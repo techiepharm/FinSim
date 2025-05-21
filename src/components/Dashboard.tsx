@@ -1,8 +1,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowUp, ArrowDown, TrendingUp, BookOpen } from "lucide-react";
+import { ArrowUp, ArrowDown, TrendingUp, BookOpen, CalendarDays, Target } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   BarChart,
   Bar,
@@ -50,6 +51,18 @@ const Dashboard = () => {
     { id: 2, title: "Creating a Budget", progress: 75, category: "Budgeting" },
     { id: 3, title: "Understanding Compound Interest", progress: 50, category: "Savings" },
     { id: 4, title: "Risk Management", progress: 25, category: "Investing" },
+  ];
+  
+  // Mock goals data
+  const goals = [
+    { name: "Monthly Profit", current: 3149, target: 5000, type: "profit" },
+    { name: "Successful Trades", current: 12, target: 50, type: "trading" },
+  ];
+
+  // Mock upcoming calendar events
+  const upcomingEvents = [
+    { title: "Portfolio Review", date: "May 23, 2025", type: "trading" },
+    { title: "Monthly Profit Goal Deadline", date: "May 30, 2025", type: "goal" },
   ];
 
   return (
@@ -129,6 +142,76 @@ const Dashboard = () => {
             <div className="text-2xl font-bold">84%</div>
             <div className="text-xs text-muted-foreground">
               Average score across all quizzes
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Goals Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Financial Goals
+            </CardTitle>
+            <Link to="/goals" className="text-sm text-finance-primary hover:underline">
+              View All Goals
+            </Link>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {goals.map((goal, index) => (
+              <div key={index} className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium">{goal.name}</span>
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    goal.type === "profit" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"
+                  }`}>
+                    {goal.type === "profit" ? "Profit" : "Trading"}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Current: {goal.type === "profit" ? "$" : ""}{goal.current}</span>
+                  <span>Target: {goal.type === "profit" ? "$" : ""}{goal.target}</span>
+                </div>
+                <Progress value={(goal.current / goal.target) * 100} className="h-2" />
+                <div className="text-xs text-muted-foreground text-right">
+                  {((goal.current / goal.target) * 100).toFixed(0)}% Complete
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <CalendarDays className="h-5 w-5" />
+              Upcoming Events
+            </CardTitle>
+            <Link to="/calendar" className="text-sm text-finance-primary hover:underline">
+              View Calendar
+            </Link>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-y">
+              {upcomingEvents.map((event, index) => (
+                <div key={index} className="py-3 flex justify-between items-center">
+                  <div>
+                    <p className="font-medium">{event.title}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm">{event.date}</div>
+                    <div className={`px-2 py-1 rounded-full text-xs ${
+                      event.type === "trading" ? "bg-blue-100 text-blue-800" : 
+                      event.type === "goal" ? "bg-purple-100 text-purple-800" : 
+                      "bg-gray-100 text-gray-800"
+                    }`}>
+                      {event.type}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>

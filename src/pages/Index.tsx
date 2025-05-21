@@ -6,6 +6,8 @@ import LearningCenter from "@/components/LearningCenter";
 import StockSimulator from "@/components/StockSimulator";
 import Portfolio from "@/components/Portfolio";
 import FinancialBot from "@/components/FinancialBot";
+import Goals from "@/components/Goals";
+import CalendarView from "@/components/CalendarView";
 
 const Index = () => {
   const [activePage, setActivePage] = useState('dashboard');
@@ -23,6 +25,10 @@ const Index = () => {
         return <Portfolio />;
       case 'assistant':
         return <FinancialBot />;
+      case 'goals':
+        return <Goals />;
+      case 'calendar':
+        return <CalendarView />;
       default:
         return <Dashboard />;
     }
