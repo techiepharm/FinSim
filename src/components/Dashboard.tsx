@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowUp, ArrowDown, TrendingUp, BookOpen, CalendarDays, Target } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "@/components/ui/sonner";
 import {
   BarChart,
   Bar,
@@ -16,11 +17,20 @@ import {
 
 const Dashboard = () => {
   const [progress, setProgress] = useState(0);
+  const [portfolioValue, setPortfolioValue] = useState(103750.42);
+  const [animatedChart, setAnimatedChart] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setProgress(42);
-    }, 500);
+      setAnimatedChart(true);
+    }, 300);
+    
+    // Display welcome toast
+    toast("Welcome back!", {
+      description: "Your portfolio has grown by 3.75% since your last visit.",
+    });
+    
     return () => clearTimeout(timer);
   }, []);
 
@@ -31,7 +41,6 @@ const Dashboard = () => {
     percent: 40,
   };
 
-  const portfolioValue = 103750.42;
   const initialValue = 100000.00;
   const percentChange = ((portfolioValue - initialValue) / initialValue) * 100;
 
@@ -59,19 +68,35 @@ const Dashboard = () => {
     { name: "Successful Trades", current: 12, target: 50, type: "trading" },
   ];
 
-  // Mock upcoming calendar events
+  // Mock upcoming events
   const upcomingEvents = [
     { title: "Portfolio Review", date: "May 23, 2025", type: "trading" },
     { title: "Monthly Profit Goal Deadline", date: "May 30, 2025", type: "goal" },
   ];
+  
+  // Handle card click for interactive feedback
+  const handleCardClick = (cardName: string) => {
+    toast(`${cardName} details`, {
+      description: `You clicked on the ${cardName} card.`,
+    });
+  };
+  
+  const handleLessonClick = (lessonTitle: string) => {
+    toast("Lesson Selected", {
+      description: `Opening lesson: ${lessonTitle}`,
+    });
+  };
 
   return (
     <div className="space-y-6 p-6">
-      <h2 className="text-3xl font-bold text-finance-primary mb-6">Your Financial Dashboard</h2>
+      <h2 className="text-3xl font-bold text-finance-primary mb-6 animate-fade-in">Your Financial Dashboard</h2>
       
       {/* Overall Progress */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card 
+          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer"
+          onClick={() => handleCardClick("Portfolio Value")}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Portfolio Value</CardTitle>
             <DollarIcon className="h-4 w-4 text-muted-foreground" />
@@ -81,7 +106,7 @@ const Dashboard = () => {
             <div className="flex items-center text-sm">
               {percentChange >= 0 ? (
                 <>
-                  <ArrowUp className="mr-1 h-4 w-4 text-finance-accent" />
+                  <ArrowUp className="mr-1 h-4 w-4 text-finance-accent animate-bounce" />
                   <span className="text-finance-accent">+{percentChange.toFixed(2)}%</span>
                 </>
               ) : (
@@ -95,7 +120,10 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer"
+          onClick={() => handleCardClick("Learning Progress")}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Learning Progress</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
@@ -109,7 +137,10 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer"
+          onClick={() => handleCardClick("Successful Trades")}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Successful Trades</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -122,7 +153,10 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer"
+          onClick={() => handleCardClick("Quiz Performance")}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Quiz Performance</CardTitle>
             <svg
@@ -149,19 +183,25 @@ const Dashboard = () => {
 
       {/* Goals Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+        <Card className="hover:shadow-lg transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
               Financial Goals
             </CardTitle>
-            <Link to="/goals" className="text-sm text-finance-primary hover:underline">
+            <Link to="/goals" className="text-sm text-finance-primary hover:underline hover:text-finance-secondary transition-colors">
               View All Goals
             </Link>
           </CardHeader>
           <CardContent className="space-y-4">
             {goals.map((goal, index) => (
-              <div key={index} className="space-y-2">
+              <div 
+                key={index} 
+                className="space-y-2 p-2 rounded-md hover:bg-gray-50 cursor-pointer transition-all duration-200"
+                onClick={() => toast(`${goal.name} Goal`, {
+                  description: `Current progress: ${((goal.current / goal.target) * 100).toFixed(0)}%`
+                })}
+              >
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">{goal.name}</span>
                   <span className={`px-2 py-1 rounded-full text-xs ${
@@ -183,20 +223,26 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="hover:shadow-lg transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <CalendarDays className="h-5 w-5" />
               Upcoming Events
             </CardTitle>
-            <Link to="/calendar" className="text-sm text-finance-primary hover:underline">
+            <Link to="/calendar" className="text-sm text-finance-primary hover:underline hover:text-finance-secondary transition-colors">
               View Calendar
             </Link>
           </CardHeader>
           <CardContent>
             <div className="divide-y">
               {upcomingEvents.map((event, index) => (
-                <div key={index} className="py-3 flex justify-between items-center">
+                <div 
+                  key={index} 
+                  className="py-3 flex justify-between items-center hover:bg-gray-50 px-2 rounded-md cursor-pointer transition-colors"
+                  onClick={() => toast(`${event.title}`, {
+                    description: `Event scheduled for ${event.date}`
+                  })}
+                >
                   <div>
                     <p className="font-medium">{event.title}</p>
                   </div>
@@ -219,13 +265,17 @@ const Dashboard = () => {
 
       {/* Recent Activities */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="col-span-1">
+        <Card className="col-span-1 hover:shadow-lg transition-all duration-300">
           <CardHeader>
             <CardTitle>Recent Lessons</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {recentLessons.map((lesson) => (
-              <div key={lesson.id} className="space-y-2">
+              <div 
+                key={lesson.id} 
+                className="space-y-2 p-2 rounded-md hover:bg-gray-50 cursor-pointer transition-all duration-200"
+                onClick={() => handleLessonClick(lesson.title)}
+              >
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">{lesson.title}</span>
                   <span className={`px-2 py-1 rounded-full text-xs ${getCategoryColor(lesson.category)}`}>
@@ -241,13 +291,16 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="col-span-1">
+        <Card className="col-span-1 hover:shadow-lg transition-all duration-300">
           <CardHeader>
             <CardTitle>Trading Performance</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={tradePerformance}>
+              <BarChart 
+                data={tradePerformance}
+                className={`${animatedChart ? 'animate-fade-in' : 'opacity-50'}`}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />

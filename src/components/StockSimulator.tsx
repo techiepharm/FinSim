@@ -1,9 +1,11 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowUp, ArrowDown, Search, TrendingUp, TrendingDown, LineChart } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 import { 
   LineChart as ReLineChart, 
   Line, 
@@ -44,11 +46,47 @@ const chartData = [
   { name: "15:00", price: 183.58 },
 ];
 
+const weekData = [
+  { name: "Mon", price: 178.85 },
+  { name: "Tue", price: 179.46 },
+  { name: "Wed", price: 180.21 },
+  { name: "Thu", price: 181.87 },
+  { name: "Fri", price: 183.58 },
+];
+
+const monthData = [
+  { name: "Week 1", price: 175.25 },
+  { name: "Week 2", price: 177.46 },
+  { name: "Week 3", price: 180.01 },
+  { name: "Week 4", price: 183.58 },
+];
+
+const yearData = [
+  { name: "Jan", price: 165.25 },
+  { name: "Feb", price: 168.46 },
+  { name: "Mar", price: 170.01 },
+  { name: "Apr", price: 172.87 },
+  { name: "May", price: 183.58 },
+];
+
 const StockSimulator = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStock, setSelectedStock] = useState(mockStocks[0]);
   const [quantity, setQuantity] = useState(1);
   const [portfolioValue, setPortfolioValue] = useState(100000);
+  const [currentTab, setCurrentTab] = useState("day");
+  const [isLoading, setIsLoading] = useState(false);
+  const [chartVisible, setChartVisible] = useState(false);
+  
+  // Add animation effect when component loads
+  useEffect(() => {
+    setTimeout(() => setChartVisible(true), 300);
+    
+    // Welcome toast
+    toast("Stock Simulator Loaded", {
+      description: "Start trading with your $100,000 virtual portfolio!",
+    });
+  }, []);
   
   const filteredStocks = mockStocks.filter(stock => 
     stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -56,31 +94,78 @@ const StockSimulator = () => {
   );
   
   const handleSelectStock = (stock: any) => {
+    setIsLoading(true);
     setSelectedStock(stock);
     setSearchTerm("");
     setQuantity(1);
+    
+    // Simulate loading
+    setTimeout(() => {
+      setIsLoading(false);
+      toast(`${stock.symbol} Selected`, {
+        description: `Current price: $${stock.price.toFixed(2)}`,
+      });
+    }, 500);
   };
   
   const handleBuy = () => {
     const cost = selectedStock.price * quantity;
     if (cost <= portfolioValue) {
-      setPortfolioValue(prev => prev - cost);
-      // Would also add the stock to portfolio in a real app
-      alert(`Successfully bought ${quantity} shares of ${selectedStock.symbol} for $${cost.toFixed(2)}`);
+      setIsLoading(true);
+      
+      // Simulate transaction processing
+      setTimeout(() => {
+        setPortfolioValue(prev => prev - cost);
+        setIsLoading(false);
+        toast.success(`Purchase Successful`, {
+          description: `Bought ${quantity} shares of ${selectedStock.symbol} for $${cost.toFixed(2)}`
+        });
+      }, 800);
     } else {
-      alert("Insufficient funds for this transaction");
+      toast.error("Insufficient Funds", {
+        description: `You need $${cost.toFixed(2)} but have $${portfolioValue.toFixed(2)} available.`
+      });
     }
   };
   
   const handleSell = () => {
     const proceeds = selectedStock.price * quantity;
-    setPortfolioValue(prev => prev + proceeds);
-    // Would also remove from portfolio in a real app
-    alert(`Successfully sold ${quantity} shares of ${selectedStock.symbol} for $${proceeds.toFixed(2)}`);
+    setIsLoading(true);
+    
+    // Simulate transaction processing
+    setTimeout(() => {
+      setPortfolioValue(prev => prev + proceeds);
+      setIsLoading(false);
+      toast.success(`Sale Successful`, {
+        description: `Sold ${quantity} shares of ${selectedStock.symbol} for $${proceeds.toFixed(2)}`
+      });
+    }, 800);
+  };
+  
+  const handleViewHistory = () => {
+    toast.info("Transaction History", {
+      description: "Opening transaction history...",
+    });
+  };
+  
+  const handleAdvancedChart = () => {
+    toast.info("Advanced Chart", {
+      description: `Loading advanced chart for ${selectedStock.symbol}...`,
+    });
+  };
+  
+  const getCurrentChartData = () => {
+    switch (currentTab) {
+      case "day": return chartData;
+      case "week": return weekData;
+      case "month": return monthData;
+      case "year": return yearData;
+      default: return chartData;
+    }
   };
   
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-3xl font-bold text-finance-primary">Stock Trading Simulator</h2>
@@ -92,14 +177,17 @@ const StockSimulator = () => {
           </p>
         </div>
         
-        <Button className="bg-finance-accent hover:bg-green-700">
+        <Button 
+          className="bg-finance-accent hover:bg-green-700 transition-colors"
+          onClick={handleViewHistory}
+        >
           View Transaction History
         </Button>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Stock Search */}
-        <Card className="lg:col-span-1">
+        <Card className="lg:col-span-1 hover:shadow-lg transition-all duration-300">
           <CardHeader>
             <CardTitle>Markets</CardTitle>
             <CardDescription>Search and select stocks to trade</CardDescription>
@@ -125,7 +213,7 @@ const StockSimulator = () => {
                 filteredStocks.map(stock => (
                   <div 
                     key={stock.symbol}
-                    className={`p-3 rounded-md cursor-pointer hover:bg-gray-100 transition-colors ${
+                    className={`p-3 rounded-md cursor-pointer transition-colors hover:bg-gray-100 ${
                       selectedStock.symbol === stock.symbol ? "bg-gray-100 border border-gray-200" : ""
                     }`}
                     onClick={() => handleSelectStock(stock)}
@@ -155,7 +243,7 @@ const StockSimulator = () => {
         </Card>
         
         {/* Stock Detail and Chart */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 hover:shadow-lg transition-all duration-300">
           <CardHeader className="border-b">
             <div className="flex justify-between items-start">
               <div>
@@ -190,7 +278,12 @@ const StockSimulator = () => {
                   {selectedStock.changePercent >= 0 ? "Bullish" : "Bearish"}
                 </span>
                 
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-1 hover:bg-gray-100 transition-colors"
+                  onClick={handleAdvancedChart}
+                >
                   <LineChart className="h-4 w-4" />
                   <span>Advanced Chart</span>
                 </Button>
@@ -199,7 +292,15 @@ const StockSimulator = () => {
           </CardHeader>
           
           <CardContent className="pt-6">
-            <Tabs defaultValue="day">
+            <Tabs 
+              defaultValue="day" 
+              value={currentTab}
+              onValueChange={(value) => {
+                setCurrentTab(value);
+                setChartVisible(false);
+                setTimeout(() => setChartVisible(true), 300);
+              }}
+            >
               <div className="flex justify-between items-center mb-4">
                 <TabsList>
                   <TabsTrigger value="day">Day</TabsTrigger>
@@ -209,48 +310,38 @@ const StockSimulator = () => {
                 </TabsList>
               </div>
               
-              <TabsContent value="day" className="mt-0">
+              <TabsContent value={currentTab} className="mt-0">
                 <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ReLineChart
-                      data={chartData}
-                      margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis domain={['auto', 'auto']} />
-                      <Tooltip />
-                      <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="price" 
-                        stroke={selectedStock.changePercent >= 0 ? "#1C7C54" : "#D64045"} 
-                        activeDot={{ r: 8 }} 
-                      />
-                    </ReLineChart>
-                  </ResponsiveContainer>
-                </div>
-              </TabsContent>
-              
-              {/* Other time periods would be implemented similarly */}
-              <TabsContent value="week">
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
-                  Weekly chart data would be loaded here
-                </div>
-              </TabsContent>
-              <TabsContent value="month">
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
-                  Monthly chart data would be loaded here
-                </div>
-              </TabsContent>
-              <TabsContent value="year">
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
-                  Yearly chart data would be loaded here
+                  {isLoading ? (
+                    <div className="h-full flex items-center justify-center">
+                      <div className="animate-pulse text-gray-400">Loading chart data...</div>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%" className={chartVisible ? "animate-fade-in" : "opacity-0"}>
+                      <ReLineChart
+                        data={getCurrentChartData()}
+                        margin={{
+                          top: 5,
+                          right: 30,
+                          left: 20,
+                          bottom: 5,
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis domain={['auto', 'auto']} />
+                        <Tooltip />
+                        <Legend />
+                        <Line 
+                          type="monotone" 
+                          dataKey="price" 
+                          stroke={selectedStock.changePercent >= 0 ? "#1C7C54" : "#D64045"} 
+                          activeDot={{ r: 8 }} 
+                          animationDuration={1000}
+                        />
+                      </ReLineChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>
@@ -266,6 +357,7 @@ const StockSimulator = () => {
                     min="1"
                     value={quantity}
                     onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                    className="transition-all focus:ring-2 focus:ring-finance-primary focus:border-finance-primary"
                   />
                 </div>
                 <div>
@@ -276,17 +368,19 @@ const StockSimulator = () => {
                 </div>
                 <div className="flex items-end gap-2">
                   <Button 
-                    className="flex-1 bg-finance-accent hover:bg-green-700"
+                    className="flex-1 bg-finance-accent hover:bg-green-700 transition-colors"
                     onClick={handleBuy}
+                    disabled={isLoading}
                   >
-                    Buy
+                    {isLoading ? "Processing..." : "Buy"}
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="flex-1 text-finance-danger border-finance-danger hover:bg-red-50"
+                    className="flex-1 text-finance-danger border-finance-danger hover:bg-red-50 transition-colors"
                     onClick={handleSell}
+                    disabled={isLoading}
                   >
-                    Sell
+                    {isLoading ? "Processing..." : "Sell"}
                   </Button>
                 </div>
               </div>
