@@ -8,7 +8,7 @@ import {
   PieChart as RePieChart, 
   Pie, 
   Cell, 
-  Tooltip, 
+  Tooltip as RechartsTooltip, 
   Legend,
   LineChart,
   Line,
@@ -231,7 +231,14 @@ const Portfolio = () => {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => `${value.toFixed(2)}%`} />
+                  <RechartsTooltip 
+                    formatter={(value) => {
+                      if (typeof value === 'number') {
+                        return `${value.toFixed(2)}%`;
+                      }
+                      return value;
+                    }} 
+                  />
                   <Legend />
                 </RePieChart>
               </ResponsiveContainer>
@@ -243,95 +250,103 @@ const Portfolio = () => {
       <div className="grid grid-cols-1 gap-6">
         <Card>
           <CardHeader>
-            <Tabs defaultValue="performance">
-              <div className="flex items-center justify-between">
-                <CardTitle>Portfolio Analysis</CardTitle>
-                <TabsList>
-                  <TabsTrigger value="performance">Performance</TabsTrigger>
-                  <TabsTrigger value="transactions">Transactions</TabsTrigger>
-                </TabsList>
-              </div>
-            </Tabs>
+            {/* Fixed issue: Properly wrap TabsContent within Tabs component */}
+            <div className="flex items-center justify-between">
+              <CardTitle>Portfolio Analysis</CardTitle>
+              <div></div> {/* Placeholder for TabsList moved below */}
+            </div>
           </CardHeader>
           <CardContent>
-            <TabsContent value="performance" className="mt-0">
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={performanceData}
-                    margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip 
-                      formatter={(value) => [`$${value.toLocaleString()}`, "Portfolio Value"]}
-                      labelFormatter={(label) => `Date: ${label}`}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="value"
-                      stroke="#0A2463"
-                      activeDot={{ r: 8 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-              
-              <div className="mt-4 flex items-center justify-between border-t pt-4">
-                <div className="flex items-center gap-2">
-                  <span className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-green-100 text-green-800`}>
-                    <TrendingUp className="h-3 w-3" />
-                    Overall Growth
-                  </span>
-                  
-                  <span className="text-sm">
-                    <span className="font-medium">+3.15%</span> since inception
-                  </span>
-                </div>
-                
-                <Button variant="outline" size="sm">
-                  View Detailed Analytics
-                </Button>
-              </div>
-            </TabsContent>
+            <Tabs defaultValue="performance">
+              <TabsList className="mb-4">
+                <TabsTrigger value="performance">Performance</TabsTrigger>
+                <TabsTrigger value="transactions">Transactions</TabsTrigger>
+              </TabsList>
             
-            <TabsContent value="transactions" className="mt-0">
-              <div className="rounded-md border">
-                <div className="grid grid-cols-6 bg-muted p-3 text-xs font-medium text-muted-foreground">
-                  <div>Date</div>
-                  <div>Type</div>
-                  <div>Symbol</div>
-                  <div className="text-right">Shares</div>
-                  <div className="text-right">Price</div>
-                  <div className="text-right">Total</div>
+              <TabsContent value="performance">
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={performanceData}
+                      margin={{
+                        top: 20,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <RechartsTooltip 
+                        formatter={(value) => {
+                          if (typeof value === 'number') {
+                            return [`$${value.toLocaleString()}`, "Portfolio Value"];
+                          }
+                          return [value, "Portfolio Value"];
+                        }}
+                        labelFormatter={(label) => `Date: ${label}`}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#0A2463"
+                        activeDot={{ r: 8 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
                 
-                <div className="divide-y">
-                  {transactions.map((tx) => (
-                    <div key={tx.id} className="grid grid-cols-6 p-3 text-sm">
-                      <div>{tx.date}</div>
-                      <div className={`${tx.type === "BUY" ? "text-finance-accent font-medium" : "text-finance-danger font-medium"}`}>{tx.type}</div>
-                      <div>{tx.symbol}</div>
-                      <div className="text-right">{tx.shares}</div>
-                      <div className="text-right">${tx.price.toFixed(2)}</div>
-                      <div className="text-right">${tx.total.toFixed(2)}</div>
-                    </div>
-                  ))}
+                <div className="mt-4 flex items-center justify-between border-t pt-4">
+                  <div className="flex items-center gap-2">
+                    <span className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-green-100 text-green-800`}>
+                      <TrendingUp className="h-3 w-3" />
+                      Overall Growth
+                    </span>
+                    
+                    <span className="text-sm">
+                      <span className="font-medium">+3.15%</span> since inception
+                    </span>
+                  </div>
+                  
+                  <Button variant="outline" size="sm">
+                    View Detailed Analytics
+                  </Button>
                 </div>
-              </div>
+              </TabsContent>
               
-              <div className="flex justify-end mt-4">
-                <Button variant="outline" size="sm">
-                  View All Transactions
-                </Button>
-              </div>
-            </TabsContent>
+              <TabsContent value="transactions">
+                <div className="rounded-md border">
+                  <div className="grid grid-cols-6 bg-muted p-3 text-xs font-medium text-muted-foreground">
+                    <div>Date</div>
+                    <div>Type</div>
+                    <div>Symbol</div>
+                    <div className="text-right">Shares</div>
+                    <div className="text-right">Price</div>
+                    <div className="text-right">Total</div>
+                  </div>
+                  
+                  <div className="divide-y">
+                    {transactions.map((tx) => (
+                      <div key={tx.id} className="grid grid-cols-6 p-3 text-sm">
+                        <div>{tx.date}</div>
+                        <div className={`${tx.type === "BUY" ? "text-finance-accent font-medium" : "text-finance-danger font-medium"}`}>{tx.type}</div>
+                        <div>{tx.symbol}</div>
+                        <div className="text-right">{tx.shares}</div>
+                        <div className="text-right">${tx.price.toFixed(2)}</div>
+                        <div className="text-right">${tx.total.toFixed(2)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="flex justify-end mt-4">
+                  <Button variant="outline" size="sm">
+                    View All Transactions
+                  </Button>
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
