@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, ArrowDown, TrendingUp, BookOpen, CalendarDays, Target, Wallet, FileText } from "lucide-react";
+import { ArrowUp, ArrowDown, TrendingUp, BookOpen, CalendarDays, Target, Wallet, FileText, CreditCard } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
@@ -16,23 +16,56 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+const FINANCIAL_QUOTES = [
+  "The stock market is filled with individuals who know the price of everything, but the value of nothing.",
+  "In investing, what is comfortable is rarely profitable.",
+  "The individual investor should act consistently as an investor and not as a speculator.",
+  "The four most dangerous words in investing are: 'This time it's different.'",
+  "The best investment you can make is in yourself.",
+  "Risk comes from not knowing what you're doing.",
+  "The most important quality for an investor is temperament, not intellect.",
+  "I will tell you how to become rich. Close the doors. Be fearful when others are greedy. Be greedy when others are fearful.",
+];
+
 const Dashboard = () => {
   const [progress, setProgress] = useState(0);
   const [portfolioValue, setPortfolioValue] = useState(103750.42);
   const [animatedChart, setAnimatedChart] = useState(false);
+  const [quoteIndex, setQuoteIndex] = useState(0);
+  const [showQuote, setShowQuote] = useState(false);
+  
+  // Mock user data
+  const userData = {
+    name: "Alex Johnson",
+    email: "alex.johnson@example.com",
+    cardNumber: "**** **** **** 5678",
+    cardType: "Visa",
+    expiryDate: "09/27"
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setProgress(42);
       setAnimatedChart(true);
+      setShowQuote(true);
     }, 300);
     
+    // Rotate through quotes
+    const quoteInterval = setInterval(() => {
+      setQuoteIndex(prev => (prev + 1) % FINANCIAL_QUOTES.length);
+      setShowQuote(false);
+      setTimeout(() => setShowQuote(true), 500);
+    }, 10000);
+    
     // Display welcome toast
-    toast("Welcome back!", {
+    toast("Welcome back, " + userData.name + "!", {
       description: "Your portfolio has grown by 3.75% since your last visit.",
     });
     
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(quoteInterval);
+    }
   }, []);
 
   // Mock data for progress indicators
@@ -95,7 +128,43 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6 p-6">
-      <h2 className="text-3xl font-bold text-finance-primary mb-6 animate-fade-in finance-accent-gradient">Your Financial Dashboard</h2>
+      {/* User greeting section */}
+      <div className="mb-8 animate-fade-in">
+        <h2 className="text-3xl font-bold text-finance-primary mb-2 finance-accent-gradient">
+          Hi, {userData.name}! Welcome to Your Financial Dashboard
+        </h2>
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center p-4 bg-white/80 rounded-lg border shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="bg-finance-primary/10 p-3 rounded-full">
+              <CreditCard className="h-6 w-6 text-finance-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Your Primary Card</p>
+              <p className="font-medium">{userData.cardType} {userData.cardNumber}</p>
+            </div>
+          </div>
+          <div className="text-sm">
+            <span className="text-muted-foreground">Expires: </span>
+            <span className="font-medium">{userData.expiryDate}</span>
+          </div>
+          <div className="ml-auto">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => toast.info("Card Management", { description: "Opening card management page" })}
+              className="text-xs"
+            >
+              Manage Card
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Animated Financial Quote */}
+      <div className={`relative overflow-hidden mb-8 p-5 bg-gradient-to-r from-finance-primary to-finance-accent rounded-lg text-white ${showQuote ? 'animate-fade-in' : 'opacity-0'}`}>
+        <p className="italic text-lg md:text-xl relative z-10">"{FINANCIAL_QUOTES[quoteIndex]}"</p>
+        <div className="absolute top-0 left-0 w-full h-full bg-white opacity-5 animate-pulse"></div>
+      </div>
       
       {/* Overall Progress */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -318,7 +387,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
-        {/* New Quick Actions Card */}
+        {/* Quick Actions Card */}
         <Card className="col-span-1 hover:shadow-lg transition-all duration-300 glass-card">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
@@ -350,7 +419,7 @@ const Dashboard = () => {
               <ArrowUp className="h-4 w-4" />
             </Button>
             
-            <div className="p-3 bg-amber-50 border border-amber-100 rounded-md">
+            <div className="p-3 bg-amber-50 border border-amber-100 rounded-md animate-pulse-gentle">
               <h4 className="font-medium text-amber-800">Financial Tip</h4>
               <p className="text-xs text-amber-700 mt-1">Consistently allocating even small amounts to investments can lead to significant growth over time due to compound interest.</p>
             </div>
