@@ -8,6 +8,8 @@ import Portfolio from "@/components/Portfolio";
 import FinancialBot from "@/components/FinancialBot";
 import Goals from "@/components/Goals";
 import CalendarView from "@/components/CalendarView";
+import TransactionHistory from "@/components/TransactionHistory";
+import WithdrawFunds from "@/components/WithdrawFunds";
 
 const Index = () => {
   const [activePage, setActivePage] = useState('dashboard');
@@ -29,13 +31,17 @@ const Index = () => {
         return <Goals />;
       case 'calendar':
         return <CalendarView />;
+      case 'transactions':
+        return <TransactionHistory />;
+      case 'withdraw':
+        return <WithdrawFunds />;
       default:
         return <Dashboard />;
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50 gradient-bg-primary">
       <Header activePage={activePage} setActivePage={setActivePage} />
       <main className="flex-1">
         {renderPage()}

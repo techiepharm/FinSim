@@ -1,7 +1,6 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowUp, ArrowDown, TrendingUp, BookOpen, CalendarDays, Target } from "lucide-react";
+import { ArrowUp, ArrowDown, TrendingUp, BookOpen, CalendarDays, Target, Wallet, FileText } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
@@ -87,14 +86,19 @@ const Dashboard = () => {
     });
   };
 
+  // Add withdrawal navigation
+  const handleWithdrawFunds = () => {
+    window.location.href = '/withdraw';  // Using window.location since we're not using useNavigate
+  };
+
   return (
     <div className="space-y-6 p-6">
-      <h2 className="text-3xl font-bold text-finance-primary mb-6 animate-fade-in">Your Financial Dashboard</h2>
+      <h2 className="text-3xl font-bold text-finance-primary mb-6 animate-fade-in finance-accent-gradient">Your Financial Dashboard</h2>
       
       {/* Overall Progress */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card 
-          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer"
+          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer layered-card"
           onClick={() => handleCardClick("Portfolio Value")}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -121,7 +125,7 @@ const Dashboard = () => {
         </Card>
 
         <Card 
-          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer"
+          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer layered-card"
           onClick={() => handleCardClick("Learning Progress")}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -138,7 +142,7 @@ const Dashboard = () => {
         </Card>
 
         <Card 
-          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer"
+          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer layered-card"
           onClick={() => handleCardClick("Successful Trades")}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -154,7 +158,7 @@ const Dashboard = () => {
         </Card>
 
         <Card 
-          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer"
+          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer layered-card"
           onClick={() => handleCardClick("Quiz Performance")}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -183,7 +187,7 @@ const Dashboard = () => {
 
       {/* Goals Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="hover:shadow-lg transition-all duration-300">
+        <Card className="hover:shadow-lg transition-all duration-300 glass-card">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
@@ -223,7 +227,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
-        <Card className="hover:shadow-lg transition-all duration-300">
+        <Card className="hover:shadow-lg transition-all duration-300 glass-card">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <CalendarDays className="h-5 w-5" />
@@ -264,8 +268,8 @@ const Dashboard = () => {
       </div>
 
       {/* Recent Activities */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="col-span-1 hover:shadow-lg transition-all duration-300">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="col-span-1 hover:shadow-lg transition-all duration-300 glass-card">
           <CardHeader>
             <CardTitle>Recent Lessons</CardTitle>
           </CardHeader>
@@ -291,7 +295,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="col-span-1 hover:shadow-lg transition-all duration-300">
+        <Card className="col-span-1 hover:shadow-lg transition-all duration-300 glass-card">
           <CardHeader>
             <CardTitle>Trading Performance</CardTitle>
           </CardHeader>
@@ -309,6 +313,45 @@ const Dashboard = () => {
                 <Bar dataKey="loss" fill="#D64045" />
               </BarChart>
             </ResponsiveContainer>
+          </CardContent>
+        </Card>
+        
+        {/* New Quick Actions Card */}
+        <Card className="col-span-1 hover:shadow-lg transition-all duration-300 glass-card">
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button 
+              className="w-full flex items-center justify-between bg-finance-accent hover:bg-green-700"
+              onClick={handleWithdrawFunds}
+            >
+              <span>Withdraw Funds</span>
+              <Wallet className="h-4 w-4" />
+            </Button>
+            
+            <Button 
+              className="w-full flex items-center justify-between" 
+              variant="outline"
+              onClick={() => window.location.href = '/transactions'}
+            >
+              <span>Transaction History</span>
+              <FileText className="h-4 w-4" />
+            </Button>
+            
+            <Button 
+              className="w-full flex items-center justify-between" 
+              variant="outline"
+              onClick={() => toast.info("Deposit Funds", { description: "Opening deposit funds page" })}
+            >
+              <span>Deposit Funds</span>
+              <ArrowUp className="h-4 w-4" />
+            </Button>
+            
+            <div className="p-3 bg-amber-50 border border-amber-100 rounded-md">
+              <h4 className="font-medium text-amber-800">Financial Tip</h4>
+              <p className="text-xs text-amber-700 mt-1">Consistently allocating even small amounts to investments can lead to significant growth over time due to compound interest.</p>
+            </div>
           </CardContent>
         </Card>
       </div>

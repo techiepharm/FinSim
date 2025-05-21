@@ -9,6 +9,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Goals from "./components/Goals";
 import CalendarView from "./components/CalendarView";
+import TransactionHistory from "./components/TransactionHistory";
+import WithdrawFunds from "./components/WithdrawFunds";
 
 // Create the client as a component function
 const App = () => {
@@ -25,6 +27,8 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/goals" element={<Goals />} />
             <Route path="/calendar" element={<CalendarView />} />
+            <Route path="/transactions" element={<TransactionHistory />} />
+            <Route path="/withdraw" element={<WithdrawFunds />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

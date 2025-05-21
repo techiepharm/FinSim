@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -106,9 +105,8 @@ const Portfolio = () => {
   };
 
   const handleViewAllTransactions = () => {
-    toast.info("Transaction History", {
-      description: "Loading your complete transaction history...",
-    });
+    // Update to navigate to transactions page
+    window.location.href = '/transactions';  // Using window.location since we're not using useNavigate from react-router
   };
   
   const handleViewAnalytics = () => {
@@ -121,7 +119,7 @@ const Portfolio = () => {
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-finance-primary">Portfolio</h2>
+          <h2 className="text-3xl font-bold text-finance-primary finance-accent-gradient">Portfolio</h2>
           <p className="text-muted-foreground mt-1">Track your investments and performance</p>
         </div>
         
