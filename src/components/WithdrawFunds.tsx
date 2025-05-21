@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Wallet, CreditCard, Paypal } from "lucide-react";
+import { Wallet, CreditCard, DollarSign } from "lucide-react";
 
 const INVESTMENT_TIPS = [
   "Consider investing your withdrawn funds in a diversified ETF portfolio for long-term growth.",
@@ -84,7 +83,7 @@ const WithdrawFunds = () => {
             <Tabs defaultValue="paypal" value={withdrawalMethod} onValueChange={setWithdrawalMethod}>
               <TabsList className="grid grid-cols-3 mb-8">
                 <TabsTrigger value="paypal" className="flex items-center gap-2">
-                  <Paypal className="h-4 w-4" />
+                  <DollarSign className="h-4 w-4" />
                   <span>PayPal</span>
                 </TabsTrigger>
                 <TabsTrigger value="bank" className="flex items-center gap-2">
