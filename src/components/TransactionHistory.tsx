@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -9,8 +9,33 @@ import { format } from "date-fns";
 import { CalendarDays, Filter, Download, ArrowUpDown } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 
-// Mock transaction data
-const generateTransactions = (startDate: Date, endDate: Date) => {
+// Uses global transaction state stored in localStorage
+const getStoredTransactions = () => {
+  try {
+    const stored = localStorage.getItem('transactions');
+    if (stored) {
+      const parsedData = JSON.parse(stored);
+      return parsedData.map(t => ({
+        ...t,
+        date: new Date(t.date)
+      }));
+    }
+  } catch (e) {
+    console.error("Error reading transactions:", e);
+  }
+  return [];
+};
+
+const saveTransactions = (transactions) => {
+  try {
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+  } catch (e) {
+    console.error("Error saving transactions:", e);
+  }
+};
+
+// Mock transaction data as a fallback
+const generateMockTransactions = (startDate: Date, endDate: Date) => {
   const transactions = [];
   const types = ['BUY', 'SELL', 'DIVIDEND', 'DEPOSIT', 'WITHDRAWAL'];
   const symbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA'];
@@ -51,16 +76,97 @@ const TransactionHistory = () => {
     to: today,
   });
   
-  const [transactions, setTransactions] = useState(() => 
-    generateTransactions(oneMonthAgo, today)
-  );
-  
+  const [transactions, setTransactions] = useState([]);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [availableBalance, setAvailableBalance] = useState(12589.75);
+  
+  // Load transactions on component mount
+  useEffect(() => {
+    const storedTransactions = getStoredTransactions();
+    
+    if (storedTransactions && storedTransactions.length > 0) {
+      setTransactions(storedTransactions.sort((a, b) => 
+        sortOrder === 'desc' 
+          ? new Date(b.date).getTime() - new Date(a.date).getTime() 
+          : new Date(a.date).getTime() - new Date(b.date).getTime()
+      ));
+      
+      // Get the latest balance
+      if (storedTransactions.length > 0) {
+        const latestTransaction = [...storedTransactions].sort((a, b) => 
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        )[0];
+        
+        if (latestTransaction.balance) {
+          setAvailableBalance(latestTransaction.balance);
+        }
+      }
+    } else {
+      // Use mock data if no stored transactions
+      setTransactions(generateMockTransactions(dateRange.from, dateRange.to));
+    }
+  }, []);
+  
+  // Watch for new transactions added by other components
+  useEffect(() => {
+    const checkForNewTransactions = () => {
+      const storedTransactions = getStoredTransactions();
+      if (storedTransactions && storedTransactions.length > 0 && 
+          (transactions.length === 0 || 
+           storedTransactions.length !== transactions.length || 
+           storedTransactions[0].id !== transactions[0]?.id)) {
+        
+        setTransactions(storedTransactions.sort((a, b) => 
+          sortOrder === 'desc' 
+            ? new Date(b.date).getTime() - new Date(a.date).getTime() 
+            : new Date(a.date).getTime() - new Date(b.date).getTime()
+        ));
+        
+        // Get the latest balance
+        if (storedTransactions.length > 0) {
+          const latestTransaction = [...storedTransactions].sort((a, b) => 
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+          )[0];
+          
+          if (latestTransaction.balance) {
+            setAvailableBalance(latestTransaction.balance);
+          }
+        }
+      }
+    };
+    
+    // Check every second for new transactions
+    const intervalId = setInterval(checkForNewTransactions, 1000);
+    return () => clearInterval(intervalId);
+  }, [transactions, sortOrder]);
   
   const handleDateRangeChange = (range: { from: Date; to: Date }) => {
     if (range.from && range.to) {
       setDateRange(range);
-      setTransactions(generateTransactions(range.from, range.to));
+      
+      // Filter stored transactions by date range
+      const storedTransactions = getStoredTransactions();
+      if (storedTransactions && storedTransactions.length > 0) {
+        const filteredTransactions = storedTransactions.filter(t => {
+          const txDate = new Date(t.date);
+          return txDate >= range.from && txDate <= range.to;
+        });
+        
+        if (filteredTransactions.length > 0) {
+          setTransactions(filteredTransactions.sort((a, b) => 
+            sortOrder === 'desc' 
+              ? new Date(b.date).getTime() - new Date(a.date).getTime() 
+              : new Date(a.date).getTime() - new Date(b.date).getTime()
+          ));
+          toast.success("Date range updated", {
+            description: `Showing transactions from ${format(range.from, 'MMM d, yyyy')} to ${format(range.to, 'MMM d, yyyy')}`
+          });
+          return;
+        }
+      }
+      
+      // Use mock data as fallback
+      setTransactions(generateMockTransactions(range.from, range.to));
       toast.success("Date range updated", {
         description: `Showing transactions from ${format(range.from, 'MMM d, yyyy')} to ${format(range.to, 'MMM d, yyyy')}`
       });
@@ -72,15 +178,42 @@ const TransactionHistory = () => {
     setSortOrder(newOrder);
     setTransactions(current => [...current].sort((a, b) => 
       newOrder === 'desc' 
-        ? b.date.getTime() - a.date.getTime() 
-        : a.date.getTime() - b.date.getTime()
+        ? new Date(b.date).getTime() - new Date(a.date).getTime() 
+        : new Date(a.date).getTime() - new Date(b.date).getTime()
     ));
     toast.info(`Sorted by date (${newOrder === 'desc' ? 'newest first' : 'oldest first'})`);
   };
   
   const handleFilter = (type: string) => {
-    const regeneratedTransactions = generateTransactions(dateRange.from, dateRange.to);
+    const storedTransactions = getStoredTransactions();
+    let filteredTransactions = [];
     
+    if (storedTransactions && storedTransactions.length > 0) {
+      if (type === 'ALL') {
+        filteredTransactions = storedTransactions.filter(t => {
+          const txDate = new Date(t.date);
+          return txDate >= dateRange.from && txDate <= dateRange.to;
+        });
+      } else {
+        filteredTransactions = storedTransactions.filter(t => {
+          const txDate = new Date(t.date);
+          return t.type === type && (txDate >= dateRange.from && txDate <= dateRange.to);
+        });
+      }
+      
+      if (filteredTransactions.length > 0) {
+        setTransactions(filteredTransactions.sort((a, b) => 
+          sortOrder === 'desc' 
+            ? new Date(b.date).getTime() - new Date(a.date).getTime() 
+            : new Date(a.date).getTime() - new Date(b.date).getTime()
+        ));
+        toast.info(type === 'ALL' ? "Showing all transactions" : `Filtered to show only ${type.toLowerCase()} transactions`);
+        return;
+      }
+    }
+    
+    // Fallback to mock data
+    const regeneratedTransactions = generateMockTransactions(dateRange.from, dateRange.to);
     if (type === 'ALL') {
       setTransactions(regeneratedTransactions);
       toast.info("Showing all transactions");
@@ -185,15 +318,15 @@ const TransactionHistory = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {transactions.map((transaction) => (
+                {transactions.map((transaction, index) => (
                   <TableRow 
-                    key={transaction.id}
+                    key={transaction.id || index}
                     className="hover:bg-muted/60 transition-colors cursor-pointer"
-                    onClick={() => toast.info(`Transaction details for ${format(transaction.date, 'MMM d, yyyy')}`, {
+                    onClick={() => toast.info(`Transaction details for ${format(new Date(transaction.date), 'MMM d, yyyy')}`, {
                       description: `${transaction.type}${transaction.symbol ? ' ' + transaction.symbol : ''}: $${Math.abs(transaction.amount).toFixed(2)}`
                     })}
                   >
-                    <TableCell className="font-medium">{format(transaction.date, 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="font-medium">{format(new Date(transaction.date), 'MMM d, yyyy')}</TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs ${getTypeStyle(transaction.type)}`}>
                         {transaction.type}
@@ -203,7 +336,7 @@ const TransactionHistory = () => {
                     <TableCell className={`text-right ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {transaction.amount >= 0 ? '+' : '−'}${Math.abs(transaction.amount).toFixed(2)}
                     </TableCell>
-                    <TableCell className="text-right">${transaction.balance.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">${transaction.balance ? transaction.balance.toFixed(2) : '—'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

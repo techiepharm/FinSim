@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, ArrowDown, TrendingUp, BookOpen, CalendarDays, Target, Wallet, FileText, CreditCard } from "lucide-react";
+import { ArrowUp, ArrowDown, TrendingUp, BookOpen, CalendarDays, Target, Wallet, FileText, CreditCard, DollarSign } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";

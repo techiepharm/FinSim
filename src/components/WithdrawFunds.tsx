@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Wallet, CreditCard, DollarSign } from "lucide-react";
-import { PayPal } from "lucide-react";
 
 const INVESTMENT_TIPS = [
   "Consider investing your withdrawn funds in a diversified ETF portfolio for long-term growth.",
