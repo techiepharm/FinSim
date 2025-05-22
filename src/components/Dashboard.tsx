@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,6 @@ import { ArrowUp, ArrowDown, TrendingUp, BookOpen, CalendarDays, Target, Wallet,
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
-import CashCard from "@/components/CashCard";
 import {
   BarChart,
   Bar,
@@ -131,15 +131,43 @@ const Dashboard = () => {
           Hi, {userData.name}! Welcome to Your Financial Dashboard
         </h2>
         
-        {/* Cash Card */}
-        <div className="mt-6">
-          <CashCard 
-            userName={userData.name}
-            cardNumber={userData.cardNumber}
-            cardType={userData.cardType}
-            expiryDate={userData.expiryDate}
-            availableBalance={availableBalance}
-          />
+        {/* PayPal Info */}
+        <div className="mt-6 bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg p-6 text-white shadow-lg">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-xl font-bold mb-1">Your Account Balance</h3>
+              <div className="text-3xl font-bold">${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+              <p className="text-blue-200 mt-2">Link your PayPal account for faster transactions</p>
+            </div>
+            <div className="bg-white p-3 rounded-full">
+              <DollarSign className="h-8 w-8 text-blue-600" />
+            </div>
+          </div>
+          <div className="mt-6 flex gap-4">
+            <Button 
+              onClick={() => window.location.href = '/withdraw'}
+              className="bg-white text-blue-600 hover:bg-blue-50"
+            >
+              Withdraw Funds
+            </Button>
+            <Button 
+              variant="outline" 
+              className="border-white text-white hover:bg-blue-700"
+              onClick={() => toast.info("Deposit Funds", { description: "Opening deposit funds page" })}
+            >
+              Add Money
+            </Button>
+          </div>
+          <div className="mt-4 flex items-center text-sm">
+            <div className="mr-4">
+              <span className="text-blue-200">Card: </span>
+              <span>{userData.cardType} •••• {userData.cardNumber.slice(-4)}</span>
+            </div>
+            <div>
+              <span className="text-blue-200">Expires: </span>
+              <span>{userData.expiryDate}</span>
+            </div>
+          </div>
         </div>
       </div>
       

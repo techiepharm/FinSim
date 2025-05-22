@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,10 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/sonner";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Wallet, CreditCard, DollarSign } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { PayPal } from "lucide-react";
 
 const INVESTMENT_TIPS = [
   "Consider investing your withdrawn funds in a diversified ETF portfolio for long-term growth.",
@@ -52,6 +50,11 @@ const WithdrawFunds = () => {
   const [cvv, setCvv] = useState("");
   const [cardholderName, setCardholderName] = useState("");
   
+  // PayPal form
+  const [paypalId, setPaypalId] = useState("");
+  const [paypalAuthToken, setPaypalAuthToken] = useState("");
+  const [isPaypalLinked, setIsPaypalLinked] = useState(false);
+  
   const availableBalance = 12589.75;
   
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,6 +64,25 @@ const WithdrawFunds = () => {
     } else {
       setAmount(value);
     }
+  };
+  
+  const handleLinkPaypal = () => {
+    if (!email || !paypalId) {
+      toast.error("Please enter your PayPal email and ID");
+      return;
+    }
+    
+    setIsProcessing(true);
+    
+    // Simulate processing
+    setTimeout(() => {
+      setIsProcessing(false);
+      setIsPaypalLinked(true);
+      setPaypalAuthToken("PAT-" + Math.random().toString(36).substring(2, 10).toUpperCase());
+      toast.success("PayPal account linked successfully", {
+        description: "You can now withdraw directly to your PayPal account"
+      });
+    }, 1500);
   };
   
   const handleWithdraw = () => {
@@ -76,8 +98,8 @@ const WithdrawFunds = () => {
       return;
     }
     
-    if (withdrawalMethod === "paypal" && !email) {
-      toast.error("Please enter your PayPal email");
+    if (withdrawalMethod === "paypal" && !isPaypalLinked) {
+      toast.error("Please link your PayPal account first");
       return;
     }
     
@@ -106,7 +128,7 @@ const WithdrawFunds = () => {
     <div className="animate-fade-in">
       <div className="mb-6">
         <h2 className="text-3xl font-bold text-finance-primary mb-2 finance-accent-gradient">Withdraw Funds</h2>
-        <p className="text-muted-foreground">Transfer your profits to your bank account or PayPal</p>
+        <p className="text-muted-foreground">Transfer your profits to your bank account, PayPal, or credit card</p>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -135,31 +157,66 @@ const WithdrawFunds = () => {
               
               <TabsContent value="paypal" className="animate-fade-in">
                 <div className="space-y-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="paypal-email">PayPal Email</Label>
-                    <Input 
-                      id="paypal-email" 
-                      type="email" 
-                      placeholder="your-email@example.com" 
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="transition-all focus:ring-2 focus:ring-finance-accent"
-                    />
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="paypal-amount">Amount to Withdraw ($)</Label>
-                    <Input 
-                      id="paypal-amount" 
-                      type="number"
-                      min="1"
-                      step="0.01"
-                      value={amount}
-                      onChange={handleAmountChange}
-                      className="transition-all focus:ring-2 focus:ring-finance-accent"
-                    />
-                    <p className="text-xs text-muted-foreground">Available: ${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                  </div>
+                  {!isPaypalLinked ? (
+                    <>
+                      <div className="grid gap-2">
+                        <Label htmlFor="paypal-email">PayPal Email</Label>
+                        <Input 
+                          id="paypal-email" 
+                          type="email" 
+                          placeholder="your-email@example.com" 
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="transition-all focus:ring-2 focus:ring-finance-accent"
+                        />
+                      </div>
+                      
+                      <div className="grid gap-2">
+                        <Label htmlFor="paypal-id">PayPal ID</Label>
+                        <Input 
+                          id="paypal-id" 
+                          type="text" 
+                          placeholder="Your PayPal ID" 
+                          value={paypalId}
+                          onChange={(e) => setPaypalId(e.target.value)}
+                          className="transition-all focus:ring-2 focus:ring-finance-accent"
+                        />
+                      </div>
+                      
+                      <Button 
+                        className="w-full bg-blue-600 hover:bg-blue-700 transition-colors"
+                        onClick={handleLinkPaypal}
+                        disabled={isProcessing || !email || !paypalId}
+                      >
+                        {isProcessing ? "Linking..." : "Link PayPal Account"}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-green-50 p-4 rounded-md border border-green-100 mb-4">
+                        <h4 className="font-medium text-green-800 mb-1 flex items-center">
+                          <DollarSign className="h-4 w-4 mr-2" />
+                          PayPal Account Linked
+                        </h4>
+                        <p className="text-sm text-green-600">Your PayPal account {email} is linked and ready to use.</p>
+                        <p className="text-xs mt-2 text-green-500">Token: {paypalAuthToken}</p>
+                      </div>
+                      
+                      <div className="grid gap-2">
+                        <Label htmlFor="paypal-amount">Amount to Withdraw ($)</Label>
+                        <Input 
+                          id="paypal-amount" 
+                          type="number"
+                          min="1"
+                          step="0.01"
+                          value={amount}
+                          onChange={handleAmountChange}
+                          className="transition-all focus:ring-2 focus:ring-finance-accent"
+                        />
+                        <p className="text-xs text-muted-foreground">Available: ${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                      </div>
+                    </>
+                  )}
                   
                   <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
                     <h4 className="font-medium text-blue-800 mb-1">PayPal Withdrawal Details</h4>
@@ -307,7 +364,7 @@ const WithdrawFunds = () => {
               className="w-full bg-finance-accent hover:bg-green-700 transition-colors"
               onClick={handleWithdraw}
               disabled={isProcessing || 
-                (withdrawalMethod === "paypal" && (!email || amount <= 0)) ||
+                (withdrawalMethod === "paypal" && (!isPaypalLinked || amount <= 0)) ||
                 (withdrawalMethod === "bank" && (!accountNumber || !routingNumber || !accountName || amount <= 0)) ||
                 (withdrawalMethod === "card" && (!cardNumber || !expiryDate || !cvv || !cardholderName || amount <= 0))}
             >
@@ -372,7 +429,7 @@ const WithdrawFunds = () => {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl">Withdrawal Request Successful</AlertDialogTitle>
             <AlertDialogDescription className="text-md">
-              Your withdrawal request for ${amount.toFixed(2)} to {withdrawalMethod === "paypal" ? email : withdrawalMethod === "bank" ? `bank account ending in ${accountNumber.slice(-4)}` : `card ending in ${cardNumber.slice(-4)}`} has been submitted successfully.
+              Your withdrawal request for ${amount.toFixed(2)} to {withdrawalMethod === "paypal" ? "your PayPal account" : withdrawalMethod === "bank" ? `bank account ending in ${accountNumber.slice(-4)}` : `card ending in ${cardNumber.slice(-4)}`} has been submitted successfully.
             </AlertDialogDescription>
           </AlertDialogHeader>
           
