@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,12 +8,14 @@ import { TrendingUp, Search, ArrowRight, LineChart, BarChart, DollarSign, ArrowU
 import { toast } from "@/components/ui/sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TradeEducation from './TradeEducation';
+import { Link } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 
 // Financial quotes to display after trading
@@ -86,22 +89,56 @@ const StockSimulator = () => {
   const [tradeAmount, setTradeAmount] = useState(0);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
-  const [availableBalance, setAvailableBalance] = useState(12589.75);
-  const [transactions, setTransactions] = useState([
-    { date: new Date("2025-05-20T10:32:00"), type: "BUY", symbol: "AAPL", price: 182.63, amount: 182.63 },
-    { date: new Date("2025-05-19T14:15:00"), type: "SELL", symbol: "MSFT", price: 334.78, amount: 334.78 },
-    { date: new Date("2025-05-18T11:05:00"), type: "BUY", symbol: "GOOGL", price: 131.42, amount: 131.42 }
-  ]);
-  const [portfolio, setPortfolio] = useState({
-    cash: 12589.75,
-    invested: 5420.30,
-    holdings: [
-      { symbol: "AAPL", shares: 10, avgPrice: 170.45, currentPrice: 182.63 },
-      { symbol: "GOOGL", shares: 5, avgPrice: 128.30, currentPrice: 131.42 }
-    ]
-  });
   const [showQuoteDialog, setShowQuoteDialog] = useState(false);
   const [tradeQuote, setTradeQuote] = useState("");
+  const [showReceiptDialog, setShowReceiptDialog] = useState(false);
+  const [currentReceipt, setCurrentReceipt] = useState(null);
+  const [showAddFundsDialog, setShowAddFundsDialog] = useState(false);
+  const [addFundsAmount, setAddFundsAmount] = useState(100);
+  
+  // Get stored data from localStorage
+  const getStoredData = (key, defaultValue) => {
+    try {
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : defaultValue;
+    } catch (e) {
+      console.error(`Error reading ${key}:`, e);
+      return defaultValue;
+    }
+  };
+  
+  // Set stored data to localStorage
+  const setStoredData = (key, value) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      console.error(`Error saving ${key}:`, e);
+    }
+  };
+  
+  // Portfolio and balance state
+  const [availableBalance, setAvailableBalance] = useState(() => 
+    getStoredData('availableBalance', 12589.75)
+  );
+  
+  const [transactions, setTransactions] = useState(() => 
+    getStoredData('transactions', [])
+  );
+  
+  const [portfolio, setPortfolio] = useState(() => 
+    getStoredData('portfolio', {
+      cash: 12589.75,
+      invested: 0,
+      holdings: []
+    })
+  );
+  
+  // Save data when it changes
+  useEffect(() => {
+    setStoredData('availableBalance', availableBalance);
+    setStoredData('transactions', transactions);
+    setStoredData('portfolio', portfolio);
+  }, [availableBalance, transactions, portfolio]);
   
   // Mock stock data
   const stocks = [
@@ -119,9 +156,15 @@ const StockSimulator = () => {
     return FINANCIAL_QUOTES[Math.floor(Math.random() * FINANCIAL_QUOTES.length)];
   };
   
+  // Generate transaction ID
+  const generateTransactionId = () => {
+    return `TX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  };
+  
   // Update user's portfolio after a trade
   const updatePortfolio = (symbol, type, amount, price) => {
     const newPortfolio = {...portfolio};
+    const shares = amount / price;
     
     if (type === "BUY") {
       // Subtract from cash
@@ -129,7 +172,6 @@ const StockSimulator = () => {
       newPortfolio.invested += amount;
       
       // Update holdings
-      const shares = amount / price;
       const existingPosition = newPortfolio.holdings.find(h => h.symbol === symbol);
       if (existingPosition) {
         // Update existing position
@@ -154,7 +196,6 @@ const StockSimulator = () => {
       // Find position
       const existingPosition = newPortfolio.holdings.find(h => h.symbol === symbol);
       if (existingPosition) {
-        const shares = amount / price;
         existingPosition.shares -= shares;
         
         // If no shares left, remove from holdings
@@ -170,17 +211,16 @@ const StockSimulator = () => {
     
     setPortfolio(newPortfolio);
     setAvailableBalance(newPortfolio.cash);
-  }
+  };
   
   const filteredStocks = stocks.filter(stock => 
     stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || 
     stock.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
-  const handleStockSelect = (symbol) => {
-    const stock = stocks.find(s => s.symbol === symbol);
+  const handleStockSelect = (stock) => {
     setSelectedStock(stock);
-    toast.info("Stock Selected", { description: `You selected ${symbol}` });
+    toast.info("Stock Selected", { description: `You selected ${stock.symbol}` });
     setCurrentStep("asset-research");
   };
   
@@ -202,19 +242,54 @@ const StockSimulator = () => {
       return;
     }
     
-    // Record the transaction
-    const newTransaction = {
+    // For selling, check if user has enough shares
+    if (action === "Sell") {
+      const position = portfolio.holdings.find(h => h.symbol === stock.symbol);
+      if (!position) {
+        toast.error("No shares to sell", { description: `You don't own any shares of ${stock.symbol}` });
+        return;
+      }
+      
+      const sharesValue = tradeAmount / stock.price;
+      if (position.shares < sharesValue) {
+        toast.error("Insufficient shares", { description: `You only have ${position.shares.toFixed(4)} shares of ${stock.symbol}` });
+        return;
+      }
+    }
+    
+    // Create receipt
+    const receipt = {
+      id: generateTransactionId(),
       date: new Date(),
       type: action.toUpperCase(),
       symbol: stock.symbol,
+      name: stock.name,
       price: stock.price,
-      amount: tradeAmount
+      amount: tradeAmount,
+      shares: tradeAmount / stock.price,
+      balanceBefore: availableBalance,
+      balanceAfter: action === "Buy" ? availableBalance - tradeAmount : availableBalance + tradeAmount
+    };
+    
+    // Record the transaction
+    const newTransaction = {
+      id: receipt.id,
+      date: receipt.date,
+      type: receipt.type,
+      symbol: stock.symbol,
+      price: stock.price,
+      amount: tradeAmount,
+      balance: action === "Buy" ? availableBalance - tradeAmount : availableBalance + tradeAmount
     };
     
     setTransactions([newTransaction, ...transactions]);
     
     // Update portfolio
     updatePortfolio(stock.symbol, action.toUpperCase(), tradeAmount, stock.price);
+    
+    // Set receipt for dialog
+    setCurrentReceipt(receipt);
+    setShowReceiptDialog(true);
     
     // Show success message
     toast.success(`${action} Order Placed`, { 
@@ -223,16 +298,55 @@ const StockSimulator = () => {
     
     // Show random financial quote
     setTradeQuote(getRandomQuote());
-    setShowQuoteDialog(true);
     
     setCurrentStep("position-monitoring");
   };
   
-  const handleAnalyzeMarket = (symbol = null) => {
+  const handleAnalyze = (symbol = null) => {
     if (symbol) {
       setSelectedStock(stocks.find(s => s.symbol === symbol));
     }
     setShowAnalysisModal(true);
+  };
+  
+  const handleAddFunds = () => {
+    setShowAddFundsDialog(true);
+  };
+  
+  const processAddFunds = () => {
+    if (addFundsAmount <= 0) {
+      toast.error("Invalid amount", { description: "Please enter a valid amount to add" });
+      return;
+    }
+    
+    // Create new transaction
+    const newTransaction = {
+      id: generateTransactionId(),
+      date: new Date(),
+      type: "DEPOSIT",
+      symbol: null,
+      price: null,
+      amount: addFundsAmount,
+      balance: availableBalance + addFundsAmount
+    };
+    
+    // Update balance
+    setAvailableBalance(prev => prev + addFundsAmount);
+    
+    // Update portfolio
+    setPortfolio(prev => ({
+      ...prev,
+      cash: prev.cash + addFundsAmount
+    }));
+    
+    // Add to transactions
+    setTransactions([newTransaction, ...transactions]);
+    
+    toast.success("Funds Added", {
+      description: `$${addFundsAmount.toFixed(2)} has been added to your account`
+    });
+    
+    setShowAddFundsDialog(false);
   };
 
   return (
@@ -273,28 +387,25 @@ const StockSimulator = () => {
                   </thead>
                   <tbody>
                     {filteredStocks.map((stock) => (
-                      <tr key={stock.symbol} className="border-t hover:bg-muted/30">
+                      <tr 
+                        key={stock.symbol} 
+                        className="border-t hover:bg-muted/30 cursor-pointer" 
+                        onClick={() => handleStockSelect(stock)}
+                      >
                         <td className="p-2 font-medium">{stock.symbol}</td>
                         <td className="p-2">{stock.name}</td>
                         <td className="p-2 text-right">${stock.price}</td>
                         <td className={`p-2 text-right ${stock.change >= 0 ? "text-green-600" : "text-red-600"}`}>
                           {stock.change >= 0 ? `+${stock.change}%` : `${stock.change}%`}
                         </td>
-                        <td className="p-2 flex justify-center gap-1">
+                        <td className="p-2 flex justify-center gap-1" onClick={(e) => e.stopPropagation()}>
                           <Button 
                             size="sm" 
                             variant="outline" 
-                            onClick={() => handleStockSelect(stock.symbol)}
+                            onClick={() => handleStockSelect(stock)}
                             className="text-xs"
                           >
                             Select
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleAnalyzeMarket(stock.symbol)}
-                            className="bg-finance-primary text-xs"
-                          >
-                            Analyze
                           </Button>
                         </td>
                       </tr>
@@ -372,7 +483,7 @@ const StockSimulator = () => {
                         </div>
                         <Button 
                           className="w-full mt-2 bg-finance-primary"
-                          onClick={() => handleAnalyzeMarket(selectedStock.symbol)}
+                          onClick={() => handleAnalyze(selectedStock.symbol)}
                         >
                           <TrendingUp className="h-4 w-4 mr-2" />
                           Analyze This Stock
@@ -429,7 +540,7 @@ const StockSimulator = () => {
             <CardContent>
               <TradeEducation 
                 currentStep={currentStep}
-                onAnalyze={handleAnalyzeMarket}
+                onAnalyze={() => {}}
               />
             </CardContent>
           </Card>
@@ -450,7 +561,9 @@ const StockSimulator = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Total Profit/Loss</span>
-                  <span className="text-green-600 font-medium">+$742.15 (13.7%)</span>
+                  <span className={portfolio.invested > 0 ? "text-green-600 font-medium" : "font-medium"}>
+                    {portfolio.invested > 0 ? "+$742.15 (13.7%)" : "$0.00 (0%)"}
+                  </span>
                 </div>
                 <div className="flex justify-center mt-4 gap-2">
                   <Button 
@@ -462,7 +575,7 @@ const StockSimulator = () => {
                   </Button>
                   <Button 
                     variant="outline"
-                    onClick={() => toast.info("Add Funds", { description: "Opening deposit funds page" })}
+                    onClick={handleAddFunds}
                     className="flex items-center gap-2"
                   >
                     <ArrowUp className="h-4 w-4" />
@@ -478,33 +591,45 @@ const StockSimulator = () => {
               <CardTitle>Recent Trades</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {transactions.slice(0, 3).map((transaction, index) => (
-                <div key={index} className="border-b pb-2">
-                  <div className="flex justify-between">
-                    <div>
-                      <span className="font-medium">{transaction.symbol}</span>
-                      <span className={`ml-2 text-xs ${
-                        transaction.type === "BUY" 
-                          ? "bg-green-100 text-green-800" 
-                          : "bg-red-100 text-red-800"
-                      } px-2 py-0.5 rounded-full`}>
-                        {transaction.type}
-                      </span>
+              {transactions.length > 0 ? (
+                <>
+                  {transactions.slice(0, 3).map((transaction, index) => (
+                    <div key={transaction.id || index} className="border-b pb-2">
+                      <div className="flex justify-between">
+                        <div>
+                          <span className="font-medium">{transaction.symbol || 'Cash'}</span>
+                          <span className={`ml-2 text-xs ${
+                            transaction.type === "BUY" 
+                              ? "bg-green-100 text-green-800" 
+                              : transaction.type === "SELL"
+                                ? "bg-red-100 text-red-800"
+                                : transaction.type === "DEPOSIT"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-amber-100 text-amber-800"
+                          } px-2 py-0.5 rounded-full`}>
+                            {transaction.type}
+                          </span>
+                        </div>
+                        <span>${transaction.amount?.toFixed(2)}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(transaction.date).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true
+                        })}
+                      </div>
                     </div>
-                    <span>${transaction.price}</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {transaction.date.toLocaleString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                      hour: 'numeric',
-                      minute: '2-digit',
-                      hour12: true
-                    })}
-                  </div>
+                  ))}
+                </>
+              ) : (
+                <div className="text-center text-muted-foreground py-4">
+                  No transactions yet
                 </div>
-              ))}
+              )}
               <Button
                 variant="outline"
                 className="w-full"
@@ -517,7 +642,7 @@ const StockSimulator = () => {
         </div>
       </div>
       
-      {/* Market Analysis Dialog */}
+      {/* Stock Analysis Dialog */}
       <Dialog open={showAnalysisModal} onOpenChange={setShowAnalysisModal}>
         <DialogContent className="sm:max-w-[625px]">
           <DialogHeader>
@@ -586,50 +711,9 @@ const StockSimulator = () => {
                 </div>
               </>
             ) : (
-              <>
-                {/* General market analysis for when no specific stock is selected */}
-                <div className="space-y-2">
-                  <h4 className="font-medium">Market Sentiment</h4>
-                  <div className="h-6 w-full bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-green-500 to-blue-500" 
-                      style={{ width: "65%" }}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Bearish</span>
-                    <span>Neutral</span>
-                    <span>Bullish</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <h4 className="font-medium">Key Indicators</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 bg-muted/30 rounded-md">
-                      <div className="text-sm text-muted-foreground">RSI (14)</div>
-                      <div className="font-medium">58.3 <span className="text-xs text-muted-foreground">(Neutral)</span></div>
-                    </div>
-                    <div className="p-3 bg-muted/30 rounded-md">
-                      <div className="text-sm text-muted-foreground">MACD</div>
-                      <div className="font-medium">2.31 <span className="text-xs text-green-600">(Bullish)</span></div>
-                    </div>
-                    <div className="p-3 bg-muted/30 rounded-md">
-                      <div className="text-sm text-muted-foreground">50-Day MA</div>
-                      <div className="font-medium">179.24 <span className="text-xs text-green-600">(Above)</span></div>
-                    </div>
-                    <div className="p-3 bg-muted/30 rounded-md">
-                      <div className="text-sm text-muted-foreground">200-Day MA</div>
-                      <div className="font-medium">172.51 <span className="text-xs text-green-600">(Above)</span></div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium mb-2">Recommendation</h4>
-                  <p className="text-sm">Based on current technical analysis, the market shows moderate bullish momentum with strong support at key levels. Consider a balanced approach with selective entry points.</p>
-                </div>
-              </>
+              <div className="text-center p-6">
+                <p className="text-muted-foreground">Analysis not available for this stock.</p>
+              </div>
             )}
           </div>
         </DialogContent>
@@ -651,6 +735,181 @@ const StockSimulator = () => {
               Continue Trading
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Receipt Dialog */}
+      <Dialog open={showReceiptDialog} onOpenChange={setShowReceiptDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Transaction Receipt</DialogTitle>
+            <DialogDescription>
+              {currentReceipt && new Date(currentReceipt.date).toLocaleString()}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {currentReceipt && (
+            <div className="space-y-4">
+              <div className="bg-muted/30 p-4 rounded-md space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-sm text-muted-foreground">Transaction ID:</div>
+                  <div className="text-sm font-mono">{currentReceipt.id}</div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-sm text-muted-foreground">Type:</div>
+                  <div className="text-sm font-medium">
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${
+                      currentReceipt.type === "BUY" 
+                        ? "bg-green-100 text-green-800" 
+                        : currentReceipt.type === "SELL"
+                          ? "bg-red-100 text-red-800"
+                          : currentReceipt.type === "DEPOSIT"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-amber-100 text-amber-800"
+                    }`}>
+                      {currentReceipt.type}
+                    </span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-sm text-muted-foreground">Stock:</div>
+                  <div className="text-sm">{currentReceipt.symbol} - {currentReceipt.name}</div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-sm text-muted-foreground">Price per share:</div>
+                  <div className="text-sm">${currentReceipt.price.toFixed(2)}</div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-sm text-muted-foreground">Shares:</div>
+                  <div className="text-sm">{currentReceipt.shares.toFixed(4)}</div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-sm text-muted-foreground">Total Amount:</div>
+                  <div className="text-sm font-medium">${currentReceipt.amount.toFixed(2)}</div>
+                </div>
+              </div>
+              
+              <div className="bg-muted/30 p-4 rounded-md">
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-muted-foreground">Previous Balance:</div>
+                  <div className="text-sm">${currentReceipt.balanceBefore.toFixed(2)}</div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-muted-foreground">Transaction Amount:</div>
+                  <div className={`text-sm ${currentReceipt.type === "BUY" || currentReceipt.type === "WITHDRAWAL" ? "text-red-600" : "text-green-600"}`}>
+                    {currentReceipt.type === "BUY" || currentReceipt.type === "WITHDRAWAL" ? "-" : "+"}${currentReceipt.amount.toFixed(2)}
+                  </div>
+                </div>
+                <div className="border-t mt-2 pt-2 flex justify-between items-center">
+                  <div className="text-sm font-medium">New Balance:</div>
+                  <div className="text-sm font-medium">${currentReceipt.balanceAfter.toFixed(2)}</div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowReceiptDialog(false)}
+                >
+                  Close
+                </Button>
+                <Button 
+                  onClick={() => {
+                    toast.success("Receipt downloaded", { description: "Transaction receipt saved to your device" });
+                    setShowReceiptDialog(false);
+                  }}
+                >
+                  Download Receipt
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add Funds Dialog */}
+      <Dialog open={showAddFundsDialog} onOpenChange={setShowAddFundsDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add Funds</DialogTitle>
+            <DialogDescription>
+              Add money to your trading account using PayPal
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            <div className="bg-[#003087] p-4 rounded-md text-white flex justify-between items-center">
+              <div className="text-2xl font-bold">PayPal</div>
+              <div className="text-xs opacity-80">Fast, secure payments</div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="add-amount">Amount to Add ($)</Label>
+                <div className="flex mt-1">
+                  <span className="inline-flex items-center px-3 bg-muted border border-r-0 border-input rounded-l-md">
+                    <DollarSign className="h-4 w-4" />
+                  </span>
+                  <Input
+                    id="add-amount"
+                    type="number"
+                    value={addFundsAmount || ''}
+                    onChange={(e) => setAddFundsAmount(Number(e.target.value))}
+                    className="rounded-l-none"
+                    placeholder="Enter amount"
+                  />
+                </div>
+              </div>
+              
+              <div className="border rounded-md p-4 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Amount:</span>
+                  <span>${addFundsAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Fee:</span>
+                  <span>$0.00</span>
+                </div>
+                <div className="flex justify-between border-t pt-2 mt-2 font-medium">
+                  <span>Total:</span>
+                  <span>${addFundsAmount.toFixed(2)}</span>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-md">
+                <div className="text-sm text-muted-foreground mb-2">Choose payment method:</div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 p-2 border rounded-md bg-white">
+                    <input type="radio" id="paypal-balance" name="payment" defaultChecked />
+                    <label htmlFor="paypal-balance" className="text-sm">PayPal Balance</label>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 border rounded-md bg-white">
+                    <input type="radio" id="paypal-card" name="payment" />
+                    <label htmlFor="paypal-card" className="text-sm">Credit/Debit Card</label>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 border rounded-md bg-white">
+                    <input type="radio" id="paypal-bank" name="payment" />
+                    <label htmlFor="paypal-bank" className="text-sm">Bank Account</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowAddFundsDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              className="bg-[#003087] hover:bg-[#002266]"
+              onClick={processAddFunds}
+            >
+              Continue with PayPal
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
