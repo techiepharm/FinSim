@@ -11,6 +11,13 @@ import Goals from "./components/Goals";
 import CalendarView from "./components/CalendarView";
 import TransactionHistory from "./components/TransactionHistory";
 import WithdrawFunds from "./components/WithdrawFunds";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 
 // Create the client as a component function
 const App = () => {

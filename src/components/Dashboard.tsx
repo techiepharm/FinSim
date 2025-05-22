@@ -1,8 +1,8 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, ArrowDown, TrendingUp, BookOpen, CalendarDays, Target, Wallet, FileText, CreditCard, DollarSign } from "lucide-react";
+import { ArrowUp, ArrowDown, TrendingUp, BookOpen, CalendarDays, Target, Wallet, DollarSign } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
@@ -124,7 +124,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-6 p-6 bg-background">
+    <div className="space-y-6 p-6 bg-background dark">
       {/* User greeting section */}
       <div className="mb-8 animate-fade-in">
         <h2 className="text-3xl font-bold text-finance-primary mb-2 finance-accent-gradient">
@@ -132,39 +132,32 @@ const Dashboard = () => {
         </h2>
         
         {/* PayPal Info */}
-        <div className="mt-6 bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg p-6 text-white shadow-lg">
+        <div className="mt-6 bg-gradient-to-r from-slate-800 to-slate-700 rounded-lg p-6 text-white shadow-lg">
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-xl font-bold mb-1">Your Account Balance</h3>
               <div className="text-3xl font-bold">${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-              <p className="text-blue-200 mt-2">Link your PayPal account for faster transactions</p>
+              <p className="text-slate-300 mt-2">Link your PayPal account for faster transactions</p>
             </div>
-            <div className="bg-white p-3 rounded-full">
-              <DollarSign className="h-8 w-8 text-blue-600" />
+            <div className="bg-slate-600 p-3 rounded-full">
+              <DollarSign className="h-8 w-8 text-green-400" />
             </div>
           </div>
-          <div className="mt-6 flex gap-4">
+          <div className="mt-6">
             <Button 
               onClick={() => window.location.href = '/withdraw'}
-              className="bg-white text-blue-600 hover:bg-blue-50"
+              className="bg-green-600 text-white hover:bg-green-700"
             >
-              Withdraw Funds
-            </Button>
-            <Button 
-              variant="outline" 
-              className="border-white text-white hover:bg-blue-700"
-              onClick={() => toast.info("Deposit Funds", { description: "Opening deposit funds page" })}
-            >
-              Add Money
+              <Wallet className="mr-2 h-5 w-5" /> Withdraw Funds
             </Button>
           </div>
           <div className="mt-4 flex items-center text-sm">
             <div className="mr-4">
-              <span className="text-blue-200">Card: </span>
+              <span className="text-slate-400">Card: </span>
               <span>{userData.cardType} •••• {userData.cardNumber.slice(-4)}</span>
             </div>
             <div>
-              <span className="text-blue-200">Expires: </span>
+              <span className="text-slate-400">Expires: </span>
               <span>{userData.expiryDate}</span>
             </div>
           </div>
@@ -172,7 +165,7 @@ const Dashboard = () => {
       </div>
       
       {/* Animated Financial Quote */}
-      <div className={`relative overflow-hidden mb-8 p-5 bg-gradient-to-r from-finance-primary to-finance-accent rounded-lg text-white ${showQuote ? 'animate-fade-in' : 'opacity-0'}`}>
+      <div className={`relative overflow-hidden mb-8 p-5 bg-gradient-to-r from-slate-800 to-slate-700 rounded-lg text-white ${showQuote ? 'animate-fade-in' : 'opacity-0'}`}>
         <p className="italic text-lg md:text-xl relative z-10">"{FINANCIAL_QUOTES[quoteIndex]}"</p>
         <div className="absolute top-0 left-0 w-full h-full bg-white opacity-5 animate-pulse"></div>
       </div>
@@ -181,25 +174,25 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card 
           gradient="green"
-          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer layered-card"
+          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer layered-card bg-slate-800 text-white"
           onClick={() => handleCardClick("Portfolio Value")}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Portfolio Value</CardTitle>
-            <DollarIcon className="h-4 w-4 text-white opacity-75" />
+            <DollarIcon className="h-4 w-4 text-green-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${portfolioValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
             <div className="flex items-center text-sm">
               {percentChange >= 0 ? (
                 <>
-                  <ArrowUp className="mr-1 h-4 w-4 text-green-300 animate-bounce" />
-                  <span className="text-green-300">+{percentChange.toFixed(2)}%</span>
+                  <ArrowUp className="mr-1 h-4 w-4 text-green-400 animate-bounce" />
+                  <span className="text-green-400">+{percentChange.toFixed(2)}%</span>
                 </>
               ) : (
                 <>
-                  <ArrowDown className="mr-1 h-4 w-4 text-red-300" />
-                  <span className="text-red-300">{percentChange.toFixed(2)}%</span>
+                  <ArrowDown className="mr-1 h-4 w-4 text-red-400" />
+                  <span className="text-red-400">{percentChange.toFixed(2)}%</span>
                 </>
               )}
               <span className="text-white opacity-75 ml-2">from initial</span>
@@ -209,16 +202,16 @@ const Dashboard = () => {
 
         <Card 
           gradient="gold"
-          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer layered-card"
+          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer layered-card bg-slate-800 text-white"
           onClick={() => handleCardClick("Learning Progress")}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Learning Progress</CardTitle>
-            <BookOpen className="h-4 w-4 text-white opacity-75" />
+            <BookOpen className="h-4 w-4 text-amber-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{learningProgress.percent}%</div>
-            <Progress className="h-2 mt-2 bg-white/20" value={learningProgress.percent} />
+            <Progress className="h-2 mt-2 bg-slate-700" value={learningProgress.percent} />
             <div className="text-xs text-white opacity-75 mt-2">
               {learningProgress.completed} of {learningProgress.total} lessons completed
             </div>
@@ -227,12 +220,12 @@ const Dashboard = () => {
 
         <Card 
           gradient="blue"
-          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer layered-card"
+          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer layered-card bg-slate-800 text-white"
           onClick={() => handleCardClick("Successful Trades")}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Successful Trades</CardTitle>
-            <TrendingUp className="h-4 w-4 text-white opacity-75" />
+            <TrendingUp className="h-4 w-4 text-blue-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">67%</div>
@@ -244,7 +237,7 @@ const Dashboard = () => {
 
         <Card 
           gradient="premium"
-          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer layered-card"
+          className="hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer layered-card bg-slate-800 text-white"
           onClick={() => handleCardClick("Quiz Performance")}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -257,7 +250,7 @@ const Dashboard = () => {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="2"
-              className="h-4 w-4 text-white opacity-75"
+              className="h-4 w-4 text-purple-400"
             >
               <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
             </svg>
@@ -271,59 +264,15 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Quick Actions Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="col-span-1 md:col-span-1">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button 
-              className="w-full flex items-center justify-between bg-finance-accent hover:bg-green-700"
-              onClick={() => { window.location.href = '/withdraw'; }}
-            >
-              <span>Withdraw Funds</span>
-              <Wallet className="h-4 w-4" />
-            </Button>
-            
-            <Button 
-              className="w-full flex items-center justify-between" 
-              variant="outline"
-              onClick={() => { window.location.href = '/transactions'; }}
-            >
-              <span>Transaction History</span>
-              <FileText className="h-4 w-4" />
-            </Button>
-            
-            <Button 
-              className="w-full flex items-center justify-between bg-blue-600 hover:bg-blue-700" 
-              onClick={() => toast.info("Deposit Funds", { description: "Opening deposit funds page" })}
-            >
-              <span>Add Money</span>
-              <ArrowUp className="h-4 w-4" />
-            </Button>
-            
-            <Button 
-              className="w-full flex items-center justify-between"
-              variant="outline"
-              onClick={() => toast.info("Card Management", { description: "Opening card management page" })}
-            >
-              <span>Manage Cards</span>
-              <CreditCard className="h-4 w-4" />
-            </Button>
-          </CardContent>
-        </Card>
-        
-        {/* The rest of the dashboard content */}
-        {/* Goals Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="hover:shadow-lg transition-all duration-300 glass-card">
+          <Card className="hover:shadow-lg transition-all duration-300 glass-card bg-slate-800 text-white border-slate-700">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
+                <Target className="h-5 w-5 text-green-400" />
                 Financial Goals
               </CardTitle>
-              <Link to="/goals" className="text-sm text-finance-primary hover:underline hover:text-finance-secondary transition-colors">
+              <Link to="/goals" className="text-sm text-green-400 hover:underline hover:text-green-300 transition-colors">
                 View All Goals
               </Link>
             </CardHeader>
@@ -331,7 +280,7 @@ const Dashboard = () => {
               {goals.map((goal, index) => (
                 <div 
                   key={index} 
-                  className="space-y-2 p-2 rounded-md hover:bg-gray-50 cursor-pointer transition-all duration-200"
+                  className="space-y-2 p-2 rounded-md hover:bg-slate-700 cursor-pointer transition-all duration-200"
                   onClick={() => toast(`${goal.name} Goal`, {
                     description: `Current progress: ${((goal.current / goal.target) * 100).toFixed(0)}%`
                   })}
@@ -339,17 +288,17 @@ const Dashboard = () => {
                   <div className="flex justify-between text-sm">
                     <span className="font-medium">{goal.name}</span>
                     <span className={`px-2 py-1 rounded-full text-xs ${
-                      goal.type === "profit" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"
+                      goal.type === "profit" ? "bg-green-900 text-green-300" : "bg-blue-900 text-blue-300"
                     }`}>
                       {goal.type === "profit" ? "Profit" : "Trading"}
                     </span>
                   </div>
-                  <div className="flex justify-between text-xs text-muted-foreground">
+                  <div className="flex justify-between text-xs text-slate-400">
                     <span>Current: {goal.type === "profit" ? "$" : ""}{goal.current}</span>
                     <span>Target: {goal.type === "profit" ? "$" : ""}{goal.target}</span>
                   </div>
-                  <Progress value={(goal.current / goal.target) * 100} className="h-2" />
-                  <div className="text-xs text-muted-foreground text-right">
+                  <Progress value={(goal.current / goal.target) * 100} className="h-2 bg-slate-700" />
+                  <div className="text-xs text-slate-400 text-right">
                     {((goal.current / goal.target) * 100).toFixed(0)}% Complete
                   </div>
                 </div>
@@ -357,22 +306,22 @@ const Dashboard = () => {
             </CardContent>
           </Card>
           
-          <Card className="hover:shadow-lg transition-all duration-300 glass-card">
+          <Card className="hover:shadow-lg transition-all duration-300 glass-card bg-slate-800 text-white border-slate-700">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
-                <CalendarDays className="h-5 w-5" />
+                <CalendarDays className="h-5 w-5 text-blue-400" />
                 Upcoming Events
               </CardTitle>
-              <Link to="/calendar" className="text-sm text-finance-primary hover:underline hover:text-finance-secondary transition-colors">
+              <Link to="/calendar" className="text-sm text-blue-400 hover:underline hover:text-blue-300 transition-colors">
                 View Calendar
               </Link>
             </CardHeader>
             <CardContent>
-              <div className="divide-y">
+              <div className="divide-y divide-slate-700">
                 {upcomingEvents.map((event, index) => (
                   <div 
                     key={index} 
-                    className="py-3 flex justify-between items-center hover:bg-gray-50 px-2 rounded-md cursor-pointer transition-colors"
+                    className="py-3 flex justify-between items-center hover:bg-slate-700 px-2 rounded-md cursor-pointer transition-colors"
                     onClick={() => toast(`${event.title}`, {
                       description: `Event scheduled for ${event.date}`
                     })}
@@ -383,9 +332,9 @@ const Dashboard = () => {
                     <div className="flex items-center gap-3">
                       <div className="text-sm">{event.date}</div>
                       <div className={`px-2 py-1 rounded-full text-xs ${
-                        event.type === "trading" ? "bg-blue-100 text-blue-800" : 
-                        event.type === "goal" ? "bg-purple-100 text-purple-800" : 
-                        "bg-gray-100 text-gray-800"
+                        event.type === "trading" ? "bg-blue-900 text-blue-300" : 
+                        event.type === "goal" ? "bg-purple-900 text-purple-300" : 
+                        "bg-slate-700 text-slate-300"
                       }`}>
                         {event.type}
                       </div>
@@ -399,7 +348,7 @@ const Dashboard = () => {
 
         {/* Recent Activities */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="col-span-1 hover:shadow-lg transition-all duration-300 glass-card">
+          <Card className="col-span-1 hover:shadow-lg transition-all duration-300 glass-card bg-slate-800 text-white border-slate-700">
             <CardHeader>
               <CardTitle>Recent Lessons</CardTitle>
             </CardHeader>
@@ -407,7 +356,7 @@ const Dashboard = () => {
               {recentLessons.map((lesson) => (
                 <div 
                   key={lesson.id} 
-                  className="space-y-2 p-2 rounded-md hover:bg-gray-50 cursor-pointer transition-all duration-200"
+                  className="space-y-2 p-2 rounded-md hover:bg-slate-700 cursor-pointer transition-all duration-200"
                   onClick={() => handleLessonClick(lesson.title)}
                 >
                   <div className="flex justify-between text-sm">
@@ -416,8 +365,8 @@ const Dashboard = () => {
                       {lesson.category}
                     </span>
                   </div>
-                  <Progress value={lesson.progress} className="h-2" />
-                  <div className="text-xs text-muted-foreground">
+                  <Progress value={lesson.progress} className="h-2 bg-slate-700" />
+                  <div className="text-xs text-slate-400">
                     {lesson.progress}% completed
                   </div>
                 </div>
@@ -425,7 +374,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="col-span-1 hover:shadow-lg transition-all duration-300 glass-card">
+          <Card className="col-span-1 hover:shadow-lg transition-all duration-300 glass-card bg-slate-800 text-white border-slate-700">
             <CardHeader>
               <CardTitle>Trading Performance</CardTitle>
             </CardHeader>
@@ -435,52 +384,35 @@ const Dashboard = () => {
                   data={tradePerformance}
                   className={`${animatedChart ? 'animate-fade-in' : 'opacity-50'}`}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip contentStyle={{ background: "#fff", border: "1px solid #ddd" }} />
-                  <Bar dataKey="profit" fill="#1C7C54" />
-                  <Bar dataKey="loss" fill="#D64045" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="name" stroke="#9ca3af" />
+                  <YAxis stroke="#9ca3af" />
+                  <Tooltip contentStyle={{ background: "#1e293b", border: "1px solid #475569", color: "#e2e8f0" }} />
+                  <Bar dataKey="profit" fill="#10B981" />
+                  <Bar dataKey="loss" fill="#EF4444" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
           
-          {/* Quick Actions Card */}
-          <Card className="col-span-1 hover:shadow-lg transition-all duration-300 glass-card">
+          <Card className="col-span-1 hover:shadow-lg transition-all duration-300 glass-card bg-slate-800 text-white border-slate-700">
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+              <CardTitle>Financial Tips</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button 
-                className="w-full flex items-center justify-between bg-finance-accent hover:bg-green-700"
-                onClick={() => { window.location.href = '/withdraw'; }}
-              >
-                <span>Withdraw Funds</span>
-                <Wallet className="h-4 w-4" />
-              </Button>
+              <div className="p-3 bg-amber-900/30 border border-amber-800/30 rounded-md">
+                <h4 className="font-medium text-amber-300">Investment Tip</h4>
+                <p className="text-xs text-amber-200 mt-1">Consistently allocating even small amounts to investments can lead to significant growth over time due to compound interest.</p>
+              </div>
               
-              <Button 
-                className="w-full flex items-center justify-between" 
-                variant="outline"
-                onClick={() => { window.location.href = '/transactions'; }}
-              >
-                <span>Transaction History</span>
-                <FileText className="h-4 w-4" />
-              </Button>
+              <div className="p-3 bg-blue-900/30 border border-blue-800/30 rounded-md">
+                <h4 className="font-medium text-blue-300">Trading Strategy</h4>
+                <p className="text-xs text-blue-200 mt-1">Consider dollar-cost averaging instead of trying to time the market. Regular investments can help mitigate market volatility.</p>
+              </div>
               
-              <Button 
-                className="w-full flex items-center justify-between" 
-                variant="outline"
-                onClick={() => toast.info("Deposit Funds", { description: "Opening deposit funds page" })}
-              >
-                <span>Deposit Funds</span>
-                <ArrowUp className="h-4 w-4" />
-              </Button>
-              
-              <div className="p-3 bg-amber-50 border border-amber-100 rounded-md animate-pulse-gentle">
-                <h4 className="font-medium text-amber-800">Financial Tip</h4>
-                <p className="text-xs text-amber-700 mt-1">Consistently allocating even small amounts to investments can lead to significant growth over time due to compound interest.</p>
+              <div className="p-3 bg-green-900/30 border border-green-800/30 rounded-md">
+                <h4 className="font-medium text-green-300">Savings Advice</h4>
+                <p className="text-xs text-green-200 mt-1">Aim to save at least 20% of your income each month. Automating these transfers can help ensure consistency.</p>
               </div>
             </CardContent>
           </Card>
@@ -493,13 +425,13 @@ const Dashboard = () => {
 function getCategoryColor(category: string) {
   switch (category) {
     case "Investing":
-      return "bg-blue-100 text-blue-800";
+      return "bg-blue-900 text-blue-300";
     case "Budgeting":
-      return "bg-green-100 text-green-800";
+      return "bg-green-900 text-green-300";
     case "Savings":
-      return "bg-purple-100 text-purple-800";
+      return "bg-purple-900 text-purple-300";
     default:
-      return "bg-gray-100 text-gray-800";
+      return "bg-slate-700 text-slate-300";
   }
 }
 
