@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { TrendingUp, Search, ArrowRight, LineChart, BarChart, DollarSign } from "lucide-react";
+import { TrendingUp, Search, ArrowRight, LineChart, BarChart, DollarSign, ArrowUp, Wallet } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TradeEducation from './TradeEducation';
