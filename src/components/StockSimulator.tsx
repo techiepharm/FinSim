@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -45,8 +46,8 @@ const generateStockData = (symbol, basePrice) => {
   return data;
 };
 
-// Stock definitions
-const stocks = [
+// Initial stock definitions with proper typing
+const initialStocks = [
   { symbol: 'AAPL', name: 'Apple Inc.', price: 178.72, change: 1.25, industry: 'Technology' },
   { symbol: 'MSFT', name: 'Microsoft Corporation', price: 338.47, change: -0.38, industry: 'Technology' },
   { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 134.99, change: 0.73, industry: 'Technology' },
@@ -59,11 +60,21 @@ const stocks = [
   { symbol: 'DIS', name: 'The Walt Disney Company', price: 112.73, change: 1.85, industry: 'Entertainment' },
   { symbol: 'HD', name: 'Home Depot Inc.', price: 372.11, change: -1.05, industry: 'Retail' },
   { symbol: 'MRK', name: 'Merck & Co., Inc.', price: 114.29, change: 0.21, industry: 'Healthcare' },
-].map(stock => ({
-  ...stock,
-  data: generateStockData(stock.symbol, stock.price),
-  currentPrice: stock.price
-}));
+];
+
+// Function to update stock price with realistic movement
+const updateStockPrice = (stock) => {
+  const volatility = 0.02; // 2% volatility
+  const randomChange = (Math.random() - 0.5) * volatility;
+  const newPrice = stock.currentPrice * (1 + randomChange);
+  const priceChange = ((newPrice - stock.price) / stock.price) * 100;
+  
+  return {
+    ...stock,
+    currentPrice: Math.max(0.01, parseFloat(newPrice.toFixed(2))),
+    change: parseFloat(priceChange.toFixed(2))
+  };
+};
 
 // Function to save transaction to local storage
 const saveTransaction = (transaction) => {
@@ -173,7 +184,29 @@ const StockSimulator = () => {
   const [receipt, setReceipt] = useState(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [marketAnalysis, setMarketAnalysis] = useState(false);
+  const [stocks, setStocks] = useState([]);
   const { toast } = useToast();
+  
+  // Initialize stocks with current prices and data
+  useEffect(() => {
+    const initializedStocks = initialStocks.map(stock => ({
+      ...stock,
+      data: generateStockData(stock.symbol, stock.price),
+      currentPrice: stock.price
+    }));
+    setStocks(initializedStocks);
+  }, []);
+  
+  // Update stock prices every 3 seconds for realistic movement
+  useEffect(() => {
+    if (stocks.length === 0) return;
+    
+    const interval = setInterval(() => {
+      setStocks(prevStocks => prevStocks.map(updateStockPrice));
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, [stocks.length]);
   
   // Load portfolio on mount
   useEffect(() => {
@@ -349,8 +382,8 @@ const StockSimulator = () => {
   // Market analysis data
   const getMarketAnalysis = () => {
     // Calculate index performance
-    const gainers = stocks.filter(s => s.change > 0);
-    const losers = stocks.filter(s => s.change < 0);
+    const gainers = stocks.filter(s => Number(s.change) > 0);
+    const losers = stocks.filter(s => Number(s.change) < 0);
     
     const strongestSector = "Technology";
     const weakestSector = "Healthcare";
@@ -423,7 +456,7 @@ const StockSimulator = () => {
                       <div className="text-white font-medium">${stock.currentPrice.toFixed(2)}</div>
                       <div className={`text-xs flex items-center ${Number(stock.change) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                         {Number(stock.change) >= 0 ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <ArrowDownRight className="h-3 w-3 mr-1" />}
-                        {Number(stock.change) >= 0 ? '+' : ''}{stock.change.toFixed(2)}%
+                        {Number(stock.change) >= 0 ? '+' : ''}{Number(stock.change).toFixed(2)}%
                       </div>
                     </div>
                     <Button 
@@ -471,7 +504,7 @@ const StockSimulator = () => {
                   <div className="text-2xl font-bold text-white">${selectedStock.currentPrice.toFixed(2)}</div>
                   <div className={`flex items-center ${Number(selectedStock.change) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {Number(selectedStock.change) >= 0 ? <TrendingUp className="mr-1 h-4 w-4" /> : <TrendingDown className="mr-1 h-4 w-4" />}
-                    {Number(selectedStock.change) >= 0 ? '+' : ''}{selectedStock.change.toFixed(2)}%
+                    {Number(selectedStock.change) >= 0 ? '+' : ''}{Number(selectedStock.change).toFixed(2)}%
                   </div>
                 </div>
                 
@@ -831,7 +864,7 @@ const StockSimulator = () => {
                     <div className="text-right">
                       <div className="text-white">${stock.currentPrice.toFixed(2)}</div>
                       <div className={`text-sm ${Number(stock.change) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {Number(stock.change) >= 0 ? '+' : ''}{stock.change.toFixed(2)}%
+                        {Number(stock.change) >= 0 ? '+' : ''}{Number(stock.change).toFixed(2)}%
                       </div>
                     </div>
                   </div>
