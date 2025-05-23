@@ -469,9 +469,9 @@ const StockSimulator = () => {
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div className="text-2xl font-bold text-white">${selectedStock.currentPrice.toFixed(2)}</div>
-                  <div className={`flex items-center ${selectedStock.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {selectedStock.change >= 0 ? <TrendingUp className="mr-1 h-4 w-4" /> : <TrendingDown className="mr-1 h-4 w-4" />}
-                    {selectedStock.change >= 0 ? '+' : ''}{selectedStock.change.toFixed(2)}%
+                  <div className={`flex items-center ${Number(selectedStock.change) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {Number(selectedStock.change) >= 0 ? <TrendingUp className="mr-1 h-4 w-4" /> : <TrendingDown className="mr-1 h-4 w-4" />}
+                    {Number(selectedStock.change) >= 0 ? '+' : ''}{selectedStock.change.toFixed(2)}%
                   </div>
                 </div>
                 
