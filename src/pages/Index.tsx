@@ -1,5 +1,6 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Header from "@/components/Header";
 import Dashboard from "@/components/Dashboard";
 import LearningCenter from "@/components/LearningCenter";
@@ -19,9 +20,16 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 
-const Index = () => {
-  const [activePage, setActivePage] = useState('dashboard');
-  const [showFinancialBot, setShowFinancialBot] = useState(false);
+const Index = ({ activePage: initialPage = 'dashboard' }) => {
+  const location = useLocation();
+  const [activePage, setActivePage] = useState(initialPage);
+  
+  useEffect(() => {
+    // If the URL is /trading, set the active page to 'trading'
+    if (location.pathname === '/trading') {
+      setActivePage('trading');
+    }
+  }, [location.pathname]);
   
   // Map of page IDs to components
   const pageComponents = {
@@ -46,7 +54,6 @@ const Index = () => {
           <DrawerTrigger asChild>
             <Button 
               className="fixed bottom-4 right-4 rounded-full w-14 h-14 bg-green-600 hover:bg-green-700 shadow-lg flex items-center justify-center"
-              onClick={() => setShowFinancialBot(true)}
             >
               <Bot size={28} />
             </Button>

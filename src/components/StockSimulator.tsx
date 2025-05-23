@@ -1,915 +1,852 @@
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { TrendingUp, Search, ArrowRight, LineChart, BarChart, DollarSign, ArrowUp, Wallet } from "lucide-react";
-import { toast } from "@/components/ui/sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import TradeEducation from './TradeEducation';
-import { Link } from "react-router-dom";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { TrendingUp, TrendingDown, AlertCircle, PieChart, Search, ArrowRight, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
   DialogTitle,
-  DialogFooter,
+  DialogFooter
 } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/use-toast";
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from "@/components/ui/popover";
 
-// Financial quotes to display after trading
-const FINANCIAL_QUOTES = [
-  "The stock market is filled with individuals who know the price of everything, but the value of nothing.",
-  "In investing, what is comfortable is rarely profitable.",
-  "The individual investor should act consistently as an investor and not as a speculator.",
-  "The four most dangerous words in investing are: 'This time it's different.'",
-  "The best investment you can make is in yourself.",
-  "Risk comes from not knowing what you're doing.",
-  "The most important quality for an investor is temperament, not intellect.",
-  "I will tell you how to become rich. Close the doors. Be fearful when others are greedy. Be greedy when others are fearful.",
-];
+// Generate realistic looking but fake stock data
+const generateStockData = (symbol, basePrice) => {
+  const data = [];
+  let price = basePrice;
+  const now = new Date();
+  
+  for (let i = 30; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(now.getDate() - i);
+    
+    // Random price change within a reasonable range
+    const change = (Math.random() - 0.48) * (basePrice * 0.03);
+    price += change;
+    if (price < basePrice * 0.7) price = basePrice * 0.7;
+    if (price > basePrice * 1.3) price = basePrice * 1.3;
+    
+    data.push({
+      date: date.toLocaleDateString(),
+      price: parseFloat(price.toFixed(2)),
+    });
+  }
+  
+  return data;
+};
 
-// Simple stock analysis descriptions in plain language
-const STOCK_ANALYSES = {
-  "AAPL": {
-    trend: "rising",
-    sentiment: "positive",
-    riskLevel: "moderate",
-    description: "Apple stock looks pretty good right now. Their new products are selling well, and people seem excited about what's coming next. The company has lots of cash, which gives them a safety cushion if things get tough.",
-    recommendation: "This could be a good time to buy if you're looking for a stable company with growth potential."
-  },
-  "MSFT": {
-    trend: "stable",
-    sentiment: "positive",
-    riskLevel: "low",
-    description: "Microsoft is a steady performer. Their cloud services are growing, and they have reliable income from software subscriptions. They're not the most exciting stock, but they're dependable.",
-    recommendation: "This is a solid choice if you want something reliable in your portfolio."
-  },
-  "GOOGL": {
-    trend: "rising",
-    sentiment: "positive",
-    riskLevel: "moderate",
-    description: "Google continues to dominate online advertising. They're investing heavily in AI, which could pay off big in the future. Some regulatory concerns exist, but the company is still growing steadily.",
-    recommendation: "Consider buying if you believe in their long-term AI strategy and aren't worried about potential regulations."
-  },
-  "AMZN": {
-    trend: "volatile",
-    sentiment: "mixed",
-    riskLevel: "moderate",
-    description: "Amazon has been up and down lately. Their e-commerce business faces competition, but AWS cloud services continue to grow strongly. They're spending a lot on new initiatives, which might hurt profits in the short term.",
-    recommendation: "This could be good for long-term growth, but expect some bumps along the way."
-  },
-  "META": {
-    trend: "volatile",
-    sentiment: "mixed",
-    riskLevel: "high",
-    description: "Meta (Facebook) is making big bets on the metaverse, which is risky. Their core social media business still makes money, but user growth is slowing and there are privacy concerns.",
-    recommendation: "This is a higher risk option - might be worth a small position if you believe in their vision."
-  },
-  "TSLA": {
-    trend: "volatile",
-    sentiment: "mixed",
-    riskLevel: "very high",
-    description: "Tesla stock tends to swing wildly based on what Elon Musk says or does. The company is growing and leading in electric vehicles, but competition is increasing and the stock price already assumes a lot of future success.",
-    recommendation: "Only invest what you can afford to lose - this stock can go up or down dramatically."
-  },
-  "NVDA": {
-    trend: "strongly rising",
-    sentiment: "very positive",
-    riskLevel: "moderate",
-    description: "NVIDIA is booming due to AI demand for their chips. They're the leader in GPUs needed for AI training. The stock has gone up a lot already, which raises questions about how much growth is already priced in.",
-    recommendation: "Strong growth potential, but consider buying in smaller amounts over time rather than all at once."
+// Stock definitions
+const stocks = [
+  { symbol: 'AAPL', name: 'Apple Inc.', price: 178.72, change: 1.25, industry: 'Technology' },
+  { symbol: 'MSFT', name: 'Microsoft Corporation', price: 338.47, change: -0.38, industry: 'Technology' },
+  { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 134.99, change: 0.73, industry: 'Technology' },
+  { symbol: 'AMZN', name: 'Amazon.com Inc.', price: 178.29, change: 2.14, industry: 'E-Commerce' },
+  { symbol: 'TSLA', name: 'Tesla, Inc.', price: 237.49, change: -3.25, industry: 'Automotive' },
+  { symbol: 'JPM', name: 'JPMorgan Chase & Co.', price: 192.70, change: 0.45, industry: 'Financial Services' },
+  { symbol: 'JNJ', name: 'Johnson & Johnson', price: 152.36, change: -0.68, industry: 'Healthcare' },
+  { symbol: 'V', name: 'Visa Inc.', price: 272.46, change: 1.02, industry: 'Financial Services' },
+  { symbol: 'PG', name: 'Procter & Gamble Co.', price: 162.95, change: 0.32, industry: 'Consumer Goods' },
+  { symbol: 'DIS', name: 'The Walt Disney Company', price: 112.73, change: 1.85, industry: 'Entertainment' },
+  { symbol: 'HD', name: 'Home Depot Inc.', price: 372.11, change: -1.05, industry: 'Retail' },
+  { symbol: 'MRK', name: 'Merck & Co., Inc.', price: 114.29, change: 0.21, industry: 'Healthcare' },
+].map(stock => ({
+  ...stock,
+  data: generateStockData(stock.symbol, stock.price),
+  currentPrice: stock.price
+}));
+
+// Function to save transaction to local storage
+const saveTransaction = (transaction) => {
+  try {
+    // Get existing transactions or initialize empty array
+    const existingTransactionsJson = localStorage.getItem('transactions');
+    const existingTransactions = existingTransactionsJson 
+      ? JSON.parse(existingTransactionsJson) 
+      : [];
+    
+    // Add new transaction with ID
+    const newTransaction = {
+      ...transaction,
+      id: Date.now(),
+      date: new Date().toISOString()
+    };
+    
+    const updatedTransactions = [newTransaction, ...existingTransactions];
+    
+    // Save back to localStorage
+    localStorage.setItem('transactions', JSON.stringify(updatedTransactions));
+    
+    return newTransaction;
+  } catch (e) {
+    console.error("Error saving transaction:", e);
+    return null;
   }
 };
 
-const StockSimulator = () => {
-  const [currentStep, setCurrentStep] = useState("market-selection");
-  const [searchQuery, setSearchQuery] = useState('');
-  const [tradeAmount, setTradeAmount] = useState(0);
-  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
-  const [selectedStock, setSelectedStock] = useState(null);
-  const [showQuoteDialog, setShowQuoteDialog] = useState(false);
-  const [tradeQuote, setTradeQuote] = useState("");
-  const [showReceiptDialog, setShowReceiptDialog] = useState(false);
-  const [currentReceipt, setCurrentReceipt] = useState(null);
-  const [showAddFundsDialog, setShowAddFundsDialog] = useState(false);
-  const [addFundsAmount, setAddFundsAmount] = useState(100);
-  
-  // Get stored data from localStorage
-  const getStoredData = (key, defaultValue) => {
-    try {
-      const stored = localStorage.getItem(key);
-      return stored ? JSON.parse(stored) : defaultValue;
-    } catch (e) {
-      console.error(`Error reading ${key}:`, e);
-      return defaultValue;
-    }
-  };
-  
-  // Set stored data to localStorage
-  const setStoredData = (key, value) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (e) {
-      console.error(`Error saving ${key}:`, e);
-    }
-  };
-  
-  // Portfolio and balance state
-  const [availableBalance, setAvailableBalance] = useState(() => 
-    getStoredData('availableBalance', 12589.75)
-  );
-  
-  const [transactions, setTransactions] = useState(() => 
-    getStoredData('transactions', [])
-  );
-  
-  const [portfolio, setPortfolio] = useState(() => 
-    getStoredData('portfolio', {
-      cash: 12589.75,
-      invested: 0,
-      holdings: []
-    })
-  );
-  
-  // Save data when it changes
-  useEffect(() => {
-    setStoredData('availableBalance', availableBalance);
-    setStoredData('transactions', transactions);
-    setStoredData('portfolio', portfolio);
-  }, [availableBalance, transactions, portfolio]);
-  
-  // Mock stock data
-  const stocks = [
-    { symbol: "AAPL", name: "Apple Inc.", price: 182.63, change: 1.25 },
-    { symbol: "MSFT", name: "Microsoft Corporation", price: 334.78, change: -0.52 },
-    { symbol: "GOOGL", name: "Alphabet Inc.", price: 131.42, change: 0.87 },
-    { symbol: "AMZN", name: "Amazon.com Inc.", price: 178.12, change: 2.13 },
-    { symbol: "META", name: "Meta Platforms Inc.", price: 465.20, change: -1.45 },
-    { symbol: "TSLA", name: "Tesla Inc.", price: 175.34, change: 3.21 },
-    { symbol: "NVDA", name: "NVIDIA Corporation", price: 924.79, change: 5.63 }
-  ];
-  
-  // Generate a random quote
-  const getRandomQuote = () => {
-    return FINANCIAL_QUOTES[Math.floor(Math.random() * FINANCIAL_QUOTES.length)];
-  };
-  
-  // Generate transaction ID
-  const generateTransactionId = () => {
-    return `TX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-  };
-  
-  // Update user's portfolio after a trade
-  const updatePortfolio = (symbol, type, amount, price) => {
-    const newPortfolio = {...portfolio};
-    const shares = amount / price;
+// Function to update portfolio in local storage
+const updatePortfolio = (symbol, shares, price, isBuying) => {
+  try {
+    // Get existing portfolio or initialize
+    const existingPortfolioJson = localStorage.getItem('portfolio');
+    const existingPortfolio = existingPortfolioJson 
+      ? JSON.parse(existingPortfolioJson) 
+      : { cash: 1000, holdings: [] };
     
-    if (type === "BUY") {
-      // Subtract from cash
-      newPortfolio.cash -= amount;
-      newPortfolio.invested += amount;
-      
-      // Update holdings
-      const existingPosition = newPortfolio.holdings.find(h => h.symbol === symbol);
-      if (existingPosition) {
-        // Update existing position
-        const totalShares = existingPosition.shares + shares;
-        const totalCost = (existingPosition.shares * existingPosition.avgPrice) + amount;
-        existingPosition.shares = totalShares;
-        existingPosition.avgPrice = totalCost / totalShares;
-        existingPosition.currentPrice = price;
+    // Calculate transaction amount
+    const transactionAmount = shares * price;
+    
+    // Update cash
+    if (isBuying) {
+      existingPortfolio.cash -= transactionAmount;
+    } else {
+      existingPortfolio.cash += transactionAmount;
+    }
+    
+    // Find if stock already exists in holdings
+    const holdingIndex = existingPortfolio.holdings.findIndex(h => h.symbol === symbol);
+    
+    if (holdingIndex >= 0) {
+      // Update existing holding
+      if (isBuying) {
+        existingPortfolio.holdings[holdingIndex].shares += shares;
+        existingPortfolio.holdings[holdingIndex].averagePrice = 
+          ((existingPortfolio.holdings[holdingIndex].averagePrice * (existingPortfolio.holdings[holdingIndex].shares - shares)) 
+            + (price * shares)) / existingPortfolio.holdings[holdingIndex].shares;
       } else {
-        // Add new position
-        newPortfolio.holdings.push({
-          symbol,
-          shares,
-          avgPrice: price,
-          currentPrice: price
-        });
-      }
-    } else if (type === "SELL") {
-      // Add to cash
-      newPortfolio.cash += amount;
-      
-      // Find position
-      const existingPosition = newPortfolio.holdings.find(h => h.symbol === symbol);
-      if (existingPosition) {
-        existingPosition.shares -= shares;
+        existingPortfolio.holdings[holdingIndex].shares -= shares;
         
-        // If no shares left, remove from holdings
-        if (existingPosition.shares <= 0) {
-          newPortfolio.holdings = newPortfolio.holdings.filter(h => h.symbol !== symbol);
+        // If all shares sold, remove from holdings
+        if (existingPortfolio.holdings[holdingIndex].shares <= 0) {
+          existingPortfolio.holdings.splice(holdingIndex, 1);
         }
-        
-        // Adjust invested amount
-        newPortfolio.invested -= amount;
-        if (newPortfolio.invested < 0) newPortfolio.invested = 0;
       }
+    } else if (isBuying) {
+      // Add new holding if buying
+      existingPortfolio.holdings.push({
+        symbol,
+        shares,
+        averagePrice: price
+      });
     }
     
-    setPortfolio(newPortfolio);
-    setAvailableBalance(newPortfolio.cash);
+    // Save updated portfolio
+    localStorage.setItem('portfolio', JSON.stringify(existingPortfolio));
+    
+    return existingPortfolio;
+  } catch (e) {
+    console.error("Error updating portfolio:", e);
+    return null;
+  }
+};
+
+// Generate receipt
+const generateReceipt = (transaction) => {
+  return {
+    transactionId: transaction.id,
+    date: new Date(transaction.date).toLocaleString(),
+    type: transaction.type,
+    symbol: transaction.symbol,
+    shares: transaction.shares,
+    price: transaction.price,
+    total: Math.abs(transaction.amount),
+    fee: 0.00
   };
+};
+
+// Main component
+const StockSimulator = () => {
+  const [selectedStock, setSelectedStock] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [portfolio, setPortfolio] = useState({ cash: 1000, holdings: [] });
+  const [shares, setShares] = useState(1);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receipt, setReceipt] = useState(null);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [marketAnalysis, setMarketAnalysis] = useState(false);
+  const { toast } = useToast();
+  
+  // Load portfolio on mount
+  useEffect(() => {
+    try {
+      const portfolioData = localStorage.getItem('portfolio');
+      if (portfolioData) {
+        setPortfolio(JSON.parse(portfolioData));
+      }
+    } catch (e) {
+      console.error("Error loading portfolio:", e);
+    }
+    
+    // Show stock recommendation notification
+    const timeout = setTimeout(() => {
+      toast({
+        title: "Stock Alert",
+        description: "AAPL is showing strong momentum with positive earnings. Consider adding to your portfolio.",
+        duration: 8000,
+      });
+    }, 15000);
+    
+    return () => clearTimeout(timeout);
+  }, [toast]);
   
   const filteredStocks = stocks.filter(stock => 
-    stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    stock.name.toLowerCase().includes(searchQuery.toLowerCase())
+    stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    stock.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  const handleStockSelect = (stock) => {
+  const handleBuy = () => {
+    const stock = selectedStock;
+    const totalCost = stock.currentPrice * shares;
+    
+    // Check if user has enough cash
+    if (portfolio.cash < totalCost) {
+      toast({
+        title: "Insufficient Funds",
+        description: `You need $${totalCost.toFixed(2)} but only have $${portfolio.cash.toFixed(2)}`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Process transaction
+    const transaction = {
+      type: 'BUY',
+      symbol: stock.symbol,
+      shares,
+      price: stock.currentPrice,
+      amount: -totalCost
+    };
+    
+    const savedTransaction = saveTransaction(transaction);
+    const updatedPortfolio = updatePortfolio(stock.symbol, shares, stock.currentPrice, true);
+    
+    if (updatedPortfolio) {
+      setPortfolio(updatedPortfolio);
+      
+      // Generate receipt and show it
+      const newReceipt = generateReceipt(savedTransaction);
+      setReceipt(newReceipt);
+      setShowReceipt(true);
+      
+      toast({
+        title: "Purchase Complete",
+        description: `Successfully bought ${shares} shares of ${stock.symbol} for $${totalCost.toFixed(2)}`,
+      });
+    }
+  };
+  
+  const handleSell = () => {
+    const stock = selectedStock;
+    
+    // Check if user owns the stock
+    const holding = portfolio.holdings.find(h => h.symbol === stock.symbol);
+    if (!holding || holding.shares < shares) {
+      toast({
+        title: "Insufficient Shares",
+        description: `You only own ${holding ? holding.shares : 0} shares of ${stock.symbol}`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Calculate sale amount
+    const saleAmount = stock.currentPrice * shares;
+    
+    // Process transaction
+    const transaction = {
+      type: 'SELL',
+      symbol: stock.symbol,
+      shares,
+      price: stock.currentPrice,
+      amount: saleAmount
+    };
+    
+    const savedTransaction = saveTransaction(transaction);
+    const updatedPortfolio = updatePortfolio(stock.symbol, shares, stock.currentPrice, false);
+    
+    if (updatedPortfolio) {
+      setPortfolio(updatedPortfolio);
+      
+      // Generate receipt and show it
+      const newReceipt = generateReceipt(savedTransaction);
+      setReceipt(newReceipt);
+      setShowReceipt(true);
+      
+      toast({
+        title: "Sale Complete",
+        description: `Successfully sold ${shares} shares of ${stock.symbol} for $${saleAmount.toFixed(2)}`,
+      });
+    }
+  };
+  
+  const showAnalyzeMarket = () => {
+    setMarketAnalysis(true);
+  };
+  
+  const showStockAnalysis = (stock) => {
     setSelectedStock(stock);
-    toast.info("Stock Selected", { description: `You selected ${stock.symbol}` });
-    setCurrentStep("asset-research");
+    setShowAnalysis(true);
   };
   
-  const handleTrade = (action, symbol) => {
-    if (tradeAmount <= 0) {
-      toast.error("Invalid Amount", { description: "Please enter a valid amount to trade" });
-      return;
+  // Analysis data
+  const getStockAnalysis = (stock) => {
+    const recentData = stock.data.slice(-10);
+    const priceChange = recentData[recentData.length - 1].price - recentData[0].price;
+    const percentChange = (priceChange / recentData[0].price) * 100;
+    
+    let recommendation, reasoning;
+    
+    if (percentChange > 5) {
+      recommendation = "Strong Buy";
+      reasoning = "The stock has shown significant momentum over the past 10 days with steady price increases.";
+    } else if (percentChange > 2) {
+      recommendation = "Buy";
+      reasoning = "The stock has positive momentum and could present a good entry point.";
+    } else if (percentChange >= -2 && percentChange <= 2) {
+      recommendation = "Hold";
+      reasoning = "The stock is stable with minimal price movement. Wait for clearer signals.";
+    } else if (percentChange > -5) {
+      recommendation = "Consider Selling";
+      reasoning = "The stock shows slight downward momentum. Monitor closely for further weakness.";
+    } else {
+      recommendation = "Sell";
+      reasoning = "The stock has shown significant weakness over the past 10 days. Consider cutting losses.";
     }
     
-    const stock = selectedStock || stocks.find(s => s.symbol === symbol);
-    
-    if (!stock) {
-      toast.error("Select a stock first", { description: "Please select a stock to trade" });
-      return;
-    }
-    
-    if (action === "Buy" && tradeAmount > availableBalance) {
-      toast.error("Insufficient funds", { description: `You only have $${availableBalance.toFixed(2)} available` });
-      return;
-    }
-    
-    // For selling, check if user has enough shares
-    if (action === "Sell") {
-      const position = portfolio.holdings.find(h => h.symbol === stock.symbol);
-      if (!position) {
-        toast.error("No shares to sell", { description: `You don't own any shares of ${stock.symbol}` });
-        return;
-      }
-      
-      const sharesValue = tradeAmount / stock.price;
-      if (position.shares < sharesValue) {
-        toast.error("Insufficient shares", { description: `You only have ${position.shares.toFixed(4)} shares of ${stock.symbol}` });
-        return;
-      }
-    }
-    
-    // Create receipt
-    const receipt = {
-      id: generateTransactionId(),
-      date: new Date(),
-      type: action.toUpperCase(),
-      symbol: stock.symbol,
-      name: stock.name,
-      price: stock.price,
-      amount: tradeAmount,
-      shares: tradeAmount / stock.price,
-      balanceBefore: availableBalance,
-      balanceAfter: action === "Buy" ? availableBalance - tradeAmount : availableBalance + tradeAmount
+    return {
+      recent: {
+        change: priceChange.toFixed(2),
+        percentChange: percentChange.toFixed(2)
+      },
+      volume: "High",
+      volatility: Math.abs(percentChange) > 5 ? "High" : Math.abs(percentChange) > 2 ? "Medium" : "Low",
+      support: (stock.currentPrice * 0.95).toFixed(2),
+      resistance: (stock.currentPrice * 1.05).toFixed(2),
+      recommendation,
+      reasoning
     };
+  };
+  
+  // Market analysis data
+  const getMarketAnalysis = () => {
+    // Calculate index performance
+    const gainers = stocks.filter(s => s.change > 0);
+    const losers = stocks.filter(s => s.change < 0);
     
-    // Record the transaction
-    const newTransaction = {
-      id: receipt.id,
-      date: receipt.date,
-      type: receipt.type,
-      symbol: stock.symbol,
-      price: stock.price,
-      amount: tradeAmount,
-      balance: action === "Buy" ? availableBalance - tradeAmount : availableBalance + tradeAmount
+    const strongestSector = "Technology";
+    const weakestSector = "Healthcare";
+    
+    return {
+      overview: "The market is showing mixed signals with tech stocks leading gains while healthcare continues to lag.",
+      momentum: "Positive",
+      gainers: gainers.length,
+      losers: losers.length,
+      strongestSector,
+      weakestSector,
+      recommendation: "Consider increasing technology sector exposure while maintaining a diversified portfolio."
     };
-    
-    setTransactions([newTransaction, ...transactions]);
-    
-    // Update portfolio
-    updatePortfolio(stock.symbol, action.toUpperCase(), tradeAmount, stock.price);
-    
-    // Set receipt for dialog
-    setCurrentReceipt(receipt);
-    setShowReceiptDialog(true);
-    
-    // Show success message
-    toast.success(`${action} Order Placed`, { 
-      description: `You ${action === 'Buy' ? 'bought' : 'sold'} $${tradeAmount} of ${stock.symbol}`
-    });
-    
-    // Show random financial quote
-    setTradeQuote(getRandomQuote());
-    
-    setCurrentStep("position-monitoring");
   };
   
-  const handleAnalyze = (symbol = null) => {
-    if (symbol) {
-      setSelectedStock(stocks.find(s => s.symbol === symbol));
-    }
-    setShowAnalysisModal(true);
-  };
-  
-  const handleAddFunds = () => {
-    setShowAddFundsDialog(true);
-  };
-  
-  const processAddFunds = () => {
-    if (addFundsAmount <= 0) {
-      toast.error("Invalid amount", { description: "Please enter a valid amount to add" });
-      return;
-    }
-    
-    // Create new transaction
-    const newTransaction = {
-      id: generateTransactionId(),
-      date: new Date(),
-      type: "DEPOSIT",
-      symbol: null,
-      price: null,
-      amount: addFundsAmount,
-      balance: availableBalance + addFundsAmount
-    };
-    
-    // Update balance
-    setAvailableBalance(prev => prev + addFundsAmount);
-    
-    // Update portfolio
-    setPortfolio(prev => ({
-      ...prev,
-      cash: prev.cash + addFundsAmount
-    }));
-    
-    // Add to transactions
-    setTransactions([newTransaction, ...transactions]);
-    
-    toast.success("Funds Added", {
-      description: `$${addFundsAmount.toFixed(2)} has been added to your account`
-    });
-    
-    setShowAddFundsDialog(false);
-  };
-
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <h2 className="text-3xl font-bold mb-6 finance-accent-gradient">Stock Market Simulator</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="col-span-1 md:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Market Overview</CardTitle>
-              <CardDescription>Search for stocks to trade</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex gap-2">
-                <div className="relative flex-grow">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search stocks..."
-                    className="pl-8"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="border rounded-md overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="text-left p-2">Symbol</th>
-                      <th className="text-left p-2">Name</th>
-                      <th className="text-right p-2">Price</th>
-                      <th className="text-right p-2">Change</th>
-                      <th className="text-center p-2">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredStocks.map((stock) => (
-                      <tr 
-                        key={stock.symbol} 
-                        className="border-t hover:bg-muted/30 cursor-pointer" 
-                        onClick={() => handleStockSelect(stock)}
-                      >
-                        <td className="p-2 font-medium">{stock.symbol}</td>
-                        <td className="p-2">{stock.name}</td>
-                        <td className="p-2 text-right">${stock.price}</td>
-                        <td className={`p-2 text-right ${stock.change >= 0 ? "text-green-600" : "text-red-600"}`}>
-                          {stock.change >= 0 ? `+${stock.change}%` : `${stock.change}%`}
-                        </td>
-                        <td className="p-2 flex justify-center gap-1" onClick={(e) => e.stopPropagation()}>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => handleStockSelect(stock)}
-                            className="text-xs"
-                          >
-                            Select
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Trading Dashboard</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="trade">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="trade">Trade</TabsTrigger>
-                  <TabsTrigger value="chart">Charts</TabsTrigger>
-                  <TabsTrigger value="news">News</TabsTrigger>
-                </TabsList>
-                <TabsContent value="trade" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div>
-                      <Label htmlFor="trade-amount">Amount ($)</Label>
-                      <div className="flex mt-1">
-                        <span className="inline-flex items-center px-3 bg-muted border border-r-0 border-input rounded-l-md">
-                          <DollarSign className="h-4 w-4" />
-                        </span>
-                        <Input
-                          id="trade-amount"
-                          type="number"
-                          value={tradeAmount || ''}
-                          onChange={(e) => setTradeAmount(Number(e.target.value))}
-                          className="rounded-l-none"
-                          placeholder="Enter amount"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-end gap-2">
-                      <Button 
-                        onClick={() => handleTrade("Buy", selectedStock ? selectedStock.symbol : null)}
-                        className="flex-1 bg-green-600 hover:bg-green-700"
-                        disabled={!selectedStock}
-                      >
-                        Buy
-                      </Button>
-                      <Button 
-                        onClick={() => handleTrade("Sell", selectedStock ? selectedStock.symbol : null)}
-                        variant="destructive"
-                        className="flex-1"
-                        disabled={!selectedStock}
-                      >
-                        Sell
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="mt-8">
-                    <h3 className="font-medium mb-2">Selected Stock Details</h3>
-                    {selectedStock ? (
-                      <div className="p-4 bg-muted/30 rounded-md">
-                        <div className="flex justify-between mb-2">
-                          <div>
-                            <p className="font-medium text-lg">{selectedStock.symbol}</p>
-                            <p className="text-muted-foreground">{selectedStock.name}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium text-lg">${selectedStock.price}</p>
-                            <p className={selectedStock.change >= 0 ? "text-green-600" : "text-red-600"}>
-                              {selectedStock.change >= 0 ? "+" : ""}{selectedStock.change}%
-                            </p>
-                          </div>
-                        </div>
-                        <Button 
-                          className="w-full mt-2 bg-finance-primary"
-                          onClick={() => handleAnalyze(selectedStock.symbol)}
-                        >
-                          <TrendingUp className="h-4 w-4 mr-2" />
-                          Analyze This Stock
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="p-4 bg-muted/30 rounded-md">
-                        <p className="text-muted-foreground text-sm">Select a stock to see details</p>
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-                <TabsContent value="chart">
-                  <div className="flex justify-center items-center h-64 bg-muted/30 rounded-md">
-                    <div className="text-center space-y-2">
-                      <LineChart className="h-12 w-12 text-muted-foreground mx-auto" />
-                      <p className="text-muted-foreground">Select a stock to view chart data</p>
-                    </div>
-                  </div>
-                </TabsContent>
-                <TabsContent value="news">
-                  <div className="space-y-2 mt-4">
-                    <Card className="border-0 shadow-none hover:bg-muted/30 cursor-pointer">
-                      <CardContent className="p-3 flex items-center gap-3">
-                        <ArrowRight className="h-4 w-4 flex-shrink-0" />
-                        <p className="text-sm">Market opens higher on tech stock gains</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-0 shadow-none hover:bg-muted/30 cursor-pointer">
-                      <CardContent className="p-3 flex items-center gap-3">
-                        <ArrowRight className="h-4 w-4 flex-shrink-0" />
-                        <p className="text-sm">Federal Reserve signals potential rate cut</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-0 shadow-none hover:bg-muted/30 cursor-pointer">
-                      <CardContent className="p-3 flex items-center gap-3">
-                        <ArrowRight className="h-4 w-4 flex-shrink-0" />
-                        <p className="text-sm">Earnings season shows strong corporate growth</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+    <div className="container mx-auto p-6">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+        <div>
+          <h2 className="text-3xl font-bold text-white">Stock Trading Simulator</h2>
+          <p className="text-slate-400">Practice trading with $1,000 in virtual cash</p>
         </div>
         
-        <div className="col-span-1 space-y-6">
-          <Card gradient="light">
-            <CardHeader>
-              <CardTitle>Trading Education</CardTitle>
-              <CardDescription>Learn as you trade</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <TradeEducation 
-                currentStep={currentStep}
-                onAnalyze={() => {}}
-              />
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Portfolio Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Available Cash</span>
-                  <span className="font-medium">${portfolio.cash.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Invested Amount</span>
-                  <span className="font-medium">${portfolio.invested.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total Profit/Loss</span>
-                  <span className={portfolio.invested > 0 ? "text-green-600 font-medium" : "font-medium"}>
-                    {portfolio.invested > 0 ? "+$742.15 (13.7%)" : "$0.00 (0%)"}
-                  </span>
-                </div>
-                <div className="flex justify-center mt-4 gap-2">
-                  <Button 
-                    onClick={() => window.location.href = '/withdraw'}
-                    className="flex items-center gap-2"
-                  >
-                    <Wallet className="h-4 w-4" />
-                    <span>Withdraw</span>
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={handleAddFunds}
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowUp className="h-4 w-4" />
-                    <span>Add Funds</span>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Trades</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {transactions.length > 0 ? (
-                <>
-                  {transactions.slice(0, 3).map((transaction, index) => (
-                    <div key={transaction.id || index} className="border-b pb-2">
-                      <div className="flex justify-between">
-                        <div>
-                          <span className="font-medium">{transaction.symbol || 'Cash'}</span>
-                          <span className={`ml-2 text-xs ${
-                            transaction.type === "BUY" 
-                              ? "bg-green-100 text-green-800" 
-                              : transaction.type === "SELL"
-                                ? "bg-red-100 text-red-800"
-                                : transaction.type === "DEPOSIT"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-amber-100 text-amber-800"
-                          } px-2 py-0.5 rounded-full`}>
-                            {transaction.type}
-                          </span>
-                        </div>
-                        <span>${transaction.amount?.toFixed(2)}</span>
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(transaction.date).toLocaleString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          hour12: true
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </>
-              ) : (
-                <div className="text-center text-muted-foreground py-4">
-                  No transactions yet
-                </div>
-              )}
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => { window.location.href = '/transactions'; }}
-              >
-                View All Transactions
-              </Button>
-            </CardContent>
-          </Card>
+        <div className="flex space-x-4 mt-4 md:mt-0">
+          <Button 
+            className="bg-slate-700 hover:bg-slate-600" 
+            onClick={showAnalyzeMarket}
+          >
+            <PieChart className="mr-2 h-4 w-4" />
+            Analyze Market
+          </Button>
+          <Button className="bg-green-600 hover:bg-green-700" onClick={() => window.location.href = '/portfolio'}>
+            <PieChart className="mr-2 h-4 w-4" />
+            View Portfolio
+          </Button>
         </div>
       </div>
       
-      {/* Stock Analysis Dialog */}
-      <Dialog open={showAnalysisModal} onOpenChange={setShowAnalysisModal}>
-        <DialogContent className="sm:max-w-[625px]">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedStock ? `${selectedStock.name} (${selectedStock.symbol}) Analysis` : 'Market Analysis'}
-            </DialogTitle>
-            <DialogDescription>
-              {selectedStock 
-                ? `Current price: $${selectedStock.price} (${selectedStock.change >= 0 ? '+' : ''}${selectedStock.change}%)`
-                : 'Current market trends and technical indicators'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-6">
-            {selectedStock && STOCK_ANALYSES[selectedStock.symbol] ? (
-              <>
-                <div className="space-y-2">
-                  <h4 className="font-medium">What's happening with this stock?</h4>
-                  <p className="text-sm">{STOCK_ANALYSES[selectedStock.symbol].description}</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <h4 className="font-medium">Current Sentiment</h4>
-                  <div className="h-6 w-full bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full ${
-                        STOCK_ANALYSES[selectedStock.symbol].sentiment === "very positive"
-                          ? "bg-gradient-to-r from-green-400 to-green-600 w-[85%]" 
-                          : STOCK_ANALYSES[selectedStock.symbol].sentiment === "positive"
-                            ? "bg-gradient-to-r from-green-300 to-green-500 w-[65%]"
-                            : STOCK_ANALYSES[selectedStock.symbol].sentiment === "mixed"
-                              ? "bg-gradient-to-r from-yellow-300 to-yellow-500 w-[50%]"
-                              : "bg-gradient-to-r from-red-300 to-red-500 w-[25%]"
-                      }`}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Bearish</span>
-                    <span>Neutral</span>
-                    <span>Bullish</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <h4 className="font-medium">Risk Level</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 bg-muted/30 rounded-md">
-                      <div className="text-sm text-muted-foreground">Volatility</div>
-                      <div className="font-medium">
-                        {STOCK_ANALYSES[selectedStock.symbol].trend === "volatile" || 
-                         STOCK_ANALYSES[selectedStock.symbol].trend === "strongly rising" ? "High" : "Moderate"}
-                      </div>
-                    </div>
-                    <div className="p-3 bg-muted/30 rounded-md">
-                      <div className="text-sm text-muted-foreground">Overall Risk</div>
-                      <div className="font-medium capitalize">
-                        {STOCK_ANALYSES[selectedStock.symbol].riskLevel}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium mb-2">What should you do?</h4>
-                  <p className="text-sm">{STOCK_ANALYSES[selectedStock.symbol].recommendation}</p>
-                </div>
-              </>
-            ) : (
-              <div className="text-center p-6">
-                <p className="text-muted-foreground">Analysis not available for this stock.</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="md:col-span-2 bg-slate-800 border-slate-700">
+          <CardHeader className="pb-2">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-white">Stock Market</CardTitle>
+              <div className="relative w-64">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-500" />
+                <Input 
+                  placeholder="Search stocks..."
+                  className="pl-8 bg-slate-700 border-slate-600 text-white"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Trade Quote Dialog */}
-      <Dialog open={showQuoteDialog} onOpenChange={setShowQuoteDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Trade Completed</DialogTitle>
-          </DialogHeader>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-y divide-slate-700">
+              {filteredStocks.map((stock) => (
+                <div 
+                  key={stock.symbol} 
+                  className="py-3 flex flex-col md:flex-row justify-between hover:bg-slate-700/30 cursor-pointer rounded-md p-2"
+                  onClick={() => setSelectedStock(stock)}
+                >
+                  <div className="flex flex-col md:flex-row items-start md:items-center mb-2 md:mb-0">
+                    <div className="font-medium text-white mr-4">{stock.symbol}</div>
+                    <div className="text-slate-400">{stock.name}</div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-6">
+                    <div>
+                      <div className="text-white font-medium">${stock.currentPrice.toFixed(2)}</div>
+                      <div className={`text-xs flex items-center ${stock.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {stock.change >= 0 ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <ArrowDownRight className="h-3 w-3 mr-1" />}
+                        {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}%
+                      </div>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-green-600 text-green-400 hover:bg-green-800/20"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        showStockAnalysis(stock);
+                      }}
+                    >
+                      Analyze Stock
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <div className="space-y-6">
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white">Account Balance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-white mb-4">${portfolio.cash.toFixed(2)}</div>
+              <Button 
+                variant="outline" 
+                className="w-full border-green-600 text-green-400 hover:bg-green-800/20"
+                onClick={() => window.location.href = '/withdraw'}
+              >
+                Withdraw Funds
+              </Button>
+            </CardContent>
+          </Card>
           
-          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-md border border-blue-100">
-            <p className="text-lg italic text-blue-800">{tradeQuote}</p>
-          </div>
-          
-          <div className="flex justify-end">
-            <Button onClick={() => setShowQuoteDialog(false)}>
-              Continue Trading
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          {selectedStock && (
+            <Card className="bg-slate-800 border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-white">{selectedStock.symbol}: {selectedStock.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <div className="text-2xl font-bold text-white">${selectedStock.currentPrice.toFixed(2)}</div>
+                  <div className={`flex items-center ${selectedStock.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {selectedStock.change >= 0 ? <TrendingUp className="mr-1 h-4 w-4" /> : <TrendingDown className="mr-1 h-4 w-4" />}
+                    {selectedStock.change >= 0 ? '+' : ''}{selectedStock.change.toFixed(2)}%
+                  </div>
+                </div>
+                
+                <div className="h-32">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={selectedStock.data} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                      <defs>
+                        <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="date" tick={{ fill: '#9ca3af' }} stroke="#4b5563" />
+                      <YAxis tick={{ fill: '#9ca3af' }} stroke="#4b5563" />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#f9fafb' }}
+                        labelStyle={{ color: '#f9fafb' }}
+                      />
+                      <Area type="monotone" dataKey="price" stroke="#10b981" fill="url(#colorPrice)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+                
+                <div className="flex items-center space-x-4">
+                  <div className="flex-1">
+                    <label className="text-sm text-slate-400 mb-1 block">Shares</label>
+                    <Input 
+                      type="number" 
+                      min="1" 
+                      value={shares} 
+                      onChange={e => setShares(parseInt(e.target.value) || 1)}
+                      className="bg-slate-700 border-slate-600 text-white"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-sm text-slate-400 mb-1 block">Total</label>
+                    <div className="bg-slate-700 border border-slate-600 rounded-md h-10 flex items-center px-3 text-white">
+                      ${(selectedStock.currentPrice * shares).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <Button 
+                    className="bg-green-600 hover:bg-green-700" 
+                    onClick={handleBuy}
+                  >
+                    Buy
+                  </Button>
+                  <Button 
+                    className="bg-red-600 hover:bg-red-700"
+                    onClick={handleSell}
+                  >
+                    Sell
+                  </Button>
+                </div>
+                
+                <Button
+                  variant="outline"
+                  className="w-full border-blue-600 text-blue-400 hover:bg-blue-800/20"
+                  onClick={() => setShowAnalysis(true)}
+                >
+                  <TrendingUp className="mr-2 h-4 w-4" />
+                  Detailed Analysis
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
       
       {/* Receipt Dialog */}
-      <Dialog open={showReceiptDialog} onOpenChange={setShowReceiptDialog}>
-        <DialogContent className="sm:max-w-[500px]">
+      <Dialog open={showReceipt} onOpenChange={setShowReceipt}>
+        <DialogContent className="bg-slate-800 text-white border-slate-700">
           <DialogHeader>
-            <DialogTitle>Transaction Receipt</DialogTitle>
-            <DialogDescription>
-              {currentReceipt && new Date(currentReceipt.date).toLocaleString()}
+            <DialogTitle className="text-xl font-bold text-white">Transaction Receipt</DialogTitle>
+            <DialogDescription className="text-slate-300">
+              Transaction #{receipt?.transactionId}
             </DialogDescription>
           </DialogHeader>
           
-          {currentReceipt && (
+          {receipt && (
             <div className="space-y-4">
-              <div className="bg-muted/30 p-4 rounded-md space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-sm text-muted-foreground">Transaction ID:</div>
-                  <div className="text-sm font-mono">{currentReceipt.id}</div>
+              <div className="bg-slate-700 rounded-md p-4 space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Date:</span>
+                  <span className="text-white">{receipt.date}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-sm text-muted-foreground">Type:</div>
-                  <div className="text-sm font-medium">
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${
-                      currentReceipt.type === "BUY" 
-                        ? "bg-green-100 text-green-800" 
-                        : currentReceipt.type === "SELL"
-                          ? "bg-red-100 text-red-800"
-                          : currentReceipt.type === "DEPOSIT"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-amber-100 text-amber-800"
-                    }`}>
-                      {currentReceipt.type}
-                    </span>
-                  </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Type:</span>
+                  <span className={`font-medium ${receipt.type === 'BUY' ? 'text-green-400' : 'text-red-400'}`}>
+                    {receipt.type}
+                  </span>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-sm text-muted-foreground">Stock:</div>
-                  <div className="text-sm">{currentReceipt.symbol} - {currentReceipt.name}</div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Symbol:</span>
+                  <span className="text-white">{receipt.symbol}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-sm text-muted-foreground">Price per share:</div>
-                  <div className="text-sm">${currentReceipt.price.toFixed(2)}</div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Shares:</span>
+                  <span className="text-white">{receipt.shares}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-sm text-muted-foreground">Shares:</div>
-                  <div className="text-sm">{currentReceipt.shares.toFixed(4)}</div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Price per share:</span>
+                  <span className="text-white">${receipt.price.toFixed(2)}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-sm text-muted-foreground">Total Amount:</div>
-                  <div className="text-sm font-medium">${currentReceipt.amount.toFixed(2)}</div>
+                <div className="border-t border-slate-600 pt-2 mt-2"></div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Transaction Fee:</span>
+                  <span className="text-white">${receipt.fee.toFixed(2)}</span>
                 </div>
-              </div>
-              
-              <div className="bg-muted/30 p-4 rounded-md">
-                <div className="flex justify-between items-center">
-                  <div className="text-sm text-muted-foreground">Previous Balance:</div>
-                  <div className="text-sm">${currentReceipt.balanceBefore.toFixed(2)}</div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400 font-bold">Total:</span>
+                  <span className="text-white font-bold">${receipt.total.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <div className="text-sm text-muted-foreground">Transaction Amount:</div>
-                  <div className={`text-sm ${currentReceipt.type === "BUY" || currentReceipt.type === "WITHDRAWAL" ? "text-red-600" : "text-green-600"}`}>
-                    {currentReceipt.type === "BUY" || currentReceipt.type === "WITHDRAWAL" ? "-" : "+"}${currentReceipt.amount.toFixed(2)}
-                  </div>
-                </div>
-                <div className="border-t mt-2 pt-2 flex justify-between items-center">
-                  <div className="text-sm font-medium">New Balance:</div>
-                  <div className="text-sm font-medium">${currentReceipt.balanceAfter.toFixed(2)}</div>
+                <div className="border-t border-slate-600 pt-2 mt-2"></div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Updated Balance:</span>
+                  <span className="text-white font-bold">${portfolio.cash.toFixed(2)}</span>
                 </div>
               </div>
               
-              <div className="flex justify-end gap-2">
-                <Button 
-                  variant="outline"
-                  onClick={() => setShowReceiptDialog(false)}
-                >
-                  Close
-                </Button>
-                <Button 
-                  onClick={() => {
-                    toast.success("Receipt downloaded", { description: "Transaction receipt saved to your device" });
-                    setShowReceiptDialog(false);
-                  }}
-                >
-                  Download Receipt
-                </Button>
-              </div>
+              <Button className="w-full bg-green-600" onClick={() => setShowReceipt(false)}>
+                Close
+              </Button>
             </div>
           )}
         </DialogContent>
       </Dialog>
       
-      {/* Add Funds Dialog */}
-      <Dialog open={showAddFundsDialog} onOpenChange={setShowAddFundsDialog}>
-        <DialogContent className="sm:max-w-[500px]">
+      {/* Stock Analysis Dialog */}
+      <Dialog open={showAnalysis} onOpenChange={setShowAnalysis}>
+        {selectedStock && (
+          <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-white">
+                {selectedStock.symbol}: {selectedStock.name} Analysis
+              </DialogTitle>
+              <DialogDescription className="text-slate-300">
+                Detailed technical and fundamental analysis
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-medium text-white mb-2">Price Performance</h3>
+                  <div className="h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={selectedStock.data} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                        <defs>
+                          <linearGradient id="colorAnalysis" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                        <XAxis dataKey="date" tick={{ fill: '#9ca3af' }} stroke="#4b5563" />
+                        <YAxis tick={{ fill: '#9ca3af' }} stroke="#4b5563" />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#f9fafb' }}
+                          labelStyle={{ color: '#f9fafb' }}
+                        />
+                        <Area type="monotone" dataKey="price" stroke="#10b981" fill="url(#colorAnalysis)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="font-medium text-white mb-2">Key Statistics</h3>
+                  {(() => {
+                    const analysis = getStockAnalysis(selectedStock);
+                    return (
+                      <div className="bg-slate-700 rounded-md p-4 space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Current Price:</span>
+                          <span className="text-white">${selectedStock.currentPrice.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">10-Day Change:</span>
+                          <span className={analysis.recent.percentChange >= 0 ? 'text-green-400' : 'text-red-400'}>
+                            {analysis.recent.percentChange >= 0 ? '+' : ''}{analysis.recent.percentChange}% (${analysis.recent.change})
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Volume:</span>
+                          <span className="text-white">{analysis.volume}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Volatility:</span>
+                          <span className="text-white">{analysis.volatility}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Support Level:</span>
+                          <span className="text-white">${analysis.support}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Resistance Level:</span>
+                          <span className="text-white">${analysis.resistance}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Industry:</span>
+                          <span className="text-white">{selectedStock.industry}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+              
+              {(() => {
+                const analysis = getStockAnalysis(selectedStock);
+                return (
+                  <div className="bg-slate-700 rounded-md p-4">
+                    <h3 className="font-medium text-white mb-2">Recommendation</h3>
+                    <div className={`inline-block px-3 py-1 rounded-full mb-3 text-sm font-medium 
+                      ${analysis.recommendation === 'Strong Buy' ? 'bg-green-900/60 text-green-400' :
+                        analysis.recommendation === 'Buy' ? 'bg-emerald-900/60 text-emerald-400' :
+                        analysis.recommendation === 'Hold' ? 'bg-blue-900/60 text-blue-400' :
+                        analysis.recommendation === 'Consider Selling' ? 'bg-orange-900/60 text-orange-400' :
+                        'bg-red-900/60 text-red-400'}`}>
+                      {analysis.recommendation}
+                    </div>
+                    <p className="text-slate-300">{analysis.reasoning}</p>
+                  </div>
+                );
+              })()}
+              
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                  onClick={() => setShowAnalysis(false)}
+                >
+                  Close
+                </Button>
+                <Button 
+                  className="bg-green-600 hover:bg-green-700" 
+                  onClick={() => {
+                    setShowAnalysis(false);
+                    setShares(1);
+                  }}
+                >
+                  Trade Now
+                </Button>
+              </DialogFooter>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
+      
+      {/* Market Analysis Dialog */}
+      <Dialog open={marketAnalysis} onOpenChange={setMarketAnalysis}>
+        <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Add Funds</DialogTitle>
-            <DialogDescription>
-              Add money to your trading account using PayPal
+            <DialogTitle className="text-xl font-bold text-white">Market Analysis</DialogTitle>
+            <DialogDescription className="text-slate-300">
+              Current market conditions and sector performance
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-6">
-            <div className="bg-[#003087] p-4 rounded-md text-white flex justify-between items-center">
-              <div className="text-2xl font-bold">PayPal</div>
-              <div className="text-xs opacity-80">Fast, secure payments</div>
+            <div>
+              <h3 className="font-medium text-white mb-3">Market Overview</h3>
+              <div className="bg-slate-700 rounded-md p-4">
+                <p className="text-slate-300">{getMarketAnalysis().overview}</p>
+              </div>
             </div>
             
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="add-amount">Amount to Add ($)</Label>
-                <div className="flex mt-1">
-                  <span className="inline-flex items-center px-3 bg-muted border border-r-0 border-input rounded-l-md">
-                    <DollarSign className="h-4 w-4" />
-                  </span>
-                  <Input
-                    id="add-amount"
-                    type="number"
-                    value={addFundsAmount || ''}
-                    onChange={(e) => setAddFundsAmount(Number(e.target.value))}
-                    className="rounded-l-none"
-                    placeholder="Enter amount"
-                  />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h3 className="font-medium text-white mb-2">Sector Performance</h3>
+                <div className="bg-slate-700 rounded-md p-4 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">Technology</span>
+                    <div className="flex items-center">
+                      <span className="text-green-400 mr-2">+2.4%</span>
+                      <Progress value={85} className="h-2 w-24" />
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">Financial Services</span>
+                    <div className="flex items-center">
+                      <span className="text-green-400 mr-2">+1.1%</span>
+                      <Progress value={65} className="h-2 w-24" />
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">Consumer Goods</span>
+                    <div className="flex items-center">
+                      <span className="text-green-400 mr-2">+0.6%</span>
+                      <Progress value={55} className="h-2 w-24" />
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">Entertainment</span>
+                    <div className="flex items-center">
+                      <span className="text-green-400 mr-2">+0.2%</span>
+                      <Progress value={52} className="h-2 w-24" />
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">Automotive</span>
+                    <div className="flex items-center">
+                      <span className="text-red-400 mr-2">-0.8%</span>
+                      <Progress value={35} className="h-2 w-24" />
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">Healthcare</span>
+                    <div className="flex items-center">
+                      <span className="text-red-400 mr-2">-1.2%</span>
+                      <Progress value={25} className="h-2 w-24" />
+                    </div>
+                  </div>
                 </div>
               </div>
               
-              <div className="border rounded-md p-4 space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Amount:</span>
-                  <span>${addFundsAmount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Fee:</span>
-                  <span>$0.00</span>
-                </div>
-                <div className="flex justify-between border-t pt-2 mt-2 font-medium">
-                  <span>Total:</span>
-                  <span>${addFundsAmount.toFixed(2)}</span>
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 p-4 rounded-md">
-                <div className="text-sm text-muted-foreground mb-2">Choose payment method:</div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 p-2 border rounded-md bg-white">
-                    <input type="radio" id="paypal-balance" name="payment" defaultChecked />
-                    <label htmlFor="paypal-balance" className="text-sm">PayPal Balance</label>
+              <div>
+                <h3 className="font-medium text-white mb-2">Key Metrics</h3>
+                <div className="bg-slate-700 rounded-md p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Market Momentum:</span>
+                    <span className="text-green-400">{getMarketAnalysis().momentum}</span>
                   </div>
-                  <div className="flex items-center gap-2 p-2 border rounded-md bg-white">
-                    <input type="radio" id="paypal-card" name="payment" />
-                    <label htmlFor="paypal-card" className="text-sm">Credit/Debit Card</label>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Gainers vs Losers:</span>
+                    <span className="text-white">{getMarketAnalysis().gainers} / {getMarketAnalysis().losers}</span>
                   </div>
-                  <div className="flex items-center gap-2 p-2 border rounded-md bg-white">
-                    <input type="radio" id="paypal-bank" name="payment" />
-                    <label htmlFor="paypal-bank" className="text-sm">Bank Account</label>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Strongest Sector:</span>
+                    <span className="text-green-400">{getMarketAnalysis().strongestSector}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Weakest Sector:</span>
+                    <span className="text-red-400">{getMarketAnalysis().weakestSector}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Market Volatility:</span>
+                    <span className="text-white">Medium</span>
                   </div>
                 </div>
               </div>
             </div>
+            
+            <div>
+              <h3 className="font-medium text-white mb-2">Trending Stocks</h3>
+              <div className="bg-slate-700 rounded-md divide-y divide-slate-600">
+                {stocks.filter(s => Math.abs(s.change) > 1).slice(0, 4).map(stock => (
+                  <div key={stock.symbol} className="p-3 flex justify-between items-center">
+                    <div>
+                      <div className="font-medium text-white">{stock.symbol}: {stock.name}</div>
+                      <div className="text-sm text-slate-400">{stock.industry}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-white">${stock.currentPrice.toFixed(2)}</div>
+                      <div className={`text-sm ${stock.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}%
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="bg-slate-900 border border-green-900/50 rounded-md p-4">
+              <h3 className="font-medium text-white flex items-center mb-2">
+                <AlertCircle className="h-4 w-4 text-green-400 mr-2" />
+                Recommendation
+              </h3>
+              <p className="text-slate-300">{getMarketAnalysis().recommendation}</p>
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                className="bg-green-600 hover:bg-green-700" 
+                onClick={() => setMarketAnalysis(false)}
+              >
+                Continue Trading
+              </Button>
+            </DialogFooter>
           </div>
-          
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowAddFundsDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              className="bg-[#003087] hover:bg-[#002266]"
-              onClick={processAddFunds}
-            >
-              Continue with PayPal
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

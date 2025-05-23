@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +11,7 @@ import Goals from "./components/Goals";
 import CalendarView from "./components/CalendarView";
 import TransactionHistory from "./components/TransactionHistory";
 import WithdrawFunds from "./components/WithdrawFunds";
+import AddFunds from "./components/AddFunds";
 import {
   Drawer,
   DrawerContent,
@@ -35,6 +37,8 @@ const App = () => {
             <Route path="/calendar" element={<CalendarView />} />
             <Route path="/transactions" element={<TransactionHistory />} />
             <Route path="/withdraw" element={<WithdrawFunds />} />
+            <Route path="/add-funds" element={<AddFunds />} />
+            <Route path="/trading" element={() => <Index activePage="trading" />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

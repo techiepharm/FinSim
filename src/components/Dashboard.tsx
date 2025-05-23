@@ -1,17 +1,13 @@
+
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, BookOpen, ArrowRight, TrendingUp } from "lucide-react";
-import OnboardingTutorial from './OnboardingTutorial';
-import AppWelcome from './AppWelcome';
+import { BookOpen, ArrowRight, TrendingUp, Bell, PiggyBank } from "lucide-react";
 import CashCardUpdated from './CashCardUpdated';
+import { useToast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
-  // State for onboarding
-  const [showWelcome, setShowWelcome] = useState(true);
-  const [showTutorial, setShowTutorial] = useState(false);
-  
   // User account info
   const [accountBalance, setAccountBalance] = useState(() => {
     try {
@@ -34,6 +30,7 @@ const Dashboard = () => {
   
   // Recent transactions
   const [recentTransactions, setRecentTransactions] = useState([]);
+  const { toast } = useToast();
   
   // Load transactions from localStorage
   useEffect(() => {
@@ -48,27 +45,61 @@ const Dashboard = () => {
     }
   }, []);
   
-  // Check if this is the first visit
-  useEffect(() => {
-    const hasVisitedBefore = localStorage.getItem('hasVisitedBefore');
-    if (hasVisitedBefore) {
-      setShowWelcome(false);
-    } else {
-      setShowWelcome(true);
-    }
-  }, []);
+  // Financial tips and recommendations
+  const [financialTip, setFinancialTip] = useState('');
   
-  // Handle getting started
-  const handleGetStarted = () => {
-    localStorage.setItem('hasVisitedBefore', 'true');
-    setShowWelcome(false);
-    setShowTutorial(true);
+  useEffect(() => {
+    const tips = [
+      "Consider saving 20% of your income for long-term goals and emergencies.",
+      "Track your expenses to identify areas where you can cut back.",
+      "Try to limit debt repayments to less than 36% of your gross income.",
+      "Invest regularly even in small amounts to benefit from compound interest.",
+      "Consider allocating 50% to needs, 30% to wants, and 20% to savings and debt repayment."
+    ];
+    
+    // Show a tip on load
+    const randomTip = tips[Math.floor(Math.random() * tips.length)];
+    setFinancialTip(randomTip);
+    
+    // Show a financial tip notification after 10 seconds
+    const tipTimeout = setTimeout(() => {
+      toast({
+        title: "Financial Tip",
+        description: randomTip,
+        duration: 8000,
+      });
+    }, 10000);
+    
+    // Show a stock recommendation after 30 seconds
+    const stockTimeout = setTimeout(() => {
+      toast({
+        title: "Investment Opportunity",
+        description: "AAPL stock is showing positive momentum. Consider researching this opportunity.",
+        duration: 8000,
+      });
+    }, 30000);
+    
+    return () => {
+      clearTimeout(tipTimeout);
+      clearTimeout(stockTimeout);
+    };
+  }, [toast]);
+  
+  const generateFinancialReport = () => {
+    toast({
+      title: "Financial Report Generated",
+      description: "Your monthly spending is 15% below average. Great job managing expenses!",
+      duration: 5000,
+    });
   };
   
-  // If welcome screen should be shown
-  if (showWelcome) {
-    return <AppWelcome onGetStarted={handleGetStarted} />;
-  }
+  const getSavingsRecommendation = () => {
+    toast({
+      title: "Savings Recommendation",
+      description: "Based on your activity, we recommend increasing your emergency fund by allocating an additional 5% of your income.",
+      duration: 5000,
+    });
+  };
   
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -90,7 +121,46 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white">Financial Health</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Savings Rate:</span>
+              <span className="text-green-400">20%</span>
+            </div>
+            <Progress value={20} className="h-2 mb-2" />
+            
+            <Button 
+              onClick={generateFinancialReport}
+              className="w-full bg-slate-700 hover:bg-slate-600"
+            >
+              Generate Report
+            </Button>
+          </CardContent>
+        </Card>
         
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button 
+              className="w-full bg-blue-800 hover:bg-blue-700"
+              onClick={getSavingsRecommendation}
+            >
+              <PiggyBank className="mr-2 h-4 w-4" />
+              Savings Recommendations
+            </Button>
+            <Button 
+              className="w-full bg-purple-800 hover:bg-purple-700"
+              onClick={() => window.location.href = '/goals'}
+            >
+              Set Financial Goals
+            </Button>
+          </CardContent>
+        </Card>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
@@ -180,20 +250,16 @@ const Dashboard = () => {
         </Card>
       </div>
       
-      {/* Tutorial Dialog */}
-      <OnboardingTutorial 
-        isOpen={showTutorial} 
-        onClose={() => setShowTutorial(false)} 
-      />
-      
-      {/* Help Button */}
-      <Button 
-        className="fixed bottom-20 right-4 bg-slate-700 hover:bg-slate-600 text-white shadow-lg"
-        onClick={() => setShowTutorial(true)}
-      >
-        <CheckCircle className="h-4 w-4 mr-2" />
-        App Tutorial
-      </Button>
+      {/* Financial Tip Card */}
+      <Card className="bg-slate-800 border-slate-700 border-l-4 border-l-green-500">
+        <CardContent className="p-4 flex items-start">
+          <Bell className="h-6 w-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
+          <div>
+            <h3 className="font-medium text-white mb-1">Financial Tip</h3>
+            <p className="text-slate-300">{financialTip}</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
