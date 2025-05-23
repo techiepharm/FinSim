@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -422,9 +421,9 @@ const StockSimulator = () => {
                   <div className="flex items-center space-x-6">
                     <div>
                       <div className="text-white font-medium">${stock.currentPrice.toFixed(2)}</div>
-                      <div className={`text-xs flex items-center ${stock.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {stock.change >= 0 ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <ArrowDownRight className="h-3 w-3 mr-1" />}
-                        {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}%
+                      <div className={`text-xs flex items-center ${Number(stock.change) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {Number(stock.change) >= 0 ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <ArrowDownRight className="h-3 w-3 mr-1" />}
+                        {Number(stock.change) >= 0 ? '+' : ''}{stock.change.toFixed(2)}%
                       </div>
                     </div>
                     <Button 
