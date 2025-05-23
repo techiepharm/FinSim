@@ -29,7 +29,25 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Sonner />
+        <Sonner 
+          position="top-center"
+          expand={true}
+          closeButton={true}
+          richColors={true}
+          className="cursor-pointer" 
+          toastOptions={{
+            style: {
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              maxWidth: "400px",
+              width: "calc(100% - 32px)",
+              zIndex: "100",
+              cursor: "pointer",
+            }
+          }}
+        />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />

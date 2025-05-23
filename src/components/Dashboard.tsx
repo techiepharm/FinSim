@@ -5,10 +5,13 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { BookOpen, ArrowRight, TrendingUp, Bell, PiggyBank } from "lucide-react";
 import CashCardUpdated from './CashCardUpdated';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast"; // Updated import path
 import { toast } from "@/components/ui/sonner";
 
 const Dashboard = () => {
+  // User info
+  const username = "Ezra Folorunso";
+  
   // User account info
   const [accountBalance, setAccountBalance] = useState(1000);
   const [recentTransactions, setRecentTransactions] = useState([]);
@@ -97,9 +100,33 @@ const Dashboard = () => {
     };
   }, [useToastHook]);
   
+  // Get financial advice based on transaction history
+  const getFinancialAdvice = () => {
+    // Analyze transaction types and provide relevant advice
+    if (recentTransactions.length > 0) {
+      const buyTransactions = recentTransactions.filter(t => t.type === 'BUY').length;
+      const sellTransactions = recentTransactions.filter(t => t.type === 'SELL').length;
+      
+      if (buyTransactions > sellTransactions * 2) {
+        toast("Financial Advice", {
+          description: "You're buying frequently. Consider a more balanced approach to lock in profits.",
+          className: "bg-yellow-600 border-yellow-700 text-white",
+          duration: 5000,
+        });
+      } else if (sellTransactions > buyTransactions) {
+        toast("Financial Advice", {
+          description: "You're selling frequently. Consider longer holding periods for potential growth.",
+          className: "bg-yellow-600 border-yellow-700 text-white",
+          duration: 5000,
+        });
+      }
+    }
+  };
+  
   const generateFinancialReport = () => {
     toast("Financial Report Generated", {
       description: "Your monthly spending is 15% below average. Great job managing expenses!",
+      className: "bg-green-600 border-green-700 text-white fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2",
       duration: 5000,
     });
   };
@@ -107,13 +134,25 @@ const Dashboard = () => {
   const getSavingsRecommendation = () => {
     toast("Savings Recommendation", {
       description: "Based on your activity, we recommend increasing your emergency fund by allocating an additional 5% of your income.",
+      className: "bg-green-600 border-green-700 text-white fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2",
       duration: 5000,
     });
   };
   
   return (
-    <div className="container mx-auto p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-5rem)]">
-      <h2 className="text-3xl font-bold mb-6 text-white">Dashboard</h2>
+    <div className="container mx-auto p-6 space-y-6 overflow-y-auto max-h-[100vh] pb-20">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+        <div>
+          <h2 className="text-3xl font-bold mb-2 text-white">Welcome, {username}</h2>
+          <p className="text-slate-400">Your financial journey at a glance</p>
+        </div>
+        <Button 
+          onClick={getFinancialAdvice}
+          className="mt-2 md:mt-0 bg-blue-600 hover:bg-blue-700"
+        >
+          Get Financial Advice
+        </Button>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <CashCardUpdated availableBalance={accountBalance} />

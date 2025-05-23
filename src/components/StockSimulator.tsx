@@ -367,7 +367,7 @@ const StockSimulator = () => {
   };
   
   return (
-    <div className="container mx-auto p-6 overflow-y-auto max-h-[calc(100vh-5rem)]">
+    <div className="container mx-auto p-6 overflow-y-auto max-h-[100vh] pb-20">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <div>
           <h2 className="text-3xl font-bold text-white">Stock Trading Simulator</h2>
@@ -822,7 +822,7 @@ const StockSimulator = () => {
             <div>
               <h3 className="font-medium text-white mb-2">Trending Stocks</h3>
               <div className="bg-slate-700 rounded-md divide-y divide-slate-600">
-                {stocks.filter(s => Math.abs(s.change) > 1).slice(0, 4).map(stock => (
+                {stocks.filter(s => Math.abs(Number(s.change)) > 1).slice(0, 4).map(stock => (
                   <div key={stock.symbol} className="p-3 flex justify-between items-center">
                     <div>
                       <div className="font-medium text-white">{stock.symbol}: {stock.name}</div>
@@ -830,8 +830,8 @@ const StockSimulator = () => {
                     </div>
                     <div className="text-right">
                       <div className="text-white">${stock.currentPrice.toFixed(2)}</div>
-                      <div className={`text-sm ${stock.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}%
+                      <div className={`text-sm ${Number(stock.change) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {Number(stock.change) >= 0 ? '+' : ''}{stock.change.toFixed(2)}%
                       </div>
                     </div>
                   </div>
