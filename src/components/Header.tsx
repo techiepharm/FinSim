@@ -6,8 +6,10 @@ import {
   BookOpen, 
   TrendingUp, 
   PieChart, 
-  Bot,
-  User
+  User,
+  Goal,
+  CalendarDays,
+  Receipt
 } from "lucide-react";
 
 interface HeaderProps {
@@ -23,15 +25,17 @@ const Header = ({ activePage, setActivePage }: HeaderProps) => {
     { id: 'learning', label: 'Learning Center', icon: <BookOpen size={20} /> },
     { id: 'trading', label: 'Trading', icon: <TrendingUp size={20} /> },
     { id: 'portfolio', label: 'Portfolio', icon: <PieChart size={20} /> },
-    { id: 'assistant', label: 'Financial Assistant', icon: <Bot size={20} /> },
+    { id: 'goals', label: 'Goals', icon: <Goal size={20} /> },
+    { id: 'calendar', label: 'Calendar', icon: <CalendarDays size={20} /> },
+    { id: 'transactions', label: 'Transactions', icon: <Receipt size={20} /> },
   ];
   
   return (
-    <header className="bg-white border-b border-gray-200 py-4 px-6 sticky top-0 z-50">
+    <header className="bg-slate-800 border-b border-slate-700 py-4 px-6 sticky top-0 z-50">
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <TrendingUp className="text-finance-primary h-6 w-6" />
-          <h1 className="text-xl font-bold text-finance-primary">FinSavvy</h1>
+          <TrendingUp className="text-green-400 h-6 w-6" />
+          <h1 className="text-xl font-bold text-green-400">FinSavvy</h1>
         </div>
         
         {/* Desktop Navigation */}
@@ -41,7 +45,7 @@ const Header = ({ activePage, setActivePage }: HeaderProps) => {
               key={item.id}
               variant={activePage === item.id ? "default" : "ghost"}
               className={`flex items-center gap-2 ${
-                activePage === item.id ? "bg-finance-primary text-white" : "text-gray-600 hover:text-finance-primary"
+                activePage === item.id ? "bg-green-600 text-white" : "text-gray-300 hover:text-green-400"
               }`}
               onClick={() => setActivePage(item.id)}
             >
@@ -70,13 +74,13 @@ const Header = ({ activePage, setActivePage }: HeaderProps) => {
       
       {/* Mobile Navigation Menu */}
       {menuOpen && (
-        <div className="md:hidden mt-4 bg-white border-t border-gray-200">
+        <div className="md:hidden mt-4 bg-slate-700 border-t border-slate-600">
           {navItems.map((item) => (
             <Button
               key={item.id}
               variant="ghost"
               className={`w-full flex items-center gap-2 justify-start px-6 py-3 ${
-                activePage === item.id ? "bg-finance-light text-finance-primary font-medium" : "text-gray-600"
+                activePage === item.id ? "bg-slate-600 text-green-400 font-medium" : "text-gray-300"
               }`}
               onClick={() => {
                 setActivePage(item.id);
