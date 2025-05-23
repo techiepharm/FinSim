@@ -6,43 +6,55 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, ArrowRight, TrendingUp, Bell, PiggyBank } from "lucide-react";
 import CashCardUpdated from './CashCardUpdated';
 import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/sonner";
 
 const Dashboard = () => {
   // User account info
-  const [accountBalance, setAccountBalance] = useState(() => {
-    try {
-      const storedPortfolio = localStorage.getItem('portfolio');
-      if (storedPortfolio) {
-        const portfolio = JSON.parse(storedPortfolio);
-        return portfolio.cash || 1000;
-      }
-      return 1000; // Default starting amount
-    } catch (e) {
-      console.error("Error reading portfolio data:", e);
-      return 1000;
-    }
-  });
+  const [accountBalance, setAccountBalance] = useState(1000);
+  const [recentTransactions, setRecentTransactions] = useState([]);
+  const { toast: useToastHook } = useToast();
   
   // Learning progress
   const learningProgress = 35;
   const completedLessons = 4;
   const totalLessons = 12;
   
-  // Recent transactions
-  const [recentTransactions, setRecentTransactions] = useState([]);
-  const { toast } = useToast();
-  
-  // Load transactions from localStorage
-  useEffect(() => {
+  // Load transactions and account balance from localStorage
+  const updateDataFromStorage = () => {
     try {
+      // Load portfolio for balance
+      const storedPortfolio = localStorage.getItem('portfolio');
+      if (storedPortfolio) {
+        const portfolio = JSON.parse(storedPortfolio);
+        setAccountBalance(portfolio.cash);
+      }
+      
+      // Load transactions
       const storedTransactions = localStorage.getItem('transactions');
       if (storedTransactions) {
         const transactions = JSON.parse(storedTransactions);
         setRecentTransactions(transactions.slice(0, 3));
       }
     } catch (e) {
-      console.error("Error reading transactions:", e);
+      console.error("Error reading data:", e);
     }
+  };
+  
+  // Update data on mount and when localStorage changes
+  useEffect(() => {
+    updateDataFromStorage();
+    
+    // Listen for storage events (triggered by other components)
+    window.addEventListener('storage', updateDataFromStorage);
+    
+    // Create our own custom event listener for inter-component communication
+    const handleStorageChange = () => updateDataFromStorage();
+    window.addEventListener('storageUpdate', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', updateDataFromStorage);
+      window.removeEventListener('storageUpdate', handleStorageChange);
+    };
   }, []);
   
   // Financial tips and recommendations
@@ -63,7 +75,7 @@ const Dashboard = () => {
     
     // Show a financial tip notification after 10 seconds
     const tipTimeout = setTimeout(() => {
-      toast({
+      useToastHook({
         title: "Financial Tip",
         description: randomTip,
         duration: 8000,
@@ -72,7 +84,7 @@ const Dashboard = () => {
     
     // Show a stock recommendation after 30 seconds
     const stockTimeout = setTimeout(() => {
-      toast({
+      useToastHook({
         title: "Investment Opportunity",
         description: "AAPL stock is showing positive momentum. Consider researching this opportunity.",
         duration: 8000,
@@ -83,26 +95,24 @@ const Dashboard = () => {
       clearTimeout(tipTimeout);
       clearTimeout(stockTimeout);
     };
-  }, [toast]);
+  }, [useToastHook]);
   
   const generateFinancialReport = () => {
-    toast({
-      title: "Financial Report Generated",
+    toast("Financial Report Generated", {
       description: "Your monthly spending is 15% below average. Great job managing expenses!",
       duration: 5000,
     });
   };
   
   const getSavingsRecommendation = () => {
-    toast({
-      title: "Savings Recommendation",
+    toast("Savings Recommendation", {
       description: "Based on your activity, we recommend increasing your emergency fund by allocating an additional 5% of your income.",
       duration: 5000,
     });
   };
   
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-5rem)]">
       <h2 className="text-3xl font-bold mb-6 text-white">Dashboard</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -193,7 +203,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className={transaction.amount >= 0 ? "text-green-400" : "text-red-400"}>
-                      {transaction.amount >= 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}
+                      {transaction.amount >= 0 ? '+' : ''}${Math.abs(Number(transaction.amount)).toFixed(2)}
                     </div>
                   </div>
                 ))}

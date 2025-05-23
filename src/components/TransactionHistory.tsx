@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -78,34 +77,53 @@ const TransactionHistory = () => {
   
   const [transactions, setTransactions] = useState([]);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [availableBalance, setAvailableBalance] = useState(12589.75);
+  const [availableBalance, setAvailableBalance] = useState(0);
   
-  // Load transactions on component mount
+  // Load transactions and balance on component mount
   useEffect(() => {
-    const storedTransactions = getStoredTransactions();
-    
-    if (storedTransactions && storedTransactions.length > 0) {
-      setTransactions(storedTransactions.sort((a, b) => 
-        sortOrder === 'desc' 
-          ? new Date(b.date).getTime() - new Date(a.date).getTime() 
-          : new Date(a.date).getTime() - new Date(b.date).getTime()
-      ));
+    const updateTransactionsAndBalance = () => {
+      const storedTransactions = getStoredTransactions();
       
-      // Get the latest balance
-      if (storedTransactions.length > 0) {
-        const latestTransaction = [...storedTransactions].sort((a, b) => 
-          new Date(b.date).getTime() - new Date(a.date).getTime()
-        )[0];
-        
-        if (latestTransaction.balance) {
-          setAvailableBalance(latestTransaction.balance);
-        }
+      if (storedTransactions && storedTransactions.length > 0) {
+        setTransactions(storedTransactions.sort((a, b) => 
+          sortOrder === 'desc' 
+            ? new Date(b.date).getTime() - new Date(a.date).getTime() 
+            : new Date(a.date).getTime() - new Date(b.date).getTime()
+        ));
+      } else {
+        // Use mock data if no stored transactions
+        setTransactions(generateMockTransactions(dateRange.from, dateRange.to));
       }
-    } else {
-      // Use mock data if no stored transactions
-      setTransactions(generateMockTransactions(dateRange.from, dateRange.to));
-    }
-  }, []);
+      
+      // Get current balance from portfolio
+      try {
+        const portfolioData = localStorage.getItem('portfolio');
+        if (portfolioData) {
+          const portfolio = JSON.parse(portfolioData);
+          setAvailableBalance(portfolio.cash);
+        } else {
+          setAvailableBalance(1000); // Default
+        }
+      } catch (e) {
+        console.error("Error reading portfolio:", e);
+      }
+    };
+    
+    updateTransactionsAndBalance();
+    
+    // Setup listeners for real-time updates
+    window.addEventListener('storage', updateTransactionsAndBalance);
+    window.addEventListener('storageUpdate', updateTransactionsAndBalance);
+    
+    // Check periodically for updates
+    const interval = setInterval(updateTransactionsAndBalance, 2000);
+    
+    return () => {
+      window.removeEventListener('storage', updateTransactionsAndBalance);
+      window.removeEventListener('storageUpdate', updateTransactionsAndBalance);
+      clearInterval(interval);
+    };
+  }, [sortOrder, dateRange.from, dateRange.to]);
   
   // Watch for new transactions added by other components
   useEffect(() => {
@@ -231,7 +249,7 @@ const TransactionHistory = () => {
   };
   
   return (
-    <div className="animate-fade-in">
+    <div className="container mx-auto p-6 overflow-y-auto max-h-[calc(100vh-5rem)]">
       <div className="mb-6">
         <h2 className="text-3xl font-bold text-finance-primary mb-2 finance-accent-gradient">Transaction History</h2>
         <p className="text-muted-foreground">Review your account activity and filter by date range</p>
@@ -247,7 +265,7 @@ const TransactionHistory = () => {
               </CardDescription>
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="flex items-center gap-1">
@@ -298,7 +316,7 @@ const TransactionHistory = () => {
             </div>
           </CardHeader>
           
-          <CardContent>
+          <CardContent className="overflow-auto">
             <Table>
               <TableCaption>
                 Showing {transactions.length} transactions
@@ -322,9 +340,30 @@ const TransactionHistory = () => {
                   <TableRow 
                     key={transaction.id || index}
                     className="hover:bg-muted/60 transition-colors cursor-pointer"
-                    onClick={() => toast.info(`Transaction details for ${format(new Date(transaction.date), 'MMM d, yyyy')}`, {
-                      description: `${transaction.type}${transaction.symbol ? ' ' + transaction.symbol : ''}: $${Math.abs(transaction.amount).toFixed(2)}`
-                    })}
+                    onClick={() => {
+                      // Get financial advice based on transaction type
+                      let advice = "";
+                      
+                      if (transaction.type === 'BUY') {
+                        advice = "Remember to diversify your investments. Don't put all your eggs in one basket.";
+                      } else if (transaction.type === 'SELL') {
+                        advice = "Good job taking profits. Consider reinvesting in emerging opportunities.";
+                      } else if (transaction.type === 'WITHDRAWAL') {
+                        advice = "Try to minimize withdrawals to let your investments grow over time.";
+                      } else if (transaction.type === 'DEPOSIT') {
+                        advice = "Regular deposits are a great way to build wealth through dollar-cost averaging.";
+                      }
+                      
+                      if (advice) {
+                        toast("Financial Advice", {
+                          description: advice,
+                        });
+                      } else {
+                        toast(`Transaction details for ${format(new Date(transaction.date), 'MMM d, yyyy')}`, {
+                          description: `${transaction.type}${transaction.symbol ? ' ' + transaction.symbol : ''}: $${Math.abs(Number(transaction.amount)).toFixed(2)}`
+                        });
+                      }
+                    }}
                   >
                     <TableCell className="font-medium">{format(new Date(transaction.date), 'MMM d, yyyy')}</TableCell>
                     <TableCell>
@@ -333,8 +372,8 @@ const TransactionHistory = () => {
                       </span>
                     </TableCell>
                     <TableCell>{transaction.symbol || '—'}</TableCell>
-                    <TableCell className={`text-right ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {transaction.amount >= 0 ? '+' : '−'}${Math.abs(transaction.amount).toFixed(2)}
+                    <TableCell className={`text-right ${Number(transaction.amount) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {Number(transaction.amount) >= 0 ? '+' : '−'}${Math.abs(Number(transaction.amount)).toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">${transaction.balance ? transaction.balance.toFixed(2) : '—'}</TableCell>
                   </TableRow>
@@ -368,8 +407,8 @@ const TransactionHistory = () => {
                   <span className="text-sm">In:</span>
                   <span className="text-sm text-green-600 font-medium">
                     +${transactions
-                      .filter(t => t.amount > 0)
-                      .reduce((sum, t) => sum + t.amount, 0)
+                      .filter(t => Number(t.amount) > 0)
+                      .reduce((sum, t) => sum + Number(t.amount), 0)
                       .toFixed(2)}
                   </span>
                 </div>
@@ -378,20 +417,45 @@ const TransactionHistory = () => {
                   <span className="text-sm text-red-600 font-medium">
                     −${Math.abs(
                       transactions
-                        .filter(t => t.amount < 0)
-                        .reduce((sum, t) => sum + t.amount, 0)
+                        .filter(t => Number(t.amount) < 0)
+                        .reduce((sum, t) => sum + Number(t.amount), 0)
                     ).toFixed(2)}
                   </span>
                 </div>
               </div>
               
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-1">Current Balance</h4>
+                <p className="text-2xl font-bold text-green-500">${availableBalance.toFixed(2)}</p>
+              </div>
+              
               <Button 
                 className="w-full bg-finance-accent hover:bg-green-700" 
-                onClick={() => toast.success("Report generated", {
-                  description: "A detailed transaction report has been sent to your email"
-                })}
+                onClick={() => {
+                  // Generate a detailed financial advice report
+                  const deposits = transactions.filter(t => t.type === 'DEPOSIT').length;
+                  const withdrawals = transactions.filter(t => t.type === 'WITHDRAWAL').length;
+                  const buys = transactions.filter(t => t.type === 'BUY').length;
+                  const sells = transactions.filter(t => t.type === 'SELL').length;
+                  
+                  let advice = "";
+                  
+                  if (withdrawals > deposits) {
+                    advice = "You're withdrawing more than depositing. Consider building your savings for long-term growth.";
+                  } else if (buys > sells * 3) {
+                    advice = "You're buying frequently but not rebalancing. Consider reviewing your portfolio allocation.";
+                  } else if (sells > buys) {
+                    advice = "You're selling more than buying. Make sure you have a reinvestment strategy.";
+                  } else {
+                    advice = "Your transaction pattern shows a balanced approach. Keep up the good work!";
+                  }
+                  
+                  toast.success("Financial Report Generated", {
+                    description: advice
+                  });
+                }}
               >
-                Generate Report
+                Generate Financial Report
               </Button>
             </div>
           </CardContent>

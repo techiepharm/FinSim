@@ -38,7 +38,7 @@ const App = () => {
             <Route path="/transactions" element={<TransactionHistory />} />
             <Route path="/withdraw" element={<WithdrawFunds />} />
             <Route path="/add-funds" element={<AddFunds />} />
-            <Route path="/trading" element={() => <Index activePage="trading" />} />
+            <Route path="/trading" element={<Index activePage="trading" />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

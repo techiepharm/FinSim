@@ -205,6 +205,8 @@ const StockSimulator = () => {
   );
   
   const handleBuy = () => {
+    if (!selectedStock) return;
+    
     const stock = selectedStock;
     const totalCost = stock.currentPrice * shares;
     
@@ -242,10 +244,15 @@ const StockSimulator = () => {
         title: "Purchase Complete",
         description: `Successfully bought ${shares} shares of ${stock.symbol} for $${totalCost.toFixed(2)}`,
       });
+      
+      // Force a refresh of the dashboard by updating localStorage
+      window.dispatchEvent(new Event('storage'));
     }
   };
   
   const handleSell = () => {
+    if (!selectedStock) return;
+    
     const stock = selectedStock;
     
     // Check if user owns the stock
@@ -286,6 +293,9 @@ const StockSimulator = () => {
         title: "Sale Complete",
         description: `Successfully sold ${shares} shares of ${stock.symbol} for $${saleAmount.toFixed(2)}`,
       });
+      
+      // Force a refresh of the dashboard by updating localStorage
+      window.dispatchEvent(new Event('storage'));
     }
   };
   
@@ -358,11 +368,11 @@ const StockSimulator = () => {
   };
   
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 overflow-y-auto max-h-[calc(100vh-5rem)]">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <div>
           <h2 className="text-3xl font-bold text-white">Stock Trading Simulator</h2>
-          <p className="text-slate-400">Practice trading with $1,000 in virtual cash</p>
+          <p className="text-slate-400">Practice trading with virtual cash</p>
         </div>
         
         <div className="flex space-x-4 mt-4 md:mt-0">
@@ -396,7 +406,7 @@ const StockSimulator = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-y-auto max-h-[50vh]">
             <div className="divide-y divide-slate-700">
               {filteredStocks.map((stock) => (
                 <div 

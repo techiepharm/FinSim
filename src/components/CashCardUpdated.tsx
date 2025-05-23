@@ -1,14 +1,49 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Wallet, PlusCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { toast } from "@/components/ui/sonner";
 
 interface CashCardUpdatedProps {
   availableBalance: number;
 }
 
 const CashCardUpdated = ({ availableBalance }: CashCardUpdatedProps) => {
+  const [balance, setBalance] = useState(availableBalance);
+  
+  // Keep balance updated
+  useEffect(() => {
+    setBalance(availableBalance);
+    
+    // Also listen for storage events to update in real-time
+    const handleStorageChange = () => {
+      try {
+        const portfolioData = localStorage.getItem('portfolio');
+        if (portfolioData) {
+          const portfolio = JSON.parse(portfolioData);
+          setBalance(portfolio.cash);
+        }
+      } catch (e) {
+        console.error("Error updating balance:", e);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Create our own event listener
+    window.addEventListener('storageUpdate', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('storageUpdate', handleStorageChange);
+    };
+  }, [availableBalance]);
+  
+  const handleAddFunds = () => {
+    window.location.href = '/add-funds';
+  };
+  
   return (
     <Card className="bg-slate-800 border-slate-700 overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-green-900/50 to-emerald-800/50 pb-2">
@@ -17,7 +52,7 @@ const CashCardUpdated = ({ availableBalance }: CashCardUpdatedProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-6">
-        <div className="text-3xl font-bold text-white mb-4">${availableBalance.toFixed(2)}</div>
+        <div className="text-3xl font-bold text-white mb-4">${balance.toFixed(2)}</div>
         
         <div className="space-y-2">
           <Button 
@@ -34,12 +69,10 @@ const CashCardUpdated = ({ availableBalance }: CashCardUpdatedProps) => {
           <Button 
             variant="outline" 
             className="w-full border-blue-600 text-blue-400 hover:bg-blue-800/20"
-            asChild
+            onClick={handleAddFunds}
           >
-            <Link to="/add-funds">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Funds
-            </Link>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Funds
           </Button>
         </div>
       </CardContent>
