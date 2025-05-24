@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -57,14 +56,18 @@ const initialStocks = [
 
 // Function to update stock price with realistic movement
 const updateStockPrice = (stock) => {
-  const volatility = 0.015; // 1.5% volatility
+  const volatility = 0.02; // 2% volatility
   const randomChange = (Math.random() - 0.5) * volatility;
   const newPrice = stock.currentPrice * (1 + randomChange);
   const priceChange = ((newPrice - stock.price) / stock.price) * 100;
   
+  // Add some momentum - stocks trending up are more likely to continue up
+  const momentum = Math.random() > 0.7 ? (Math.random() - 0.5) * 0.01 : 0;
+  const finalPrice = Math.max(0.01, newPrice + (stock.currentPrice * momentum));
+  
   return {
     ...stock,
-    currentPrice: Math.max(0.01, parseFloat(newPrice.toFixed(2))),
+    currentPrice: parseFloat(finalPrice.toFixed(2)),
     change: parseFloat(priceChange.toFixed(2))
   };
 };
@@ -163,23 +166,37 @@ const StockSimulator = () => {
   
   // Initialize stocks with current prices and data
   useEffect(() => {
+    console.log("Initializing stocks...");
     const initializedStocks = initialStocks.map(stock => ({
       ...stock,
       data: generateStockData(stock.symbol, stock.price),
       currentPrice: stock.price
     }));
     setStocks(initializedStocks);
+    console.log("Stocks initialized:", initializedStocks.length);
   }, []);
   
-  // Update stock prices every 5 seconds for realistic movement
+  // Update stock prices every 3 seconds for realistic movement
   useEffect(() => {
-    if (stocks.length === 0) return;
+    if (stocks.length === 0) {
+      console.log("No stocks to update");
+      return;
+    }
     
+    console.log("Setting up stock price update interval...");
     const interval = setInterval(() => {
-      setStocks(prevStocks => prevStocks.map(updateStockPrice));
-    }, 5000);
+      console.log("Updating stock prices...");
+      setStocks(prevStocks => {
+        const updatedStocks = prevStocks.map(updateStockPrice);
+        console.log("Updated stocks:", updatedStocks.slice(0, 2)); // Log first 2 for verification
+        return updatedStocks;
+      });
+    }, 3000);
     
-    return () => clearInterval(interval);
+    return () => {
+      console.log("Clearing stock price update interval");
+      clearInterval(interval);
+    };
   }, [stocks.length]);
   
   // Load portfolio on mount
