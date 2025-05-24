@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { TrendingUp, TrendingDown, AlertCircle, PieChart, Search, ArrowRight, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { TrendingUp, TrendingDown, AlertCircle, PieChart, Search, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { 
   Dialog, 
   DialogContent, 
@@ -14,12 +14,7 @@ import {
   DialogTitle,
   DialogFooter
 } from "@/components/ui/dialog";
-import { useToast } from "@/components/ui/use-toast";
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from "@/components/ui/popover";
+import { toast } from "@/components/ui/sonner";
 
 // Generate realistic looking but fake stock data
 const generateStockData = (symbol, basePrice) => {
@@ -58,13 +53,11 @@ const initialStocks = [
   { symbol: 'V', name: 'Visa Inc.', price: 272.46, change: 1.02, industry: 'Financial Services' },
   { symbol: 'PG', name: 'Procter & Gamble Co.', price: 162.95, change: 0.32, industry: 'Consumer Goods' },
   { symbol: 'DIS', name: 'The Walt Disney Company', price: 112.73, change: 1.85, industry: 'Entertainment' },
-  { symbol: 'HD', name: 'Home Depot Inc.', price: 372.11, change: -1.05, industry: 'Retail' },
-  { symbol: 'MRK', name: 'Merck & Co., Inc.', price: 114.29, change: 0.21, industry: 'Healthcare' },
 ];
 
 // Function to update stock price with realistic movement
 const updateStockPrice = (stock) => {
-  const volatility = 0.02; // 2% volatility
+  const volatility = 0.015; // 1.5% volatility
   const randomChange = (Math.random() - 0.5) * volatility;
   const newPrice = stock.currentPrice * (1 + randomChange);
   const priceChange = ((newPrice - stock.price) / stock.price) * 100;
@@ -76,102 +69,84 @@ const updateStockPrice = (stock) => {
   };
 };
 
-// Function to save transaction to local storage
-const saveTransaction = (transaction) => {
+// Function to save transaction and update portfolio
+const processTransaction = (symbol, shares, price, type) => {
   try {
-    // Get existing transactions or initialize empty array
-    const existingTransactionsJson = localStorage.getItem('transactions');
-    const existingTransactions = existingTransactionsJson 
-      ? JSON.parse(existingTransactionsJson) 
-      : [];
+    // Get existing portfolio
+    const portfolioData = localStorage.getItem('portfolio');
+    const portfolio = portfolioData ? JSON.parse(portfolioData) : { cash: 1000, holdings: [] };
     
-    // Add new transaction with ID
-    const newTransaction = {
-      ...transaction,
-      id: Date.now(),
-      date: new Date().toISOString()
-    };
-    
-    const updatedTransactions = [newTransaction, ...existingTransactions];
-    
-    // Save back to localStorage
-    localStorage.setItem('transactions', JSON.stringify(updatedTransactions));
-    
-    return newTransaction;
-  } catch (e) {
-    console.error("Error saving transaction:", e);
-    return null;
-  }
-};
-
-// Function to update portfolio in local storage
-const updatePortfolio = (symbol, shares, price, isBuying) => {
-  try {
-    // Get existing portfolio or initialize
-    const existingPortfolioJson = localStorage.getItem('portfolio');
-    const existingPortfolio = existingPortfolioJson 
-      ? JSON.parse(existingPortfolioJson) 
-      : { cash: 1000, holdings: [] };
-    
-    // Calculate transaction amount
     const transactionAmount = shares * price;
     
-    // Update cash
-    if (isBuying) {
-      existingPortfolio.cash -= transactionAmount;
-    } else {
-      existingPortfolio.cash += transactionAmount;
-    }
+    // Create transaction record
+    const transaction = {
+      id: Date.now(),
+      date: new Date().toISOString(),
+      type,
+      symbol,
+      shares,
+      price,
+      amount: type === 'BUY' ? -transactionAmount : transactionAmount
+    };
     
-    // Find if stock already exists in holdings
-    const holdingIndex = existingPortfolio.holdings.findIndex(h => h.symbol === symbol);
-    
-    if (holdingIndex >= 0) {
-      // Update existing holding
-      if (isBuying) {
-        existingPortfolio.holdings[holdingIndex].shares += shares;
-        existingPortfolio.holdings[holdingIndex].averagePrice = 
-          ((existingPortfolio.holdings[holdingIndex].averagePrice * (existingPortfolio.holdings[holdingIndex].shares - shares)) 
-            + (price * shares)) / existingPortfolio.holdings[holdingIndex].shares;
-      } else {
-        existingPortfolio.holdings[holdingIndex].shares -= shares;
-        
-        // If all shares sold, remove from holdings
-        if (existingPortfolio.holdings[holdingIndex].shares <= 0) {
-          existingPortfolio.holdings.splice(holdingIndex, 1);
-        }
+    // Update portfolio based on transaction type
+    if (type === 'BUY') {
+      if (portfolio.cash < transactionAmount) {
+        return { success: false, message: 'Insufficient funds' };
       }
-    } else if (isBuying) {
-      // Add new holding if buying
-      existingPortfolio.holdings.push({
-        symbol,
-        shares,
-        averagePrice: price
-      });
+      
+      portfolio.cash -= transactionAmount;
+      
+      // Update holdings
+      const holdingIndex = portfolio.holdings.findIndex(h => h.symbol === symbol);
+      if (holdingIndex >= 0) {
+        const existing = portfolio.holdings[holdingIndex];
+        const totalShares = existing.shares + shares;
+        const totalValue = (existing.shares * existing.averagePrice) + (shares * price);
+        portfolio.holdings[holdingIndex] = {
+          symbol,
+          shares: totalShares,
+          averagePrice: totalValue / totalShares
+        };
+      } else {
+        portfolio.holdings.push({ symbol, shares, averagePrice: price });
+      }
+    } else if (type === 'SELL') {
+      const holding = portfolio.holdings.find(h => h.symbol === symbol);
+      if (!holding || holding.shares < shares) {
+        return { success: false, message: 'Insufficient shares' };
+      }
+      
+      portfolio.cash += transactionAmount;
+      
+      // Update holdings
+      const holdingIndex = portfolio.holdings.findIndex(h => h.symbol === symbol);
+      portfolio.holdings[holdingIndex].shares -= shares;
+      
+      // Remove holding if no shares left
+      if (portfolio.holdings[holdingIndex].shares <= 0) {
+        portfolio.holdings.splice(holdingIndex, 1);
+      }
     }
     
     // Save updated portfolio
-    localStorage.setItem('portfolio', JSON.stringify(existingPortfolio));
+    localStorage.setItem('portfolio', JSON.stringify(portfolio));
     
-    return existingPortfolio;
-  } catch (e) {
-    console.error("Error updating portfolio:", e);
-    return null;
+    // Save transaction
+    const existingTransactions = localStorage.getItem('transactions');
+    const transactions = existingTransactions ? JSON.parse(existingTransactions) : [];
+    transactions.unshift(transaction);
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+    
+    // Trigger storage event for other components
+    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new Event('storageUpdate'));
+    
+    return { success: true, portfolio, transaction };
+  } catch (error) {
+    console.error('Transaction processing error:', error);
+    return { success: false, message: 'Transaction failed' };
   }
-};
-
-// Generate receipt
-const generateReceipt = (transaction) => {
-  return {
-    transactionId: transaction.id,
-    date: new Date(transaction.date).toLocaleString(),
-    type: transaction.type,
-    symbol: transaction.symbol,
-    shares: transaction.shares,
-    price: transaction.price,
-    total: Math.abs(transaction.amount),
-    fee: 0.00
-  };
 };
 
 // Main component
@@ -185,7 +160,6 @@ const StockSimulator = () => {
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [marketAnalysis, setMarketAnalysis] = useState(false);
   const [stocks, setStocks] = useState([]);
-  const { toast } = useToast();
   
   // Initialize stocks with current prices and data
   useEffect(() => {
@@ -197,13 +171,13 @@ const StockSimulator = () => {
     setStocks(initializedStocks);
   }, []);
   
-  // Update stock prices every 3 seconds for realistic movement
+  // Update stock prices every 5 seconds for realistic movement
   useEffect(() => {
     if (stocks.length === 0) return;
     
     const interval = setInterval(() => {
       setStocks(prevStocks => prevStocks.map(updateStockPrice));
-    }, 3000);
+    }, 5000);
     
     return () => clearInterval(interval);
   }, [stocks.length]);
@@ -219,17 +193,15 @@ const StockSimulator = () => {
       console.error("Error loading portfolio:", e);
     }
     
-    // Show stock recommendation notification
-    const timeout = setTimeout(() => {
-      toast({
-        title: "Stock Alert",
-        description: "AAPL is showing strong momentum with positive earnings. Consider adding to your portfolio.",
-        duration: 8000,
+    // Show demo notification
+    setTimeout(() => {
+      toast("🎯 Demo Trading Account", {
+        description: "You're using a demo account with virtual money. Perfect for learning!",
+        className: "bg-blue-600 border-blue-700 text-white",
+        duration: 6000,
       });
-    }, 15000);
-    
-    return () => clearTimeout(timeout);
-  }, [toast]);
+    }, 2000);
+  }, []);
   
   const filteredStocks = stocks.filter(stock => 
     stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -237,97 +209,74 @@ const StockSimulator = () => {
   );
   
   const handleBuy = () => {
-    if (!selectedStock) return;
+    if (!selectedStock || shares < 1) return;
     
-    const stock = selectedStock;
-    const totalCost = stock.currentPrice * shares;
+    const result = processTransaction(selectedStock.symbol, shares, selectedStock.currentPrice, 'BUY');
     
-    // Check if user has enough cash
-    if (portfolio.cash < totalCost) {
-      toast({
-        title: "Insufficient Funds",
-        description: `You need $${totalCost.toFixed(2)} but only have $${portfolio.cash.toFixed(2)}`,
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Process transaction
-    const transaction = {
-      type: 'BUY',
-      symbol: stock.symbol,
-      shares,
-      price: stock.currentPrice,
-      amount: -totalCost
-    };
-    
-    const savedTransaction = saveTransaction(transaction);
-    const updatedPortfolio = updatePortfolio(stock.symbol, shares, stock.currentPrice, true);
-    
-    if (updatedPortfolio) {
-      setPortfolio(updatedPortfolio);
+    if (result.success) {
+      setPortfolio(result.portfolio);
       
-      // Generate receipt and show it
-      const newReceipt = generateReceipt(savedTransaction);
+      const newReceipt = {
+        transactionId: result.transaction.id,
+        date: new Date(result.transaction.date).toLocaleString(),
+        type: result.transaction.type,
+        symbol: result.transaction.symbol,
+        shares: result.transaction.shares,
+        price: result.transaction.price,
+        total: Math.abs(result.transaction.amount),
+        fee: 0.00
+      };
+      
       setReceipt(newReceipt);
       setShowReceipt(true);
       
-      toast({
-        title: "Purchase Complete",
-        description: `Successfully bought ${shares} shares of ${stock.symbol} for $${totalCost.toFixed(2)}`,
+      toast("✅ Purchase Successful", {
+        description: `Bought ${shares} shares of ${selectedStock.symbol} for $${(selectedStock.currentPrice * shares).toFixed(2)}`,
+        className: "bg-green-600 border-green-700 text-white",
+        duration: 4000,
       });
-      
-      // Force a refresh of the dashboard by updating localStorage
-      window.dispatchEvent(new Event('storage'));
+    } else {
+      toast("❌ Purchase Failed", {
+        description: result.message,
+        className: "bg-red-600 border-red-700 text-white",
+        duration: 4000,
+      });
     }
   };
   
   const handleSell = () => {
-    if (!selectedStock) return;
+    if (!selectedStock || shares < 1) return;
     
-    const stock = selectedStock;
+    const result = processTransaction(selectedStock.symbol, shares, selectedStock.currentPrice, 'SELL');
     
-    // Check if user owns the stock
-    const holding = portfolio.holdings.find(h => h.symbol === stock.symbol);
-    if (!holding || holding.shares < shares) {
-      toast({
-        title: "Insufficient Shares",
-        description: `You only own ${holding ? holding.shares : 0} shares of ${stock.symbol}`,
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Calculate sale amount
-    const saleAmount = stock.currentPrice * shares;
-    
-    // Process transaction
-    const transaction = {
-      type: 'SELL',
-      symbol: stock.symbol,
-      shares,
-      price: stock.currentPrice,
-      amount: saleAmount
-    };
-    
-    const savedTransaction = saveTransaction(transaction);
-    const updatedPortfolio = updatePortfolio(stock.symbol, shares, stock.currentPrice, false);
-    
-    if (updatedPortfolio) {
-      setPortfolio(updatedPortfolio);
+    if (result.success) {
+      setPortfolio(result.portfolio);
       
-      // Generate receipt and show it
-      const newReceipt = generateReceipt(savedTransaction);
+      const newReceipt = {
+        transactionId: result.transaction.id,
+        date: new Date(result.transaction.date).toLocaleString(),
+        type: result.transaction.type,
+        symbol: result.transaction.symbol,
+        shares: result.transaction.shares,
+        price: result.transaction.price,
+        total: Math.abs(result.transaction.amount),
+        fee: 0.00
+      };
+      
       setReceipt(newReceipt);
       setShowReceipt(true);
       
-      toast({
-        title: "Sale Complete",
-        description: `Successfully sold ${shares} shares of ${stock.symbol} for $${saleAmount.toFixed(2)}`,
+      toast("✅ Sale Successful", {
+        description: `Sold ${shares} shares of ${selectedStock.symbol} for $${(selectedStock.currentPrice * shares).toFixed(2)}`,
+        className: "bg-green-600 border-green-700 text-white",
+        duration: 4000,
       });
-      
-      // Force a refresh of the dashboard by updating localStorage
-      window.dispatchEvent(new Event('storage'));
+    } else {
+      toast("❌ Sale Failed", {
+        description: result.message,
+        className: "bg-red-600 border-red-700 text-white",
+        duration: 4000,
+      });
     }
   };
   
@@ -381,30 +330,26 @@ const StockSimulator = () => {
   
   // Market analysis data
   const getMarketAnalysis = () => {
-    // Calculate index performance
     const gainers = stocks.filter(s => Number(s.change) > 0);
     const losers = stocks.filter(s => Number(s.change) < 0);
-    
-    const strongestSector = "Technology";
-    const weakestSector = "Healthcare";
     
     return {
       overview: "The market is showing mixed signals with tech stocks leading gains while healthcare continues to lag.",
       momentum: "Positive",
       gainers: gainers.length,
       losers: losers.length,
-      strongestSector,
-      weakestSector,
+      strongestSector: "Technology",
+      weakestSector: "Healthcare",
       recommendation: "Consider increasing technology sector exposure while maintaining a diversified portfolio."
     };
   };
   
   return (
-    <div className="container mx-auto p-6 overflow-y-auto max-h-[100vh] pb-20">
+    <div className="container mx-auto p-4 max-h-screen overflow-y-auto">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <div>
           <h2 className="text-3xl font-bold text-white">Stock Trading Simulator</h2>
-          <p className="text-slate-400">Practice trading with virtual cash</p>
+          <p className="text-slate-400">🎯 Demo Account - Practice trading with virtual cash</p>
         </div>
         
         <div className="flex space-x-4 mt-4 md:mt-0">
@@ -415,9 +360,9 @@ const StockSimulator = () => {
             <PieChart className="mr-2 h-4 w-4" />
             Analyze Market
           </Button>
-          <Button className="bg-green-600 hover:bg-green-700" onClick={() => window.location.href = '/portfolio'}>
+          <Button className="bg-green-600 hover:bg-green-700" onClick={() => window.location.href = '/'}>
             <PieChart className="mr-2 h-4 w-4" />
-            View Portfolio
+            View Dashboard
           </Button>
         </div>
       </div>
@@ -438,7 +383,7 @@ const StockSimulator = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="overflow-y-auto max-h-[50vh]">
+          <CardContent className="overflow-y-auto max-h-[60vh]">
             <div className="divide-y divide-slate-700">
               {filteredStocks.map((stock) => (
                 <div 
@@ -480,16 +425,16 @@ const StockSimulator = () => {
         <div className="space-y-6">
           <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle className="text-white">Account Balance</CardTitle>
+              <CardTitle className="text-white">Demo Account Balance</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-white mb-4">${portfolio.cash.toFixed(2)}</div>
               <Button 
                 variant="outline" 
                 className="w-full border-green-600 text-green-400 hover:bg-green-800/20"
-                onClick={() => window.location.href = '/withdraw'}
+                onClick={() => window.location.href = '/add-funds'}
               >
-                Withdraw Funds
+                Add Demo Funds
               </Button>
             </CardContent>
           </Card>
@@ -536,7 +481,7 @@ const StockSimulator = () => {
                       type="number" 
                       min="1" 
                       value={shares} 
-                      onChange={e => setShares(parseInt(e.target.value) || 1)}
+                      onChange={e => setShares(Math.max(1, parseInt(e.target.value) || 1))}
                       className="bg-slate-700 border-slate-600 text-white"
                     />
                   </div>
@@ -552,12 +497,14 @@ const StockSimulator = () => {
                   <Button 
                     className="bg-green-600 hover:bg-green-700" 
                     onClick={handleBuy}
+                    disabled={!selectedStock || shares < 1}
                   >
                     Buy
                   </Button>
                   <Button 
                     className="bg-red-600 hover:bg-red-700"
                     onClick={handleSell}
+                    disabled={!selectedStock || shares < 1}
                   >
                     Sell
                   </Button>
@@ -639,7 +586,7 @@ const StockSimulator = () => {
       {/* Stock Analysis Dialog */}
       <Dialog open={showAnalysis} onOpenChange={setShowAnalysis}>
         {selectedStock && (
-          <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-2xl">
+          <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-white">
                 {selectedStock.symbol}: {selectedStock.name} Analysis
@@ -649,7 +596,7 @@ const StockSimulator = () => {
               </DialogDescription>
             </DialogHeader>
             
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h3 className="font-medium text-white mb-2">Price Performance</h3>
@@ -687,8 +634,8 @@ const StockSimulator = () => {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-400">10-Day Change:</span>
-                          <span className={analysis.recent.percentChange >= 0 ? 'text-green-400' : 'text-red-400'}>
-                            {analysis.recent.percentChange >= 0 ? '+' : ''}{analysis.recent.percentChange}% (${analysis.recent.change})
+                          <span className={Number(analysis.recent.percentChange) >= 0 ? 'text-green-400' : 'text-red-400'}>
+                            {Number(analysis.recent.percentChange) >= 0 ? '+' : ''}{analysis.recent.percentChange}% (${analysis.recent.change})
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -734,33 +681,33 @@ const StockSimulator = () => {
                   </div>
                 );
               })()}
-              
-              <DialogFooter>
-                <Button 
-                  variant="outline" 
-                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                  onClick={() => setShowAnalysis(false)}
-                >
-                  Close
-                </Button>
-                <Button 
-                  className="bg-green-600 hover:bg-green-700" 
-                  onClick={() => {
-                    setShowAnalysis(false);
-                    setShares(1);
-                  }}
-                >
-                  Trade Now
-                </Button>
-              </DialogFooter>
             </div>
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                onClick={() => setShowAnalysis(false)}
+              >
+                Close
+              </Button>
+              <Button 
+                className="bg-green-600 hover:bg-green-700" 
+                onClick={() => {
+                  setShowAnalysis(false);
+                  setShares(1);
+                }}
+              >
+                Trade Now
+              </Button>
+            </DialogFooter>
           </DialogContent>
         )}
       </Dialog>
       
       {/* Market Analysis Dialog */}
       <Dialog open={marketAnalysis} onOpenChange={setMarketAnalysis}>
-        <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-3xl">
+        <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-white">Market Analysis</DialogTitle>
             <DialogDescription className="text-slate-300">
@@ -768,7 +715,7 @@ const StockSimulator = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-6">
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto">
             <div>
               <h3 className="font-medium text-white mb-3">Market Overview</h3>
               <div className="bg-slate-700 rounded-md p-4">
@@ -879,16 +826,16 @@ const StockSimulator = () => {
               </h3>
               <p className="text-slate-300">{getMarketAnalysis().recommendation}</p>
             </div>
-            
-            <DialogFooter>
-              <Button 
-                className="bg-green-600 hover:bg-green-700" 
-                onClick={() => setMarketAnalysis(false)}
-              >
-                Continue Trading
-              </Button>
-            </DialogFooter>
           </div>
+          
+          <DialogFooter>
+            <Button 
+              className="bg-green-600 hover:bg-green-700" 
+              onClick={() => setMarketAnalysis(false)}
+            >
+              Continue Trading
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
