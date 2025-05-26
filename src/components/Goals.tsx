@@ -1,330 +1,259 @@
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { Target, TrendingUp, CalendarDays } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { toast } from "sonner";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { Target, Plus, Trash2, Edit2, Check } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 
 interface Goal {
   id: string;
-  name: string;
-  target: number;
-  current: number;
-  deadline: Date;
-  type: 'profit' | 'trading';
-  created: Date;
+  title: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline: string;
+  category: string;
 }
 
 const Goals = () => {
-  const [profitGoals, setProfitGoals] = useState<Goal[]>([
+  const [goals, setGoals] = useState<Goal[]>([
     {
       id: '1',
-      name: 'Monthly Profit',
-      target: 5000,
-      current: 3149,
-      deadline: new Date(2025, 5, 30),
-      type: 'profit',
-      created: new Date(2025, 4, 1)
+      title: 'Emergency Fund',
+      targetAmount: 5000,
+      currentAmount: 1200,
+      deadline: '2024-12-31',
+      category: 'Savings'
     },
     {
       id: '2',
-      name: 'Yearly Portfolio Growth',
-      target: 15000,
-      current: 3750,
-      deadline: new Date(2025, 11, 31),
-      type: 'profit',
-      created: new Date(2025, 0, 1)
-    }
-  ]);
-  
-  const [tradingGoals, setTradingGoals] = useState<Goal[]>([
-    {
-      id: '1',
-      name: 'Successful Trades',
-      target: 50,
-      current: 12,
-      deadline: new Date(2025, 6, 30),
-      type: 'trading',
-      created: new Date(2025, 4, 1)
+      title: 'Vacation Fund',
+      targetAmount: 2500,
+      currentAmount: 800,
+      deadline: '2024-08-15',
+      category: 'Travel'
     },
     {
-      id: '2',
-      name: 'Diversification',
-      target: 10,
-      current: 5,
-      deadline: new Date(2025, 5, 15),
-      type: 'trading',
-      created: new Date(2025, 4, 1)
+      id: '3',
+      title: 'Investment Portfolio',
+      targetAmount: 10000,
+      currentAmount: 3200,
+      deadline: '2025-06-30',
+      category: 'Investment'
     }
   ]);
 
-  // Form state for adding new goals
+  const [showAddForm, setShowAddForm] = useState(false);
   const [newGoal, setNewGoal] = useState({
-    name: '',
-    target: 0,
-    deadline: new Date(),
-    type: 'profit' as 'profit' | 'trading'
+    title: '',
+    targetAmount: '',
+    deadline: '',
+    category: ''
   });
-  
-  const handleAddGoal = (type: 'profit' | 'trading') => {
-    if (!newGoal.name || newGoal.target <= 0) {
-      toast.error("Please fill in all fields correctly");
+
+  const handleAddGoal = () => {
+    if (!newGoal.title || !newGoal.targetAmount || !newGoal.deadline) {
+      toast("❌ Missing Information", {
+        description: "Please fill in all fields to create a goal.",
+        className: "bg-red-600 border-red-700 text-white",
+      });
       return;
     }
-    
+
     const goal: Goal = {
       id: Date.now().toString(),
-      name: newGoal.name,
-      target: newGoal.target,
-      current: 0,
+      title: newGoal.title,
+      targetAmount: parseFloat(newGoal.targetAmount),
+      currentAmount: 0,
       deadline: newGoal.deadline,
-      type,
-      created: new Date()
+      category: newGoal.category || 'General'
     };
+
+    setGoals([...goals, goal]);
+    setNewGoal({ title: '', targetAmount: '', deadline: '', category: '' });
+    setShowAddForm(false);
     
-    if (type === 'profit') {
-      setProfitGoals(prev => [...prev, goal]);
-    } else {
-      setTradingGoals(prev => [...prev, goal]);
-    }
-    
-    setNewGoal({
-      name: '',
-      target: 0,
-      deadline: new Date(),
-      type: 'profit'
+    toast("🎯 Goal Created", {
+      description: `Your ${goal.title} goal has been created!`,
+      className: "bg-green-600 border-green-700 text-white",
     });
-    
-    toast.success(`New ${type} goal created successfully`);
   };
-  
-  const calculateProgress = (current: number, target: number) => {
-    const progress = (current / target) * 100;
-    return Math.min(progress, 100);
+
+  const handleDeleteGoal = (id: string) => {
+    setGoals(goals.filter(goal => goal.id !== id));
+    toast("🗑️ Goal Deleted", {
+      description: "Goal has been removed from your list.",
+      className: "bg-orange-600 border-orange-700 text-white",
+    });
   };
-  
+
+  const getProgressPercentage = (current: number, target: number) => {
+    return Math.min((current / target) * 100, 100);
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'savings': return 'bg-green-600';
+      case 'travel': return 'bg-blue-600';
+      case 'investment': return 'bg-purple-600';
+      default: return 'bg-gray-600';
+    }
+  };
+
   return (
-    <div className="p-6 space-y-6">
-      <h2 className="text-3xl font-bold text-finance-primary">Financial Goals</h2>
-      <p className="text-muted-foreground">Track your financial progress with personalized goals</p>
-      
-      <Tabs defaultValue="profit">
-        <div className="flex items-center justify-between mb-4">
-          <TabsList>
-            <TabsTrigger value="profit" className="flex items-center gap-1">
-              <TrendingUp className="h-4 w-4" />
-              Profit Goals
-            </TabsTrigger>
-            <TabsTrigger value="trading" className="flex items-center gap-1">
-              <Target className="h-4 w-4" />
-              Trading Goals
-            </TabsTrigger>
-          </TabsList>
+    <div className="min-h-screen bg-slate-900 p-4">
+      <div className="container mx-auto max-w-6xl">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Financial Goals</h1>
+            <p className="text-slate-400">🎯 Demo Account - Track your savings and investment targets</p>
+          </div>
+          <Button 
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Goal
+          </Button>
         </div>
-        
-        <TabsContent value="profit" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {profitGoals.map(goal => (
-              <Card key={goal.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle>{goal.name}</CardTitle>
-                      <CardDescription>
-                        Target: ${goal.target.toLocaleString()}
-                      </CardDescription>
-                    </div>
-                    <div className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full flex items-center gap-1">
-                      <CalendarDays className="h-3 w-3" />
-                      {format(goal.deadline, "MMM d, yyyy")}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>${goal.current.toLocaleString()}</span>
-                      <span>${goal.target.toLocaleString()}</span>
-                    </div>
-                    <Progress value={calculateProgress(goal.current, goal.target)} />
-                    <div className="text-right text-sm text-muted-foreground">
-                      {calculateProgress(goal.current, goal.target).toFixed(0)}% Complete
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          {/* Add New Profit Goal */}
-          <Card>
+
+        {showAddForm && (
+          <Card className="bg-slate-800 border-slate-700 mb-6">
             <CardHeader>
-              <CardTitle>Create New Profit Goal</CardTitle>
+              <CardTitle className="text-white">Create New Goal</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                <div>
-                  <label htmlFor="goal-name" className="text-sm font-medium">Goal Name</label>
-                  <Input 
-                    id="goal-name" 
-                    value={newGoal.name} 
-                    onChange={(e) => setNewGoal({...newGoal, name: e.target.value})}
-                    placeholder="e.g., Monthly Return Goal" 
-                  />
-                </div>
-                <div>
-                  <label htmlFor="goal-target" className="text-sm font-medium">Target Amount ($)</label>
-                  <Input 
-                    id="goal-target" 
-                    type="number"
-                    value={newGoal.target || ''} 
-                    onChange={(e) => setNewGoal({...newGoal, target: Number(e.target.value)})}
-                    placeholder="5000" 
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Deadline</label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !newGoal.deadline && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        {newGoal.deadline ? format(newGoal.deadline, "PPP") : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={newGoal.deadline}
-                        onSelect={(date) => date && setNewGoal({...newGoal, deadline: date})}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+            <CardContent className="space-y-4">
+              <Input
+                placeholder="Goal title (e.g., Emergency Fund)"
+                value={newGoal.title}
+                onChange={(e) => setNewGoal({...newGoal, title: e.target.value})}
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+              <Input
+                type="number"
+                placeholder="Target amount ($)"
+                value={newGoal.targetAmount}
+                onChange={(e) => setNewGoal({...newGoal, targetAmount: e.target.value})}
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+              <Input
+                type="date"
+                value={newGoal.deadline}
+                onChange={(e) => setNewGoal({...newGoal, deadline: e.target.value})}
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+              <Input
+                placeholder="Category (e.g., Savings, Travel, Investment)"
+                value={newGoal.category}
+                onChange={(e) => setNewGoal({...newGoal, category: e.target.value})}
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+              <div className="flex gap-2">
+                <Button onClick={handleAddGoal} className="bg-green-600 hover:bg-green-700">
+                  <Check className="h-4 w-4 mr-2" />
+                  Create Goal
+                </Button>
+                <Button variant="outline" onClick={() => setShowAddForm(false)}>
+                  Cancel
+                </Button>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button 
-                className="w-full bg-finance-accent hover:bg-green-700" 
-                onClick={() => handleAddGoal('profit')}
-              >
-                Create Profit Goal
-              </Button>
-            </CardFooter>
           </Card>
-        </TabsContent>
-        
-        <TabsContent value="trading" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {tradingGoals.map(goal => (
-              <Card key={goal.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle>{goal.name}</CardTitle>
-                      <CardDescription>
-                        Target: {goal.target} {goal.name.toLowerCase().includes('trade') ? 'trades' : 'stocks'}
-                      </CardDescription>
-                    </div>
-                    <div className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full flex items-center gap-1">
-                      <CalendarDays className="h-3 w-3" />
-                      {format(goal.deadline, "MMM d, yyyy")}
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {goals.map((goal) => (
+            <Card key={goal.id} className="bg-slate-800 border-slate-700">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-white flex items-center">
+                      <Target className="h-5 w-5 mr-2 text-green-400" />
+                      {goal.title}
+                    </CardTitle>
+                    <div className={`inline-block px-2 py-1 rounded-full text-xs text-white mt-2 ${getCategoryColor(goal.category)}`}>
+                      {goal.category}
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>{goal.current}</span>
-                      <span>{goal.target}</span>
-                    </div>
-                    <Progress value={calculateProgress(goal.current, goal.target)} />
-                    <div className="text-right text-sm text-muted-foreground">
-                      {calculateProgress(goal.current, goal.target).toFixed(0)}% Complete
-                    </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteGoal(goal.id)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-slate-400">Progress</span>
+                    <span className="text-white">
+                      ${goal.currentAmount.toLocaleString()} / ${goal.targetAmount.toLocaleString()}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          {/* Add New Trading Goal */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Create New Trading Goal</CardTitle>
-            </CardHeader>
+                  <Progress 
+                    value={getProgressPercentage(goal.currentAmount, goal.targetAmount)} 
+                    className="h-2"
+                  />
+                  <div className="text-right text-xs text-slate-400 mt-1">
+                    {getProgressPercentage(goal.currentAmount, goal.targetAmount).toFixed(1)}% complete
+                  </div>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Target Date:</span>
+                  <span className="text-white">{new Date(goal.deadline).toLocaleDateString()}</span>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Remaining:</span>
+                  <span className="text-green-400">
+                    ${(goal.targetAmount - goal.currentAmount).toLocaleString()}
+                  </span>
+                </div>
+
+                <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Progress
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {goals.length === 0 && (
+          <Card className="bg-slate-800 border-slate-700 text-center py-12">
             <CardContent>
-              <div className="grid gap-4">
-                <div>
-                  <label htmlFor="trading-goal-name" className="text-sm font-medium">Goal Name</label>
-                  <Input 
-                    id="trading-goal-name" 
-                    value={newGoal.name} 
-                    onChange={(e) => setNewGoal({...newGoal, name: e.target.value})}
-                    placeholder="e.g., Weekly Successful Trades" 
-                  />
-                </div>
-                <div>
-                  <label htmlFor="trading-goal-target" className="text-sm font-medium">Target Number</label>
-                  <Input 
-                    id="trading-goal-target" 
-                    type="number"
-                    value={newGoal.target || ''} 
-                    onChange={(e) => setNewGoal({...newGoal, target: Number(e.target.value)})}
-                    placeholder="10" 
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Deadline</label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !newGoal.deadline && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        {newGoal.deadline ? format(newGoal.deadline, "PPP") : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={newGoal.deadline}
-                        onSelect={(date) => date && setNewGoal({...newGoal, deadline: date})}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+              <Target className="h-16 w-16 text-slate-600 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">No Goals Yet</h3>
+              <p className="text-slate-400 mb-4">Start by creating your first financial goal!</p>
+              <Button onClick={() => setShowAddForm(true)} className="bg-green-600 hover:bg-green-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Create First Goal
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="mt-8">
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white">💡 Goal Setting Tips</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="text-slate-300">
+                <p className="mb-2">🎯 <strong>Make it SMART:</strong> Specific, Measurable, Achievable, Relevant, Time-bound</p>
+                <p className="mb-2">💰 <strong>Start small:</strong> Begin with achievable goals to build momentum</p>
+                <p className="mb-2">📅 <strong>Set deadlines:</strong> Having a target date keeps you motivated</p>
+                <p>🔄 <strong>Review regularly:</strong> Check your progress and adjust as needed</p>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button 
-                className="w-full bg-finance-primary hover:bg-blue-700" 
-                onClick={() => handleAddGoal('trading')}
-              >
-                Create Trading Goal
-              </Button>
-            </CardFooter>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 };

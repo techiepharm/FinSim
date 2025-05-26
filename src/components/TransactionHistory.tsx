@@ -1,462 +1,350 @@
+
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { format } from "date-fns";
-import { CalendarDays, Filter, Download, ArrowUpDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Search, 
+  Filter, 
+  Download, 
+  TrendingUp, 
+  TrendingDown, 
+  PiggyBank,
+  CreditCard,
+  ArrowUpCircle,
+  ArrowDownCircle
+} from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 
-// Uses global transaction state stored in localStorage
-const getStoredTransactions = () => {
-  try {
-    const stored = localStorage.getItem('transactions');
-    if (stored) {
-      const parsedData = JSON.parse(stored);
-      return parsedData.map(t => ({
-        ...t,
-        date: new Date(t.date)
-      }));
-    }
-  } catch (e) {
-    console.error("Error reading transactions:", e);
-  }
-  return [];
-};
-
-const saveTransactions = (transactions) => {
-  try {
-    localStorage.setItem('transactions', JSON.stringify(transactions));
-  } catch (e) {
-    console.error("Error saving transactions:", e);
-  }
-};
-
-// Mock transaction data as a fallback
-const generateMockTransactions = (startDate: Date, endDate: Date) => {
-  const transactions = [];
-  const types = ['BUY', 'SELL', 'DIVIDEND', 'DEPOSIT', 'WITHDRAWAL'];
-  const symbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA'];
-  
-  let currentDate = new Date(startDate);
-  while (currentDate <= endDate) {
-    const randomType = types[Math.floor(Math.random() * types.length)];
-    const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
-    const amount = parseFloat((Math.random() * 1000).toFixed(2));
-    
-    transactions.push({
-      id: transactions.length + 1,
-      date: new Date(currentDate),
-      type: randomType,
-      symbol: randomType === 'DEPOSIT' || randomType === 'WITHDRAWAL' ? null : randomSymbol,
-      amount: randomType === 'BUY' || randomType === 'WITHDRAWAL' ? -amount : amount,
-      balance: 10000 + Math.random() * 3000,
-    });
-    
-    // Add 1-2 days to the current date
-    const daysToAdd = Math.floor(Math.random() * 2) + 1;
-    currentDate.setDate(currentDate.getDate() + daysToAdd);
-  }
-  
-  return transactions.sort((a, b) => b.date.getTime() - a.date.getTime());
-};
+interface Transaction {
+  id: string;
+  date: string;
+  type: string;
+  symbol?: string;
+  description: string;
+  amount: number;
+  balance?: number;
+}
 
 const TransactionHistory = () => {
-  const today = new Date();
-  const oneMonthAgo = new Date(today);
-  oneMonthAgo.setMonth(today.getMonth() - 1);
-  
-  const [dateRange, setDateRange] = useState<{
-    from: Date;
-    to: Date;
-  }>({
-    from: oneMonthAgo,
-    to: today,
-  });
-  
-  const [transactions, setTransactions] = useState([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('all');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [availableBalance, setAvailableBalance] = useState(0);
-  
-  // Load transactions and balance on component mount
+
+  // Demo transactions if no real ones exist
+  const demoTransactions: Transaction[] = [
+    {
+      id: 'demo-1',
+      date: new Date().toISOString(),
+      type: 'DEPOSIT',
+      description: 'Initial Demo Balance',
+      amount: 1000,
+      balance: 1000
+    },
+    {
+      id: 'demo-2',
+      date: new Date(Date.now() - 86400000).toISOString(),
+      type: 'BUY',
+      symbol: 'AAPL',
+      description: 'Demo Stock Purchase - Apple Inc.',
+      amount: -150,
+      balance: 850
+    },
+    {
+      id: 'demo-3',
+      date: new Date(Date.now() - 172800000).toISOString(),
+      type: 'SAVINGS_DEPOSIT',
+      description: 'Demo Savings Deposit',
+      amount: -100,
+      balance: 750
+    },
+    {
+      id: 'demo-4',
+      date: new Date(Date.now() - 259200000).toISOString(),
+      type: 'SELL',
+      symbol: 'TSLA',
+      description: 'Demo Stock Sale - Tesla Inc.',
+      amount: 200,
+      balance: 950
+    },
+    {
+      id: 'demo-5',
+      date: new Date(Date.now() - 345600000).toISOString(),
+      type: 'WITHDRAWAL',
+      description: 'Demo ATM Withdrawal',
+      amount: -50,
+      balance: 900
+    }
+  ];
+
   useEffect(() => {
-    const updateTransactionsAndBalance = () => {
-      const storedTransactions = getStoredTransactions();
-      
-      if (storedTransactions && storedTransactions.length > 0) {
-        setTransactions(storedTransactions.sort((a, b) => 
-          sortOrder === 'desc' 
-            ? new Date(b.date).getTime() - new Date(a.date).getTime() 
-            : new Date(a.date).getTime() - new Date(b.date).getTime()
-        ));
-      } else {
-        // Use mock data if no stored transactions
-        setTransactions(generateMockTransactions(dateRange.from, dateRange.to));
-      }
-      
-      // Get current balance from portfolio
+    // Load transactions from localStorage
+    const storedTransactions = localStorage.getItem('transactions');
+    if (storedTransactions) {
       try {
-        const portfolioData = localStorage.getItem('portfolio');
-        if (portfolioData) {
-          const portfolio = JSON.parse(portfolioData);
-          setAvailableBalance(portfolio.cash);
+        const parsed = JSON.parse(storedTransactions);
+        if (parsed.length > 0) {
+          setTransactions(parsed);
         } else {
-          setAvailableBalance(1000); // Default
+          setTransactions(demoTransactions);
         }
       } catch (e) {
-        console.error("Error reading portfolio:", e);
+        console.error("Error parsing transactions:", e);
+        setTransactions(demoTransactions);
       }
-    };
-    
-    updateTransactionsAndBalance();
-    
-    // Setup listeners for real-time updates
-    window.addEventListener('storage', updateTransactionsAndBalance);
-    window.addEventListener('storageUpdate', updateTransactionsAndBalance);
-    
-    // Check periodically for updates
-    const interval = setInterval(updateTransactionsAndBalance, 2000);
-    
-    return () => {
-      window.removeEventListener('storage', updateTransactionsAndBalance);
-      window.removeEventListener('storageUpdate', updateTransactionsAndBalance);
-      clearInterval(interval);
-    };
-  }, [sortOrder, dateRange.from, dateRange.to]);
-  
-  // Watch for new transactions added by other components
-  useEffect(() => {
-    const checkForNewTransactions = () => {
-      const storedTransactions = getStoredTransactions();
-      if (storedTransactions && storedTransactions.length > 0 && 
-          (transactions.length === 0 || 
-           storedTransactions.length !== transactions.length || 
-           storedTransactions[0].id !== transactions[0]?.id)) {
-        
-        setTransactions(storedTransactions.sort((a, b) => 
-          sortOrder === 'desc' 
-            ? new Date(b.date).getTime() - new Date(a.date).getTime() 
-            : new Date(a.date).getTime() - new Date(b.date).getTime()
-        ));
-        
-        // Get the latest balance
-        if (storedTransactions.length > 0) {
-          const latestTransaction = [...storedTransactions].sort((a, b) => 
-            new Date(b.date).getTime() - new Date(a.date).getTime()
-          )[0];
-          
-          if (latestTransaction.balance) {
-            setAvailableBalance(latestTransaction.balance);
-          }
-        }
-      }
-    };
-    
-    // Check every second for new transactions
-    const intervalId = setInterval(checkForNewTransactions, 1000);
-    return () => clearInterval(intervalId);
-  }, [transactions, sortOrder]);
-  
-  const handleDateRangeChange = (range: { from: Date; to: Date }) => {
-    if (range.from && range.to) {
-      setDateRange(range);
-      
-      // Filter stored transactions by date range
-      const storedTransactions = getStoredTransactions();
-      if (storedTransactions && storedTransactions.length > 0) {
-        const filteredTransactions = storedTransactions.filter(t => {
-          const txDate = new Date(t.date);
-          return txDate >= range.from && txDate <= range.to;
-        });
-        
-        if (filteredTransactions.length > 0) {
-          setTransactions(filteredTransactions.sort((a, b) => 
-            sortOrder === 'desc' 
-              ? new Date(b.date).getTime() - new Date(a.date).getTime() 
-              : new Date(a.date).getTime() - new Date(b.date).getTime()
-          ));
-          toast.success("Date range updated", {
-            description: `Showing transactions from ${format(range.from, 'MMM d, yyyy')} to ${format(range.to, 'MMM d, yyyy')}`
-          });
-          return;
-        }
-      }
-      
-      // Use mock data as fallback
-      setTransactions(generateMockTransactions(range.from, range.to));
-      toast.success("Date range updated", {
-        description: `Showing transactions from ${format(range.from, 'MMM d, yyyy')} to ${format(range.to, 'MMM d, yyyy')}`
-      });
-    }
-  };
-  
-  const handleSortToggle = () => {
-    const newOrder = sortOrder === 'desc' ? 'asc' : 'desc';
-    setSortOrder(newOrder);
-    setTransactions(current => [...current].sort((a, b) => 
-      newOrder === 'desc' 
-        ? new Date(b.date).getTime() - new Date(a.date).getTime() 
-        : new Date(a.date).getTime() - new Date(b.date).getTime()
-    ));
-    toast.info(`Sorted by date (${newOrder === 'desc' ? 'newest first' : 'oldest first'})`);
-  };
-  
-  const handleFilter = (type: string) => {
-    const storedTransactions = getStoredTransactions();
-    let filteredTransactions = [];
-    
-    if (storedTransactions && storedTransactions.length > 0) {
-      if (type === 'ALL') {
-        filteredTransactions = storedTransactions.filter(t => {
-          const txDate = new Date(t.date);
-          return txDate >= dateRange.from && txDate <= dateRange.to;
-        });
-      } else {
-        filteredTransactions = storedTransactions.filter(t => {
-          const txDate = new Date(t.date);
-          return t.type === type && (txDate >= dateRange.from && txDate <= dateRange.to);
-        });
-      }
-      
-      if (filteredTransactions.length > 0) {
-        setTransactions(filteredTransactions.sort((a, b) => 
-          sortOrder === 'desc' 
-            ? new Date(b.date).getTime() - new Date(a.date).getTime() 
-            : new Date(a.date).getTime() - new Date(b.date).getTime()
-        ));
-        toast.info(type === 'ALL' ? "Showing all transactions" : `Filtered to show only ${type.toLowerCase()} transactions`);
-        return;
-      }
-    }
-    
-    // Fallback to mock data
-    const regeneratedTransactions = generateMockTransactions(dateRange.from, dateRange.to);
-    if (type === 'ALL') {
-      setTransactions(regeneratedTransactions);
-      toast.info("Showing all transactions");
     } else {
-      const filtered = regeneratedTransactions.filter(transaction => transaction.type === type);
-      setTransactions(filtered);
-      toast.info(`Filtered to show only ${type.toLowerCase()} transactions`);
+      setTransactions(demoTransactions);
+    }
+  }, []);
+
+  useEffect(() => {
+    let filtered = transactions;
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(transaction =>
+        transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.symbol?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.type.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by type
+    if (filterType !== 'all') {
+      filtered = filtered.filter(transaction => transaction.type === filterType);
+    }
+
+    // Sort by date
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+    });
+
+    setFilteredTransactions(filtered);
+  }, [transactions, searchTerm, filterType, sortOrder]);
+
+  const getTransactionIcon = (type: string) => {
+    switch (type) {
+      case 'BUY':
+        return <ArrowDownCircle className="h-4 w-4 text-red-400" />;
+      case 'SELL':
+        return <ArrowUpCircle className="h-4 w-4 text-green-400" />;
+      case 'DEPOSIT':
+      case 'ADD_FUNDS':
+        return <TrendingUp className="h-4 w-4 text-green-400" />;
+      case 'WITHDRAWAL':
+        return <TrendingDown className="h-4 w-4 text-red-400" />;
+      case 'SAVINGS_DEPOSIT':
+      case 'SAVINGS_WITHDRAWAL':
+        return <PiggyBank className="h-4 w-4 text-blue-400" />;
+      default:
+        return <CreditCard className="h-4 w-4 text-gray-400" />;
     }
   };
-  
-  const handleDownload = () => {
-    toast.success("Statement downloaded", {
-      description: `Transaction history from ${format(dateRange.from, 'MMM d, yyyy')} to ${format(dateRange.to, 'MMM d, yyyy')} downloaded successfully.`
+
+  const getTransactionColor = (amount: number) => {
+    return amount >= 0 ? 'text-green-400' : 'text-red-400';
+  };
+
+  const formatAmount = (amount: number) => {
+    return `${amount >= 0 ? '+' : ''}$${Math.abs(amount).toFixed(2)}`;
+  };
+
+  const getTransactionTypeLabel = (type: string) => {
+    switch (type) {
+      case 'BUY': return 'Stock Purchase';
+      case 'SELL': return 'Stock Sale';
+      case 'DEPOSIT': return 'Deposit';
+      case 'WITHDRAWAL': return 'Withdrawal';
+      case 'ADD_FUNDS': return 'Add Funds';
+      case 'SAVINGS_DEPOSIT': return 'Savings Deposit';
+      case 'SAVINGS_WITHDRAWAL': return 'Savings Withdrawal';
+      default: return type.replace('_', ' ');
+    }
+  };
+
+  const handleExport = () => {
+    toast("📊 Export Feature", {
+      description: "Transaction export coming soon! This is a demo account.",
+      className: "bg-blue-600 border-blue-700 text-white",
+      duration: 3000,
     });
   };
-  
+
+  const calculateTotal = (type: 'income' | 'expense') => {
+    return filteredTransactions
+      .filter(t => type === 'income' ? t.amount > 0 : t.amount < 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  };
+
   return (
-    <div className="container mx-auto p-6 overflow-y-auto max-h-[calc(100vh-5rem)]">
-      <div className="mb-6">
-        <h2 className="text-3xl font-bold text-finance-primary mb-2 finance-accent-gradient">Transaction History</h2>
-        <p className="text-muted-foreground">Review your account activity and filter by date range</p>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-        <Card className="col-span-1 lg:col-span-3 layered-card">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Transaction History</CardTitle>
-              <CardDescription>
-                {format(dateRange.from, 'MMM d, yyyy')} to {format(dateRange.to, 'MMM d, yyyy')}
-              </CardDescription>
-            </div>
-            
-            <div className="flex gap-2 flex-wrap">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex items-center gap-1">
-                    <CalendarDays className="h-4 w-4" />
-                    <span>Date Range</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={dateRange.from}
-                    selected={dateRange}
-                    onSelect={(range) => handleDateRangeChange(range as { from: Date; to: Date })}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
-              
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex items-center gap-1">
-                    <Filter className="h-4 w-4" />
-                    <span>Filter</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-2" align="end">
-                  <div className="flex flex-col gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleFilter('ALL')}>All Transactions</Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleFilter('BUY')}>Buys</Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleFilter('SELL')}>Sells</Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleFilter('DEPOSIT')}>Deposits</Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleFilter('WITHDRAWAL')}>Withdrawals</Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleFilter('DIVIDEND')}>Dividends</Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
-              
+    <div className="min-h-screen bg-slate-900 p-4">
+      <div className="container mx-auto max-w-6xl">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Transaction History</h1>
+            <p className="text-slate-400">📊 Demo Account - View all your financial activities</p>
+          </div>
+          <Button onClick={handleExport} className="bg-green-600 hover:bg-green-700">
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Card className="bg-slate-800 border-slate-700">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-sm">Total Income</p>
+                  <p className="text-2xl font-bold text-green-400">
+                    ${calculateTotal('income').toFixed(2)}
+                  </p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-green-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800 border-slate-700">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-sm">Total Expenses</p>
+                  <p className="text-2xl font-bold text-red-400">
+                    ${calculateTotal('expense').toFixed(2)}
+                  </p>
+                </div>
+                <TrendingDown className="h-8 w-8 text-red-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800 border-slate-700">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-sm">Net Flow</p>
+                  <p className={`text-2xl font-bold ${
+                    calculateTotal('income') - calculateTotal('expense') >= 0 
+                      ? 'text-green-400' 
+                      : 'text-red-400'
+                  }`}>
+                    ${(calculateTotal('income') - calculateTotal('expense')).toFixed(2)}
+                  </p>
+                </div>
+                <CreditCard className="h-8 w-8 text-blue-400" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters */}
+        <Card className="bg-slate-800 border-slate-700 mb-6">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="Search transactions..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-slate-700 border-slate-600 text-white"
+                />
+              </div>
+
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-700 border-slate-600">
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="BUY">Stock Purchases</SelectItem>
+                  <SelectItem value="SELL">Stock Sales</SelectItem>
+                  <SelectItem value="DEPOSIT">Deposits</SelectItem>
+                  <SelectItem value="WITHDRAWAL">Withdrawals</SelectItem>
+                  <SelectItem value="SAVINGS_DEPOSIT">Savings</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={sortOrder} onValueChange={(value: 'asc' | 'desc') => setSortOrder(value)}>
+                <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                  <SelectValue placeholder="Sort order" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-700 border-slate-600">
+                  <SelectItem value="desc">Newest First</SelectItem>
+                  <SelectItem value="asc">Oldest First</SelectItem>
+                </SelectContent>
+              </Select>
+
               <Button 
                 variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1"
-                onClick={handleDownload}
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilterType('all');
+                  setSortOrder('desc');
+                }}
+                className="border-slate-600"
               >
-                <Download className="h-4 w-4" />
-                <span>Download</span>
+                <Filter className="h-4 w-4 mr-2" />
+                Clear Filters
               </Button>
             </div>
-          </CardHeader>
-          
-          <CardContent className="overflow-auto">
-            <Table>
-              <TableCaption>
-                Showing {transactions.length} transactions
-              </TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead onClick={handleSortToggle} className="cursor-pointer hover:text-primary transition-colors">
-                    <div className="flex items-center gap-1">
-                      Date
-                      <ArrowUpDown className="h-3 w-3" />
-                    </div>
-                  </TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Symbol</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.map((transaction, index) => (
-                  <TableRow 
-                    key={transaction.id || index}
-                    className="hover:bg-muted/60 transition-colors cursor-pointer"
-                    onClick={() => {
-                      // Get financial advice based on transaction type
-                      let advice = "";
-                      
-                      if (transaction.type === 'BUY') {
-                        advice = "Remember to diversify your investments. Don't put all your eggs in one basket.";
-                      } else if (transaction.type === 'SELL') {
-                        advice = "Good job taking profits. Consider reinvesting in emerging opportunities.";
-                      } else if (transaction.type === 'WITHDRAWAL') {
-                        advice = "Try to minimize withdrawals to let your investments grow over time.";
-                      } else if (transaction.type === 'DEPOSIT') {
-                        advice = "Regular deposits are a great way to build wealth through dollar-cost averaging.";
-                      }
-                      
-                      if (advice) {
-                        toast("Financial Advice", {
-                          description: advice,
-                        });
-                      } else {
-                        toast(`Transaction details for ${format(new Date(transaction.date), 'MMM d, yyyy')}`, {
-                          description: `${transaction.type}${transaction.symbol ? ' ' + transaction.symbol : ''}: $${Math.abs(Number(transaction.amount)).toFixed(2)}`
-                        });
-                      }
-                    }}
-                  >
-                    <TableCell className="font-medium">{format(new Date(transaction.date), 'MMM d, yyyy')}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs ${getTypeStyle(transaction.type)}`}>
-                        {transaction.type}
-                      </span>
-                    </TableCell>
-                    <TableCell>{transaction.symbol || '—'}</TableCell>
-                    <TableCell className={`text-right ${Number(transaction.amount) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {Number(transaction.amount) >= 0 ? '+' : '−'}${Math.abs(Number(transaction.amount)).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right">${transaction.balance ? transaction.balance.toFixed(2) : '—'}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
           </CardContent>
         </Card>
-        
-        <Card className="col-span-1 gradient-bg-accent glass-card">
+
+        {/* Transactions List */}
+        <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
-            <CardTitle>Summary</CardTitle>
-            <CardDescription>Transaction statistics</CardDescription>
+            <CardTitle className="text-white">
+              Transactions ({filteredTransactions.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Total Transactions</h4>
-                <p className="text-2xl font-bold">{transactions.length}</p>
-              </div>
-              
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Period</h4>
-                <p className="text-sm">From {format(dateRange.from, 'MMM d, yyyy')}</p>
-                <p className="text-sm">To {format(dateRange.to, 'MMM d, yyyy')}</p>
-              </div>
-              
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Cash In/Out</h4>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">In:</span>
-                  <span className="text-sm text-green-600 font-medium">
-                    +${transactions
-                      .filter(t => Number(t.amount) > 0)
-                      .reduce((sum, t) => sum + Number(t.amount), 0)
-                      .toFixed(2)}
-                  </span>
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {filteredTransactions.length > 0 ? (
+                filteredTransactions.map((transaction) => (
+                  <div
+                    key={transaction.id}
+                    className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600 hover:bg-slate-700 transition-colors"
+                  >
+                    <div className="flex items-center space-x-4">
+                      {getTransactionIcon(transaction.type)}
+                      <div>
+                        <h4 className="font-medium text-white">
+                          {transaction.symbol ? `${transaction.symbol} - ` : ''}
+                          {getTransactionTypeLabel(transaction.type)}
+                        </h4>
+                        <p className="text-sm text-slate-400">{transaction.description}</p>
+                        <p className="text-xs text-slate-500">
+                          {new Date(transaction.date).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`font-medium ${getTransactionColor(transaction.amount)}`}>
+                        {formatAmount(transaction.amount)}
+                      </p>
+                      {transaction.balance !== undefined && (
+                        <p className="text-xs text-slate-400">
+                          Balance: ${transaction.balance.toFixed(2)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-slate-500">
+                  <CreditCard className="h-16 w-16 mx-auto mb-4 text-slate-600" />
+                  <p className="mb-2">No transactions found</p>
+                  <p className="text-sm">Try adjusting your search filters</p>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Out:</span>
-                  <span className="text-sm text-red-600 font-medium">
-                    −${Math.abs(
-                      transactions
-                        .filter(t => Number(t.amount) < 0)
-                        .reduce((sum, t) => sum + Number(t.amount), 0)
-                    ).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Current Balance</h4>
-                <p className="text-2xl font-bold text-green-500">${availableBalance.toFixed(2)}</p>
-              </div>
-              
-              <Button 
-                className="w-full bg-finance-accent hover:bg-green-700" 
-                onClick={() => {
-                  // Generate a detailed financial advice report
-                  const deposits = transactions.filter(t => t.type === 'DEPOSIT').length;
-                  const withdrawals = transactions.filter(t => t.type === 'WITHDRAWAL').length;
-                  const buys = transactions.filter(t => t.type === 'BUY').length;
-                  const sells = transactions.filter(t => t.type === 'SELL').length;
-                  
-                  let advice = "";
-                  
-                  if (withdrawals > deposits) {
-                    advice = "You're withdrawing more than depositing. Consider building your savings for long-term growth.";
-                  } else if (buys > sells * 3) {
-                    advice = "You're buying frequently but not rebalancing. Consider reviewing your portfolio allocation.";
-                  } else if (sells > buys) {
-                    advice = "You're selling more than buying. Make sure you have a reinvestment strategy.";
-                  } else {
-                    advice = "Your transaction pattern shows a balanced approach. Keep up the good work!";
-                  }
-                  
-                  toast.success("Financial Report Generated", {
-                    description: advice
-                  });
-                }}
-              >
-                Generate Financial Report
-              </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -464,22 +352,5 @@ const TransactionHistory = () => {
     </div>
   );
 };
-
-function getTypeStyle(type: string) {
-  switch (type) {
-    case 'BUY':
-      return 'bg-blue-100 text-blue-800';
-    case 'SELL':
-      return 'bg-purple-100 text-purple-800';
-    case 'DIVIDEND':
-      return 'bg-green-100 text-green-800';
-    case 'DEPOSIT':
-      return 'bg-teal-100 text-teal-800';
-    case 'WITHDRAWAL':
-      return 'bg-amber-100 text-amber-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-}
 
 export default TransactionHistory;
