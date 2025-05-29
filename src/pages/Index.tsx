@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 import Header from "@/components/Header";
 import Dashboard from "@/components/Dashboard";
 import LearningCenter from "@/components/LearningCenter";
-import StockSimulator from "@/components/StockSimulator";
+import EnhancedStockSimulator from "@/components/EnhancedStockSimulator";
 import Portfolio from "@/components/Portfolio";
 import FinancialBot from "@/components/FinancialBot";
 import Goals from "@/components/Goals";
@@ -35,7 +35,7 @@ const Index = ({ activePage: initialPage = 'dashboard' }) => {
   const pageComponents = {
     'dashboard': <Dashboard />,
     'learning': <LearningCenter />,
-    'trading': <StockSimulator />,
+    'trading': <EnhancedStockSimulator />,
     'portfolio': <Portfolio />,
     'goals': <Goals />,
     'calendar': <CalendarView />,
@@ -47,13 +47,13 @@ const Index = ({ activePage: initialPage = 'dashboard' }) => {
       <Header activePage={activePage} setActivePage={setActivePage} />
       
       <main className="flex-1">
-        {pageComponents[activePage]}
+        {pageComponents[activePage] || <Dashboard />}
         
         {/* Financial Bot Button */}
         <Drawer>
           <DrawerTrigger asChild>
             <Button 
-              className="fixed bottom-4 right-4 rounded-full w-14 h-14 bg-green-600 hover:bg-green-700 shadow-lg flex items-center justify-center"
+              className="fixed bottom-4 right-4 rounded-full w-14 h-14 bg-green-600 hover:bg-green-700 shadow-lg flex items-center justify-center z-50"
             >
               <Bot size={28} />
             </Button>
