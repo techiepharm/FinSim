@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/sonner";
-import { TrendingUp, TrendingDown, Search, Plus, Minus, BarChart3 } from "lucide-react";
+import { TrendingUp, TrendingDown, Search, Plus, Minus, BarChart3, ChartLine } from "lucide-react";
 import TransactionPin from "./TransactionPin";
 import TradeChart from "./TradeChart";
+import InvestmentSuggestions from "./InvestmentSuggestions";
 import {
   Dialog,
   DialogContent,
@@ -302,13 +303,39 @@ const EnhancedStockSimulator = () => {
         </div>
       </div>
 
-      {/* Recent Trades */}
-      {trades.length > 0 && (
+      {/* Investment Suggestions - Now prominently displayed */}
+      <InvestmentSuggestions stocks={stocks} />
+
+      {/* Recent Trades with Enhanced Chart Access */}
+      {trades.length > 0 ? (
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Recent Trades
+            <CardTitle className="text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Recent Trades & Analytics
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (trades.length > 0) {
+                    const latestTrade = trades[0];
+                    const stock = stocks.find(s => s.symbol === latestTrade.symbol);
+                    if (stock) {
+                      setSelectedTrade({
+                        ...latestTrade,
+                        currentPrice: stock.currentPrice
+                      });
+                      setShowTradeChart(true);
+                    }
+                  }
+                }}
+                className="text-blue-400 hover:text-blue-300 border-blue-600"
+              >
+                <ChartLine className="h-4 w-4 mr-1" />
+                View Latest Chart
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -334,12 +361,26 @@ const EnhancedStockSimulator = () => {
                       onClick={() => viewTradeChart(trade)}
                       className="text-blue-400 hover:text-blue-300"
                     >
+                      <ChartLine className="h-3 w-3 mr-1" />
                       View Chart
                     </Button>
                   </div>
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-slate-800 border-slate-700">
+          <CardContent className="text-center py-8">
+            <ChartLine className="h-12 w-12 text-slate-500 mx-auto mb-4" />
+            <h3 className="text-white font-medium mb-2">No Trades Yet</h3>
+            <p className="text-slate-400 text-sm mb-4">
+              Start trading to see detailed charts and analytics of your positions
+            </p>
+            <p className="text-slate-500 text-xs">
+              Charts will show profit/loss, price movements, and position details
+            </p>
           </CardContent>
         </Card>
       )}
@@ -445,13 +486,13 @@ const EnhancedStockSimulator = () => {
         />
       )}
 
-      {/* Trade Chart Dialog */}
+      {/* Trade Chart Dialog - Enhanced */}
       <Dialog open={showTradeChart} onOpenChange={setShowTradeChart}>
         <DialogContent className="max-w-4xl bg-slate-800 text-white border-slate-700">
           <DialogHeader>
-            <DialogTitle>Trade Analysis</DialogTitle>
+            <DialogTitle>Trade Analysis & Performance</DialogTitle>
             <DialogDescription className="text-slate-300">
-              Detailed view of your trade performance and price movements
+              Detailed view of your trade performance, price movements, and position analytics
             </DialogDescription>
           </DialogHeader>
           {selectedTrade && (
