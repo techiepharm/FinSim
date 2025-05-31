@@ -66,7 +66,20 @@ const Portfolio = () => {
     const savedPortfolio = localStorage.getItem('portfolio');
     if (savedPortfolio) {
       try {
-        setPortfolio(JSON.parse(savedPortfolio));
+        const parsedPortfolio = JSON.parse(savedPortfolio);
+        // Ensure portfolio has valid structure and safe values
+        const safePortfolio = {
+          cash: typeof parsedPortfolio.cash === 'number' ? parsedPortfolio.cash : 1000,
+          holdings: Array.isArray(parsedPortfolio.holdings) ? parsedPortfolio.holdings.filter(holding => 
+            holding && 
+            typeof holding.symbol === 'string' &&
+            typeof holding.shares === 'number' &&
+            typeof holding.avgCost === 'number' &&
+            !isNaN(holding.shares) &&
+            !isNaN(holding.avgCost)
+          ) : []
+        };
+        setPortfolio(safePortfolio);
       } catch (e) {
         console.error('Error parsing portfolio data:', e);
         setPortfolio({ cash: 1000, holdings: [] });
@@ -77,7 +90,8 @@ const Portfolio = () => {
     const savedTransactions = localStorage.getItem('transactions');
     if (savedTransactions) {
       try {
-        setTransactions(JSON.parse(savedTransactions));
+        const parsedTransactions = JSON.parse(savedTransactions);
+        setTransactions(Array.isArray(parsedTransactions) ? parsedTransactions : []);
       } catch (e) {
         console.error('Error parsing transactions:', e);
         setTransactions([]);
@@ -92,19 +106,34 @@ const Portfolio = () => {
     }, 300);
   }, []);
 
-  // Calculate portfolio metrics
+  // Calculate portfolio metrics with safe number handling
   const calculatePortfolioValue = () => {
     const holdingsValue = portfolio.holdings.reduce((total, holding) => {
-      const currentPrice = currentPrices[holding.symbol] || holding.avgCost;
+      if (!holding || typeof holding.shares !== 'number' || typeof holding.avgCost !== 'number') {
+        return total;
+      }
+      
+      const currentPrice = (typeof currentPrices[holding.symbol] === 'number') 
+        ? currentPrices[holding.symbol] 
+        : (typeof holding.avgCost === 'number' ? holding.avgCost : 0);
+      
       return total + (holding.shares * currentPrice);
     }, 0);
     
-    return portfolio.cash + holdingsValue;
+    const cashValue = typeof portfolio.cash === 'number' ? portfolio.cash : 0;
+    return cashValue + holdingsValue;
   };
 
   const calculateTotalGain = () => {
     return portfolio.holdings.reduce((total, holding) => {
-      const currentPrice = currentPrices[holding.symbol] || holding.avgCost;
+      if (!holding || typeof holding.shares !== 'number' || typeof holding.avgCost !== 'number') {
+        return total;
+      }
+      
+      const currentPrice = (typeof currentPrices[holding.symbol] === 'number') 
+        ? currentPrices[holding.symbol] 
+        : (typeof holding.avgCost === 'number' ? holding.avgCost : 0);
+      
       const currentValue = holding.shares * currentPrice;
       const costBasis = holding.shares * holding.avgCost;
       return total + (currentValue - costBasis);
@@ -118,23 +147,28 @@ const Portfolio = () => {
 
   const totalValue = calculatePortfolioValue();
   const totalGain = calculateTotalGain();
-  const totalGainPercent = portfolio.holdings.length > 0 ? (totalGain / (totalValue - totalGain)) * 100 : 0;
+  const totalGainPercent = portfolio.holdings.length > 0 && totalValue > 0 ? (totalGain / (totalValue - totalGain)) * 100 : 0;
   const dayChange = calculateDayChange();
   const dayChangePercent = 0.38;
 
-  // Prepare allocation data for pie chart
-  const allocationData = portfolio.holdings.map(holding => {
-    const currentPrice = currentPrices[holding.symbol] || holding.avgCost;
-    const value = holding.shares * currentPrice;
-    return {
-      name: holding.symbol,
-      value: (value / totalValue) * 100,
-      actualValue: value
-    };
-  });
+  // Prepare allocation data for pie chart with safe calculations
+  const allocationData = portfolio.holdings
+    .filter(holding => holding && typeof holding.shares === 'number' && typeof holding.avgCost === 'number')
+    .map(holding => {
+      const currentPrice = (typeof currentPrices[holding.symbol] === 'number') 
+        ? currentPrices[holding.symbol] 
+        : (typeof holding.avgCost === 'number' ? holding.avgCost : 0);
+      
+      const value = holding.shares * currentPrice;
+      return {
+        name: holding.symbol,
+        value: totalValue > 0 ? (value / totalValue) * 100 : 0,
+        actualValue: value
+      };
+    });
 
   // Add cash allocation
-  if (portfolio.cash > 0) {
+  if (portfolio.cash > 0 && totalValue > 0) {
     allocationData.push({
       name: 'CASH',
       value: (portfolio.cash / totalValue) * 100,
@@ -189,17 +223,17 @@ const Portfolio = () => {
             <CardTitle className="text-sm font-medium text-slate-400">Total Portfolio Value</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <div className="text-2xl font-bold text-white">${(totalValue || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
             <div className="flex items-center text-sm mt-1">
-              {totalGain >= 0 ? (
+              {(totalGain || 0) >= 0 ? (
                 <>
                   <ArrowUp className="mr-1 h-4 w-4 text-green-400 animate-bounce" />
-                  <span className="text-green-400">+{totalGainPercent.toFixed(2)}%</span>
+                  <span className="text-green-400">+{(totalGainPercent || 0).toFixed(2)}%</span>
                 </>
               ) : (
                 <>
                   <ArrowDown className="mr-1 h-4 w-4 text-red-400" />
-                  <span className="text-red-400">{totalGainPercent.toFixed(2)}%</span>
+                  <span className="text-red-400">{(totalGainPercent || 0).toFixed(2)}%</span>
                 </>
               )}
               <span className="text-slate-400 ml-2">overall</span>
@@ -212,10 +246,10 @@ const Portfolio = () => {
             <CardTitle className="text-sm font-medium text-slate-400">Day's Change</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">+${dayChange.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-white">+${(dayChange || 0).toFixed(2)}</div>
             <div className="flex items-center text-sm mt-1">
               <ArrowUp className="mr-1 h-4 w-4 text-green-400" />
-              <span className="text-green-400">+{dayChangePercent.toFixed(2)}%</span>
+              <span className="text-green-400">+{(dayChangePercent || 0).toFixed(2)}%</span>
               <span className="text-slate-400 ml-2">today</span>
             </div>
           </CardContent>
@@ -226,19 +260,19 @@ const Portfolio = () => {
             <CardTitle className="text-sm font-medium text-slate-400">Total Gain/Loss</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${totalGain >= 0 ? "text-green-400" : "text-red-400"}`}>
-              {totalGain >= 0 ? "+" : ""}${totalGain.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            <div className={`text-2xl font-bold ${(totalGain || 0) >= 0 ? "text-green-400" : "text-red-400"}`}>
+              {(totalGain || 0) >= 0 ? "+" : ""}${(totalGain || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </div>
             <div className="flex items-center text-sm mt-1">
-              {totalGainPercent >= 0 ? (
+              {(totalGainPercent || 0) >= 0 ? (
                 <>
                   <ArrowUp className="mr-1 h-4 w-4 text-green-400" />
-                  <span className="text-green-400">+{totalGainPercent.toFixed(2)}%</span>
+                  <span className="text-green-400">+{(totalGainPercent || 0).toFixed(2)}%</span>
                 </>
               ) : (
                 <>
                   <ArrowDown className="mr-1 h-4 w-4 text-red-400" />
-                  <span className="text-red-400">{totalGainPercent.toFixed(2)}%</span>
+                  <span className="text-red-400">{(totalGainPercent || 0).toFixed(2)}%</span>
                 </>
               )}
               <span className="text-slate-400 ml-2">overall</span>
@@ -251,7 +285,7 @@ const Portfolio = () => {
             <CardTitle className="text-sm font-medium text-slate-400">Available Cash</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">${portfolio.cash.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <div className="text-2xl font-bold text-white">${(portfolio.cash || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
             <div className="text-sm text-slate-400 mt-1">Available for trading</div>
           </CardContent>
         </Card>
@@ -278,39 +312,47 @@ const Portfolio = () => {
                 </div>
                 
                 <div className="divide-y divide-slate-600">
-                  {portfolio.holdings.map((holding) => {
-                    const currentPrice = currentPrices[holding.symbol] || holding.avgCost;
-                    const currentValue = holding.shares * currentPrice;
-                    const gain = currentValue - (holding.shares * holding.avgCost);
-                    const gainPercent = ((currentPrice - holding.avgCost) / holding.avgCost) * 100;
-                    
-                    return (
-                      <div 
-                        key={holding.symbol} 
-                        className="grid grid-cols-7 p-3 text-sm hover:bg-slate-700 cursor-pointer transition-colors"
-                      >
-                        <div className="font-medium text-white">{holding.symbol}</div>
-                        <div className="text-slate-400">{holding.name}</div>
-                        <div className="text-right text-white">{holding.shares}</div>
-                        <div className="text-right text-white">${holding.avgCost.toFixed(2)}</div>
-                        <div className="text-right text-white">${currentPrice.toFixed(2)}</div>
-                        <div className="text-right text-white">${currentValue.toFixed(2)}</div>
-                        <div className={`text-right ${gain >= 0 ? "text-green-400" : "text-red-400"} flex items-center justify-end`}>
-                          {gain >= 0 ? (
-                            <>
-                              <ArrowUp className="mr-1 h-3 w-3" />
-                              <span>+${gain.toFixed(2)} ({gainPercent.toFixed(2)}%)</span>
-                            </>
-                          ) : (
-                            <>
-                              <ArrowDown className="mr-1 h-3 w-3" />
-                              <span>-${Math.abs(gain).toFixed(2)} ({gainPercent.toFixed(2)}%)</span>
-                            </>
-                          )}
+                  {portfolio.holdings
+                    .filter(holding => holding && typeof holding.shares === 'number' && typeof holding.avgCost === 'number')
+                    .map((holding) => {
+                      const currentPrice = (typeof currentPrices[holding.symbol] === 'number') 
+                        ? currentPrices[holding.symbol] 
+                        : (typeof holding.avgCost === 'number' ? holding.avgCost : 0);
+                      
+                      const currentValue = (holding.shares || 0) * (currentPrice || 0);
+                      const costBasis = (holding.shares || 0) * (holding.avgCost || 0);
+                      const gain = currentValue - costBasis;
+                      const gainPercent = (holding.avgCost && holding.avgCost > 0) 
+                        ? ((currentPrice - holding.avgCost) / holding.avgCost) * 100 
+                        : 0;
+                      
+                      return (
+                        <div 
+                          key={holding.symbol} 
+                          className="grid grid-cols-7 p-3 text-sm hover:bg-slate-700 cursor-pointer transition-colors"
+                        >
+                          <div className="font-medium text-white">{holding.symbol || 'N/A'}</div>
+                          <div className="text-slate-400">{holding.name || 'N/A'}</div>
+                          <div className="text-right text-white">{holding.shares || 0}</div>
+                          <div className="text-right text-white">${(holding.avgCost || 0).toFixed(2)}</div>
+                          <div className="text-right text-white">${(currentPrice || 0).toFixed(2)}</div>
+                          <div className="text-right text-white">${(currentValue || 0).toFixed(2)}</div>
+                          <div className={`text-right ${(gain || 0) >= 0 ? "text-green-400" : "text-red-400"} flex items-center justify-end`}>
+                            {(gain || 0) >= 0 ? (
+                              <>
+                                <ArrowUp className="mr-1 h-3 w-3" />
+                                <span>+${(gain || 0).toFixed(2)} ({(gainPercent || 0).toFixed(2)}%)</span>
+                              </>
+                            ) : (
+                              <>
+                                <ArrowDown className="mr-1 h-3 w-3" />
+                                <span>-${Math.abs(gain || 0).toFixed(2)} ({(gainPercent || 0).toFixed(2)}%)</span>
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                 </div>
               </div>
             ) : (
@@ -342,7 +384,7 @@ const Portfolio = () => {
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
-                      label={({ name, value }) => `${name} ${value.toFixed(1)}%`}
+                      label={({ name, value }) => `${name} ${(value || 0).toFixed(1)}%`}
                     >
                       {allocationData.map((entry, index) => (
                         <Cell 
@@ -353,7 +395,7 @@ const Portfolio = () => {
                     </Pie>
                     <RechartsTooltip 
                       formatter={(value: any, name: any, props: any) => [
-                        `${value.toFixed(2)}% ($${props.payload.actualValue.toFixed(2)})`, 
+                        `${(value || 0).toFixed(2)}% ($${(props.payload.actualValue || 0).toFixed(2)})`, 
                         'Allocation'
                       ]} 
                     />
