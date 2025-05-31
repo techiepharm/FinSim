@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -133,7 +132,7 @@ const EnhancedStockSimulator = () => {
       setStocks(prevStocks => 
         prevStocks.map(stock => ({
           ...stock,
-          currentPrice: stock.currentPrice + (Math.random() - 0.5) * 2,
+          currentPrice: Math.max(0, stock.currentPrice + (Math.random() - 0.5) * 2),
           change: stock.change + (Math.random() - 0.5) * 0.5
         }))
       );
@@ -148,7 +147,8 @@ const EnhancedStockSimulator = () => {
   );
 
   const handleBuyStock = (stock: Stock) => {
-    const total = stock.currentPrice * quantity;
+    const safeCurrentPrice = stock.currentPrice || stock.price || 0;
+    const total = safeCurrentPrice * quantity;
     
     if (total > portfolio.cash) {
       toast("Insufficient Funds", {
@@ -178,7 +178,8 @@ const EnhancedStockSimulator = () => {
       return;
     }
 
-    const total = stock.currentPrice * quantity;
+    const safeCurrentPrice = stock.currentPrice || stock.price || 0;
+    const total = safeCurrentPrice * quantity;
     
     setPendingTransaction({
       type: 'sell',
@@ -193,16 +194,17 @@ const EnhancedStockSimulator = () => {
     if (!pendingTransaction) return;
 
     const { type, stock, quantity: shares, total } = pendingTransaction;
+    const safeCurrentPrice = stock.currentPrice || stock.price || 0;
     
     const newTrade: Trade = {
       id: Date.now().toString(),
       symbol: stock.symbol,
       type,
       shares,
-      price: stock.currentPrice,
+      price: safeCurrentPrice,
       total,
       timestamp: new Date().toISOString(),
-      currentPrice: stock.currentPrice
+      currentPrice: safeCurrentPrice
     };
 
     // Update trades
@@ -225,7 +227,7 @@ const EnhancedStockSimulator = () => {
           symbol: stock.symbol,
           name: stock.name,
           shares,
-          avgCost: stock.currentPrice
+          avgCost: safeCurrentPrice
         });
       }
     } else {
@@ -249,7 +251,7 @@ const EnhancedStockSimulator = () => {
       type: type === 'buy' ? 'BUY' : 'SELL',
       symbol: stock.symbol,
       shares,
-      price: stock.currentPrice,
+      price: safeCurrentPrice,
       total: type === 'buy' ? -total : total,
       description: `${type.toUpperCase()} ${shares} shares of ${stock.symbol}`
     };
@@ -274,19 +276,20 @@ const EnhancedStockSimulator = () => {
     if (stock) {
       setSelectedTrade({
         ...trade,
-        currentPrice: stock.currentPrice
+        currentPrice: stock.currentPrice || stock.price || 0
       });
       setShowTradeChart(true);
     }
   };
 
   const generatePriceHistory = (stock: Stock) => {
+    const basePrice = stock.currentPrice || stock.price || 100;
     return Array.from({ length: 20 }, (_, i) => ({
       time: new Date(Date.now() - (19 - i) * 60 * 60 * 1000).toLocaleTimeString('en-US', { 
         hour: '2-digit', 
         minute: '2-digit' 
       }),
-      price: stock.currentPrice + Math.sin(i * 0.3) * 3 + Math.random() * 2
+      price: basePrice + Math.sin(i * 0.3) * 3 + Math.random() * 2
     }));
   };
 
@@ -299,7 +302,7 @@ const EnhancedStockSimulator = () => {
         </div>
         <div className="text-right">
           <p className="text-sm text-slate-400">Available Cash</p>
-          <p className="text-2xl font-bold text-green-400">${portfolio.cash.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-green-400">${(portfolio.cash || 0).toFixed(2)}</p>
         </div>
       </div>
 
@@ -325,7 +328,7 @@ const EnhancedStockSimulator = () => {
                     if (stock) {
                       setSelectedTrade({
                         ...latestTrade,
-                        currentPrice: stock.currentPrice
+                        currentPrice: stock.currentPrice || stock.price || 0
                       });
                       setShowTradeChart(true);
                     }
@@ -350,11 +353,11 @@ const EnhancedStockSimulator = () => {
                     </span>
                     <div>
                       <p className="text-white font-medium">{trade.symbol}</p>
-                      <p className="text-slate-400 text-sm">{trade.shares} shares at ${trade.price.toFixed(2)}</p>
+                      <p className="text-slate-400 text-sm">{trade.shares} shares at ${(trade.price || 0).toFixed(2)}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white">${trade.total.toFixed(2)}</p>
+                    <p className="text-white">${(trade.total || 0).toFixed(2)}</p>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -398,75 +401,80 @@ const EnhancedStockSimulator = () => {
 
       {/* Stock List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredStocks.map((stock) => (
-          <Card key={stock.symbol} className="bg-slate-800 border-slate-700 hover:border-slate-600 transition-colors">
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg text-white">{stock.symbol}</CardTitle>
-                  <p className="text-sm text-slate-400">{stock.name}</p>
-                  <p className="text-xs text-slate-500">{stock.industry}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-white">${stock.currentPrice.toFixed(2)}</p>
-                  <div className={`flex items-center text-sm ${stock.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {stock.change >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
-                    {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}
+        {filteredStocks.map((stock) => {
+          const safeCurrentPrice = stock.currentPrice || stock.price || 0;
+          const safeChange = stock.change || 0;
+          
+          return (
+            <Card key={stock.symbol} className="bg-slate-800 border-slate-700 hover:border-slate-600 transition-colors">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg text-white">{stock.symbol}</CardTitle>
+                    <p className="text-sm text-slate-400">{stock.name}</p>
+                    <p className="text-xs text-slate-500">{stock.industry}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-white">${safeCurrentPrice.toFixed(2)}</p>
+                    <div className={`flex items-center text-sm ${safeChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {safeChange >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                      {safeChange >= 0 ? '+' : ''}{safeChange.toFixed(2)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-8 h-8 p-0"
-                >
-                  <Minus className="h-3 w-3" />
-                </Button>
-                <Input
-                  type="number"
-                  min="1"
-                  value={quantity}
-                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="text-center bg-slate-700 border-slate-600 text-white"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-8 h-8 p-0"
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-              </div>
-              
-              <div className="text-center text-sm text-slate-400">
-                Total: ${(stock.currentPrice * quantity).toFixed(2)}
-              </div>
-              
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => handleBuyStock(stock)}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
-                  size="sm"
-                >
-                  Buy
-                </Button>
-                <Button
-                  onClick={() => handleSellStock(stock)}
-                  variant="outline"
-                  className="flex-1 border-red-600 text-red-400 hover:bg-red-600/10"
-                  size="sm"
-                >
-                  Sell
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-8 h-8 p-0"
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="text-center bg-slate-700 border-slate-600 text-white"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-8 h-8 p-0"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+                
+                <div className="text-center text-sm text-slate-400">
+                  Total: ${(safeCurrentPrice * quantity).toFixed(2)}
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleBuyStock(stock)}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    size="sm"
+                  >
+                    Buy
+                  </Button>
+                  <Button
+                    onClick={() => handleSellStock(stock)}
+                    variant="outline"
+                    className="flex-1 border-red-600 text-red-400 hover:bg-red-600/10"
+                    size="sm"
+                  >
+                    Sell
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Transaction PIN Dialog */}
@@ -482,7 +490,7 @@ const EnhancedStockSimulator = () => {
           stockSymbol={pendingTransaction.stock.symbol}
           amount={pendingTransaction.total}
           shares={pendingTransaction.quantity}
-          price={pendingTransaction.stock.currentPrice}
+          price={pendingTransaction.stock.currentPrice || pendingTransaction.stock.price || 0}
         />
       )}
 

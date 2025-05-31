@@ -15,6 +15,15 @@ interface InvestmentSuggestionsProps {
 }
 
 const InvestmentSuggestions = ({ stocks }: InvestmentSuggestionsProps) => {
+  // Filter stocks safely with proper null checks
+  const safeStocks = stocks.filter(stock => 
+    stock && 
+    typeof stock.change === 'number' && 
+    !isNaN(stock.change) &&
+    typeof stock.currentPrice === 'number' && 
+    !isNaN(stock.currentPrice)
+  );
+
   const suggestions = [
     {
       type: 'bullish',
@@ -22,7 +31,7 @@ const InvestmentSuggestions = ({ stocks }: InvestmentSuggestionsProps) => {
       description: 'Consider tech stocks showing strong momentum',
       icon: TrendingUp,
       color: 'text-green-400',
-      stocks: stocks.filter(s => s.change > 5).slice(0, 2)
+      stocks: safeStocks.filter(s => s.change > 5).slice(0, 2)
     },
     {
       type: 'diversification',
@@ -30,7 +39,7 @@ const InvestmentSuggestions = ({ stocks }: InvestmentSuggestionsProps) => {
       description: 'Balance your holdings across different sectors',
       icon: Lightbulb,
       color: 'text-blue-400',
-      stocks: stocks.filter(s => s.industry !== 'Technology').slice(0, 2)
+      stocks: safeStocks.filter(s => s.industry && s.industry !== 'Technology').slice(0, 2)
     },
     {
       type: 'caution',
@@ -38,7 +47,7 @@ const InvestmentSuggestions = ({ stocks }: InvestmentSuggestionsProps) => {
       description: 'Monitor these declining positions',
       icon: AlertTriangle,
       color: 'text-yellow-400',
-      stocks: stocks.filter(s => s.change < -2).slice(0, 2)
+      stocks: safeStocks.filter(s => s.change < -2).slice(0, 2)
     }
   ];
 
