@@ -15,9 +15,12 @@ import {
 interface HeaderProps {
   activePage: string;
   setActivePage: (page: string) => void;
+  currentUser: any;
+  onShowAuth: () => void;
+  onLogout: () => void;
 }
 
-const Header = ({ activePage, setActivePage }: HeaderProps) => {
+const Header = ({ activePage, setActivePage, currentUser, onShowAuth, onLogout }: HeaderProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   
   const navItems = [
@@ -67,9 +70,23 @@ const Header = ({ activePage, setActivePage }: HeaderProps) => {
         </Button>
         
         {/* User button */}
-        <Button variant="outline" className="rounded-full p-2 hidden md:flex">
-          <User size={20} />
-        </Button>
+        {currentUser ? (
+          <Button 
+            variant="outline" 
+            className="rounded-full p-2 hidden md:flex"
+            onClick={onLogout}
+          >
+            <User size={20} />
+          </Button>
+        ) : (
+          <Button 
+            variant="outline" 
+            className="rounded-full p-2 hidden md:flex"
+            onClick={onShowAuth}
+          >
+            <User size={20} />
+          </Button>
+        )}
       </div>
       
       {/* Mobile Navigation Menu */}
