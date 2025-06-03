@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -100,6 +101,14 @@ const Dashboard = () => {
       description: "Premium features will be available soon with unlimited access and advanced tools!",
       className: "bg-purple-600 border-purple-700 text-white",
       duration: 5000,
+    });
+  };
+
+  const generateFinancialReport = () => {
+    toast("📊 Financial Report Generated", {
+      description: "Your demo financial health report shows excellent progress! Keep up the great work.",
+      className: "bg-green-600 border-green-700 text-white",
+      duration: 4000,
     });
   };
   
