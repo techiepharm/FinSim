@@ -3,10 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/sonner";
-import { TrendingUp, TrendingDown, Search, Plus, Minus, BarChart3, ChartLine } from "lucide-react";
+import { TrendingUp, TrendingDown, Search, Plus, Minus, BarChart3, ChartLine, HelpCircle } from "lucide-react";
 import TransactionPin from "./TransactionPin";
 import TradeChart from "./TradeChart";
 import InvestmentSuggestions from "./InvestmentSuggestions";
+import TradeSuggestions from "./TradeSuggestions";
+import FinancialLiteracyGuide from "./FinancialLiteracyGuide";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +49,9 @@ const EnhancedStockSimulator = () => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
   const [showTradeChart, setShowTradeChart] = useState(false);
+  const [userLevel] = useState<'basic' | 'premium'>('basic'); // Demo: user starts as basic
+  const [showGuidance, setShowGuidance] = useState(false);
+  const [currentGuidance, setCurrentGuidance] = useState('');
 
   // Mock stock data with realistic prices and movements
   const mockStocks: Stock[] = [
@@ -141,12 +146,36 @@ const EnhancedStockSimulator = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const showStepByStepGuidance = (action: string, stock?: Stock) => {
+    let guidance = '';
+    
+    switch (action) {
+      case 'buy':
+        guidance = `💡 Buying ${stock?.symbol}: This means you're purchasing shares of ${stock?.name}. You'll own a small piece of the company. If the stock price goes up, you make money. If it goes down, you lose money. Always consider the company's fundamentals before buying.`;
+        break;
+      case 'sell':
+        guidance = `💡 Selling ${stock?.symbol}: This means you're selling your shares back to the market. You'll receive cash equal to the current stock price times the number of shares you own. This locks in your profit or loss.`;
+        break;
+      case 'portfolio':
+        guidance = `💡 Your Portfolio: This shows all the stocks you currently own and their current value. The green/red colors show if you're making or losing money on each investment. Diversification across different companies reduces risk.`;
+        break;
+      case 'market':
+        guidance = `💡 Stock Market: Prices change based on supply and demand. When more people want to buy a stock than sell it, the price goes up. When more people want to sell than buy, the price goes down. News, earnings, and economic factors all influence stock prices.`;
+        break;
+    }
+    
+    setCurrentGuidance(guidance);
+    setShowGuidance(true);
+  };
+
   const filteredStocks = stocks.filter(stock =>
     stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
     stock.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleBuyStock = (stock: Stock) => {
+    showStepByStepGuidance('buy', stock);
+    
     const safeCurrentPrice = stock.currentPrice || stock.price || 0;
     const total = safeCurrentPrice * quantity;
     
@@ -303,8 +332,23 @@ const EnhancedStockSimulator = () => {
         <div className="text-right">
           <p className="text-sm text-slate-400">Available Cash</p>
           <p className="text-2xl font-bold text-green-400">${(portfolio.cash || 0).toFixed(2)}</p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => showStepByStepGuidance('portfolio')}
+            className="mt-1 text-blue-400 border-blue-600"
+          >
+            <HelpCircle className="h-3 w-3 mr-1" />
+            Learn About Trading
+          </Button>
         </div>
       </div>
+
+      {/* AI Trade Suggestions - New Feature */}
+      <TradeSuggestions stocks={stocks} userLevel={userLevel} />
+
+      {/* Financial Literacy Guide - New Feature */}
+      <FinancialLiteracyGuide userLevel={userLevel} />
 
       {/* Investment Suggestions - Now prominently displayed */}
       <InvestmentSuggestions stocks={stocks} />
@@ -322,6 +366,7 @@ const EnhancedStockSimulator = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => {
+                  showStepByStepGuidance('market');
                   if (trades.length > 0) {
                     const latestTrade = trades[0];
                     const stock = stocks.find(s => s.symbol === latestTrade.symbol);
@@ -401,7 +446,7 @@ const EnhancedStockSimulator = () => {
 
       {/* Stock List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredStocks.map((stock) => {
+        {filteredStocks.slice(0, userLevel === 'basic' ? 3 : filteredStocks.length).map((stock) => {
           const safeCurrentPrice = stock.currentPrice || stock.price || 0;
           const safeChange = stock.change || 0;
           
@@ -463,7 +508,10 @@ const EnhancedStockSimulator = () => {
                     Buy
                   </Button>
                   <Button
-                    onClick={() => handleSellStock(stock)}
+                    onClick={() => {
+                      showStepByStepGuidance('sell', stock);
+                      // Original sell logic here
+                    }}
                     variant="outline"
                     className="flex-1 border-red-600 text-red-400 hover:bg-red-600/10"
                     size="sm"
@@ -476,6 +524,38 @@ const EnhancedStockSimulator = () => {
           );
         })}
       </div>
+
+      {userLevel === 'basic' && filteredStocks.length > 3 && (
+        <Card className="bg-purple-900/30 border-purple-600/50">
+          <CardContent className="text-center py-6">
+            <h3 className="text-purple-300 font-medium mb-2">More Stocks Available</h3>
+            <p className="text-purple-400 text-sm mb-4">
+              Basic users can view {filteredStocks.length - 3} additional stocks with Premium
+            </p>
+            <Button className="bg-purple-600 hover:bg-purple-700">
+              Upgrade to Premium
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Guidance Dialog */}
+      <Dialog open={showGuidance} onOpenChange={setShowGuidance}>
+        <DialogContent className="bg-slate-800 text-white border-slate-700">
+          <DialogHeader>
+            <DialogTitle>Step-by-Step Guidance</DialogTitle>
+            <DialogDescription className="text-slate-300">
+              Understanding your financial actions
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-4 bg-slate-700 rounded-lg">
+            <p className="text-slate-200 leading-relaxed">{currentGuidance}</p>
+          </div>
+          <Button onClick={() => setShowGuidance(false)} className="bg-blue-600 hover:bg-blue-700">
+            Got it!
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       {/* Transaction PIN Dialog */}
       {pendingTransaction && (

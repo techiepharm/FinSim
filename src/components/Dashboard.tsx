@@ -1,17 +1,20 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { BookOpen, ArrowRight, TrendingUp, Bell, PiggyBank } from "lucide-react";
+import { BookOpen, ArrowRight, TrendingUp, Bell, PiggyBank, Crown, Users } from "lucide-react";
 import CashCardUpdated from './CashCardUpdated';
 import SavingsBox from './SavingsBox';
+import VirtualCard from './VirtualCard';
+import ATMAnimation from './ATMAnimation';
+import SavingsGroups from './SavingsGroups';
 import UserGuidance from './UserGuidance';
 import { toast } from "@/components/ui/sonner";
 
 const Dashboard = () => {
   // User info
   const username = "Ezra Folorunso";
+  const [userLevel] = useState<'basic' | 'premium'>('basic'); // Demo: starts as basic
   
   // User account info
   const [accountBalance, setAccountBalance] = useState(1000);
@@ -73,78 +76,31 @@ const Dashboard = () => {
     const randomTip = tips[Math.floor(Math.random() * tips.length)];
     setFinancialTip(randomTip);
     
-    // Show demo account reminder
+    // Show demo account reminder with upgrade suggestion
     setTimeout(() => {
       toast("🎯 Demo Account Active", {
-        description: "You're using virtual money - perfect for learning without risk!",
-        className: "bg-blue-600 border-blue-700 text-white",
+        description: userLevel === 'basic' 
+          ? "You're using the basic version - upgrade for unlimited features!"
+          : "You're using virtual money - perfect for learning without risk!",
+        className: userLevel === 'basic' 
+          ? "bg-purple-600 border-purple-700 text-white"
+          : "bg-blue-600 border-blue-700 text-white",
         duration: 6000,
       });
     }, 8000);
-  }, []);
-  
-  // Get financial advice based on transaction history
-  const getFinancialAdvice = () => {
-    if (recentTransactions.length > 0) {
-      const buyTransactions = recentTransactions.filter(t => t.type === 'BUY').length;
-      const sellTransactions = recentTransactions.filter(t => t.type === 'SELL').length;
-      const savingsTransactions = recentTransactions.filter(t => 
-        t.type === 'SAVINGS_DEPOSIT' || t.type === 'SAVINGS_WITHDRAWAL'
-      ).length;
-      
-      if (savingsTransactions > 0) {
-        toast("💡 Smart Saving", {
-          description: "Great job using the savings feature! This builds good financial habits.",
-          className: "bg-green-600 border-green-700 text-white",
-          duration: 5000,
-        });
-      } else if (buyTransactions > sellTransactions * 2) {
-        toast("📈 Trading Tip", {
-          description: "You're buying frequently. Consider a more balanced approach to lock in profits.",
-          className: "bg-yellow-600 border-yellow-700 text-white",
-          duration: 5000,
-        });
-      } else if (sellTransactions > buyTransactions) {
-        toast("📊 Investment Advice", {
-          description: "You're selling frequently. Consider longer holding periods for potential growth.",
-          className: "bg-yellow-600 border-yellow-700 text-white",
-          duration: 5000,
-        });
-      } else {
-        toast("🎯 Financial Advice", {
-          description: "Try using the savings box to set aside money for your goals!",
-          className: "bg-blue-600 border-blue-700 text-white",
-          duration: 5000,
-        });
-      }
-    } else {
-      toast("🚀 Get Started", {
-        description: "Start by trying the trading simulator or setting up your savings goals!",
-        className: "bg-purple-600 border-purple-700 text-white",
-        duration: 5000,
-      });
-    }
-  };
-  
-  const generateFinancialReport = () => {
-    toast("📊 Financial Report", {
-      description: "Your demo account shows good activity. Keep practicing these skills!",
-      className: "bg-green-600 border-green-700 text-white",
-      duration: 5000,
-    });
-  };
-  
-  const getSavingsRecommendation = () => {
-    toast("💰 Savings Tip", {
-      description: "Use the savings box to practice setting aside money. Try locking it for discipline!",
-      className: "bg-green-600 border-green-700 text-white",
-      duration: 5000,
-    });
-  };
+  }, [userLevel]);
 
   const handleBalanceUpdate = (newBalance: number) => {
     setAccountBalance(newBalance);
     updateDataFromStorage();
+  };
+
+  const handleUpgrade = () => {
+    toast("🚀 Premium Coming Soon!", {
+      description: "Premium features will be available soon with unlimited access and advanced tools!",
+      className: "bg-purple-600 border-purple-700 text-white",
+      duration: 5000,
+    });
   };
   
   return (
@@ -155,14 +111,20 @@ const Dashboard = () => {
         <div className="flex flex-col md:flex-row justify-between items-center mb-6">
           <div>
             <h2 className="text-3xl font-bold mb-2 text-white">Welcome, {username}</h2>
-            <p className="text-slate-400">🎯 Demo Account - Your financial journey at a glance</p>
+            <div className="flex items-center gap-2">
+              <p className="text-slate-400">🎯 Demo Account - Your financial journey at a glance</p>
+              {userLevel === 'basic' && (
+                <Button 
+                  size="sm"
+                  onClick={handleUpgrade}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  <Crown className="h-3 w-3 mr-1" />
+                  Upgrade
+                </Button>
+              )}
+            </div>
           </div>
-          <Button 
-            onClick={getFinancialAdvice}
-            className="mt-2 md:mt-0 bg-blue-600 hover:bg-blue-700"
-          >
-            Get Financial Advice
-          </Button>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -173,6 +135,18 @@ const Dashboard = () => {
             onBalanceUpdate={handleBalanceUpdate}
           />
           
+          <VirtualCard userLevel={userLevel} balance={accountBalance} />
+          
+          <ATMAnimation 
+            balance={accountBalance} 
+            onBalanceUpdate={handleBalanceUpdate}
+          />
+        </div>
+
+        {/* New Savings Groups Section */}
+        <SavingsGroups userLevel={userLevel} />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
               <CardTitle className="text-white">Learning Progress</CardTitle>
@@ -206,16 +180,51 @@ const Dashboard = () => {
               </Button>
               <Button 
                 className="w-full bg-blue-800 hover:bg-blue-700"
-                onClick={getSavingsRecommendation}
+                onClick={() => toast("💰 Tip", { 
+                  description: "Use savings groups to reach goals faster with friends and family!",
+                  className: "bg-green-600 border-green-700 text-white"
+                })}
               >
-                <PiggyBank className="mr-2 h-4 w-4" />
-                Savings Tips
+                <Users className="mr-2 h-4 w-4" />
+                Join Groups
               </Button>
               <Button 
                 className="w-full bg-purple-800 hover:bg-purple-700"
                 onClick={() => window.location.href = '/goals'}
               >
                 Set Goals
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Premium Features Preview */}
+          <Card className="md:col-span-2 bg-gradient-to-r from-purple-900/50 to-pink-900/50 border-purple-600/50">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Crown className="h-5 w-5 text-yellow-400" />
+                Premium Features Preview
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="p-2 bg-slate-800/50 rounded">
+                  <span className="text-purple-300">✨ Unlimited Stock Access</span>
+                </div>
+                <div className="p-2 bg-slate-800/50 rounded">
+                  <span className="text-purple-300">🤖 AI Trade Suggestions</span>
+                </div>
+                <div className="p-2 bg-slate-800/50 rounded">
+                  <span className="text-purple-300">👥 Unlimited Savings Groups</span>
+                </div>
+                <div className="p-2 bg-slate-800/50 rounded">
+                  <span className="text-purple-300">💳 Advanced Card Features</span>
+                </div>
+              </div>
+              <Button 
+                onClick={handleUpgrade}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              >
+                Upgrade to Premium
               </Button>
             </CardContent>
           </Card>
