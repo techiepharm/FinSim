@@ -38,44 +38,66 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
   }, [stocks]);
 
   const generateSuggestions = () => {
-    const newSuggestions: Suggestion[] = [
-      {
+    // Don't generate suggestions if we don't have enough stock data
+    if (!stocks || stocks.length === 0) {
+      setSuggestions([]);
+      return;
+    }
+
+    const newSuggestions: Suggestion[] = [];
+
+    // Only add suggestions if we have valid stocks
+    const teslaStock = stocks.find(s => s.symbol === 'TSLA') || stocks[0];
+    if (teslaStock) {
+      newSuggestions.push({
         id: '1',
         type: 'buy',
-        stock: stocks.find(s => s.symbol === 'TSLA') || stocks[0],
+        stock: teslaStock,
         reason: 'Strong upward momentum with 12.45% gain',
         confidence: 85,
         explanation: 'Tesla is showing strong bullish signals with high trading volume. The automotive sector is performing well, and the company has positive news flow.',
         isPremium: false
-      },
-      {
+      });
+    }
+
+    const appleStock = stocks.find(s => s.symbol === 'AAPL') || stocks[1];
+    if (appleStock) {
+      newSuggestions.push({
         id: '2',
         type: 'caution',
-        stock: stocks.find(s => s.symbol === 'AAPL') || stocks[1],
+        stock: appleStock,
         reason: 'Recent decline of -3.41% indicates potential weakness',
         confidence: 70,
         explanation: 'Apple has been showing some weakness recently. Consider waiting for a better entry point or implement a dollar-cost averaging strategy.',
         isPremium: false
-      },
-      {
+      });
+    }
+
+    const googleStock = stocks.find(s => s.symbol === 'GOOGL') || stocks[2];
+    if (googleStock) {
+      newSuggestions.push({
         id: '3',
         type: 'buy',
-        stock: stocks.find(s => s.symbol === 'GOOGL') || stocks[2],
+        stock: googleStock,
         reason: 'AI-powered analysis suggests strong fundamentals',
         confidence: 92,
         explanation: 'Advanced technical analysis shows multiple bullish indicators converging. The stock has strong fundamentals and is trading below its fair value.',
         isPremium: true
-      },
-      {
+      });
+    }
+
+    const microsoftStock = stocks.find(s => s.symbol === 'MSFT') || stocks[3];
+    if (microsoftStock) {
+      newSuggestions.push({
         id: '4',
         type: 'sell',
-        stock: stocks.find(s => s.symbol === 'MSFT') || stocks[1],
+        stock: microsoftStock,
         reason: 'Premium algorithm detects potential reversal pattern',
         confidence: 78,
         explanation: 'Our advanced pattern recognition system has identified a potential head and shoulders formation, suggesting a possible price reversal.',
         isPremium: true
-      }
-    ];
+      });
+    }
 
     setSuggestions(newSuggestions);
   };
@@ -137,59 +159,69 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {visibleSuggestions.map((suggestion) => (
-          <div 
-            key={suggestion.id}
-            className={`p-3 rounded-lg cursor-pointer transition-colors ${
-              suggestion.isPremium && userLevel === 'basic'
-                ? 'bg-slate-700/50 border border-purple-600/50'
-                : 'bg-slate-700 hover:bg-slate-600'
-            }`}
-            onClick={() => handleSuggestionClick(suggestion)}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3 flex-1">
-                {getTypeIcon(suggestion.type)}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-white font-medium">{suggestion.stock.symbol}</span>
-                    <Badge className={getTypeColor(suggestion.type)}>
-                      {suggestion.type.toUpperCase()}
-                    </Badge>
-                    {suggestion.isPremium && (
-                      <Lock className="h-3 w-3 text-purple-400" />
-                    )}
-                  </div>
-                  <p className="text-slate-300 text-sm">{suggestion.reason}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-slate-400">Confidence:</span>
-                    <div className="flex-1 bg-slate-600 rounded-full h-1.5">
-                      <div 
-                        className="bg-green-400 h-1.5 rounded-full"
-                        style={{ width: `${suggestion.confidence}%` }}
-                      />
+        {visibleSuggestions.length > 0 ? (
+          <>
+            {visibleSuggestions.map((suggestion) => (
+              <div 
+                key={suggestion.id}
+                className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                  suggestion.isPremium && userLevel === 'basic'
+                    ? 'bg-slate-700/50 border border-purple-600/50'
+                    : 'bg-slate-700 hover:bg-slate-600'
+                }`}
+                onClick={() => handleSuggestionClick(suggestion)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3 flex-1">
+                    {getTypeIcon(suggestion.type)}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-white font-medium">{suggestion.stock.symbol}</span>
+                        <Badge className={getTypeColor(suggestion.type)}>
+                          {suggestion.type.toUpperCase()}
+                        </Badge>
+                        {suggestion.isPremium && (
+                          <Lock className="h-3 w-3 text-purple-400" />
+                        )}
+                      </div>
+                      <p className="text-slate-300 text-sm">{suggestion.reason}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-slate-400">Confidence:</span>
+                        <div className="flex-1 bg-slate-600 rounded-full h-1.5">
+                          <div 
+                            className="bg-green-400 h-1.5 rounded-full"
+                            style={{ width: `${suggestion.confidence}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-green-400">{suggestion.confidence}%</span>
+                      </div>
                     </div>
-                    <span className="text-xs text-green-400">{suggestion.confidence}%</span>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        ))}
+            ))}
 
-        {userLevel === 'basic' && (
-          <div className="mt-4 p-3 bg-purple-900/30 border border-purple-600/50 rounded-lg text-center">
-            <Crown className="h-6 w-6 text-purple-400 mx-auto mb-2" />
-            <p className="text-purple-300 text-sm mb-2">
-              Unlock {suggestions.length - 2} more AI-powered suggestions
-            </p>
-            <Button 
-              size="sm" 
-              className="bg-purple-600 hover:bg-purple-700"
-              onClick={() => toast("Coming Soon!", { description: "Premium features will be available soon!" })}
-            >
-              Upgrade to Premium
-            </Button>
+            {userLevel === 'basic' && suggestions.length > 2 && (
+              <div className="mt-4 p-3 bg-purple-900/30 border border-purple-600/50 rounded-lg text-center">
+                <Crown className="h-6 w-6 text-purple-400 mx-auto mb-2" />
+                <p className="text-purple-300 text-sm mb-2">
+                  Unlock {suggestions.length - 2} more AI-powered suggestions
+                </p>
+                <Button 
+                  size="sm" 
+                  className="bg-purple-600 hover:bg-purple-700"
+                  onClick={() => toast("Coming Soon!", { description: "Premium features will be available soon!" })}
+                >
+                  Upgrade to Premium
+                </Button>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-8 text-slate-500">
+            <Lightbulb className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+            <p className="mb-2">Loading AI suggestions...</p>
+            <p className="text-sm">Waiting for stock data to generate personalized recommendations.</p>
           </div>
         )}
       </CardContent>
