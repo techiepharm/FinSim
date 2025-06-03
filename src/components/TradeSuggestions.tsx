@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,7 +54,7 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
         stock: teslaStock,
         reason: 'Strong upward momentum with 12.45% gain',
         confidence: 85,
-        explanation: 'Tesla is showing strong bullish signals with high trading volume. The automotive sector is performing well, and the company has positive news flow.',
+        explanation: 'Tesla is showing strong bullish signals with high trading volume. The automotive sector is performing well, and the company has positive news flow. Minimum purchase: 0.05 shares.',
         isPremium: false
       });
     }
@@ -68,7 +67,7 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
         stock: appleStock,
         reason: 'Recent decline of -3.41% indicates potential weakness',
         confidence: 70,
-        explanation: 'Apple has been showing some weakness recently. Consider waiting for a better entry point or implement a dollar-cost averaging strategy.',
+        explanation: 'Apple has been showing some weakness recently. Consider waiting for a better entry point or implement a dollar-cost averaging strategy with minimum 0.05 shares.',
         isPremium: false
       });
     }
@@ -81,7 +80,7 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
         stock: googleStock,
         reason: 'AI-powered analysis suggests strong fundamentals',
         confidence: 92,
-        explanation: 'Advanced technical analysis shows multiple bullish indicators converging. The stock has strong fundamentals and is trading below its fair value.',
+        explanation: 'Advanced technical analysis shows multiple bullish indicators converging. The stock has strong fundamentals and is trading below its fair value. Start with minimum 0.05 shares.',
         isPremium: true
       });
     }
@@ -94,7 +93,7 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
         stock: microsoftStock,
         reason: 'Premium algorithm detects potential reversal pattern',
         confidence: 78,
-        explanation: 'Our advanced pattern recognition system has identified a potential head and shoulders formation, suggesting a possible price reversal.',
+        explanation: 'Our advanced pattern recognition system has identified a potential head and shoulders formation, suggesting a possible price reversal. Consider selling in increments of 0.05 shares.',
         isPremium: true
       });
     }

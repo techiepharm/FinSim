@@ -77,15 +77,11 @@ const Dashboard = () => {
     const randomTip = tips[Math.floor(Math.random() * tips.length)];
     setFinancialTip(randomTip);
     
-    // Show demo account reminder with upgrade suggestion
+    // Show demo account reminder
     setTimeout(() => {
       toast("🎯 Demo Account Active", {
-        description: userLevel === 'basic' 
-          ? "You're using the basic version - upgrade for unlimited features!"
-          : "You're using virtual money - perfect for learning without risk!",
-        className: userLevel === 'basic' 
-          ? "bg-purple-600 border-purple-700 text-white"
-          : "bg-blue-600 border-blue-700 text-white",
+        description: "You're using virtual money - perfect for learning without risk!",
+        className: "bg-blue-600 border-blue-700 text-white",
         duration: 6000,
       });
     }, 8000);
@@ -94,17 +90,20 @@ const Dashboard = () => {
   const handleBalanceUpdate = (newBalance: number) => {
     setAccountBalance(newBalance);
     updateDataFromStorage();
+    // Trigger custom event to update other components
+    window.dispatchEvent(new Event('storageUpdate'));
   };
 
-  const handleUpgrade = () => {
-    toast("🚀 Premium Coming Soon!", {
-      description: "Premium features will be available soon with unlimited access and advanced tools!",
-      className: "bg-purple-600 border-purple-700 text-white",
-      duration: 5000,
+  const handleFeatureClick = (featureName: string, description: string) => {
+    toast(`ℹ️ ${featureName}`, {
+      description: description,
+      className: "bg-blue-600 border-blue-700 text-white",
+      duration: 4000,
     });
   };
 
   const generateFinancialReport = () => {
+    handleFeatureClick("Financial Report", "Get insights into your spending patterns and financial health");
     toast("📊 Financial Report Generated", {
       description: "Your demo financial health report shows excellent progress! Keep up the great work.",
       className: "bg-green-600 border-green-700 text-white",
@@ -113,44 +112,48 @@ const Dashboard = () => {
   };
   
   return (
-    <div className="min-h-screen bg-slate-900 overflow-y-auto">
+    <div className="min-h-screen bg-slate-900 overflow-y-auto relative">
       <div className="container mx-auto p-4 space-y-6 max-h-screen overflow-y-auto pb-20">
         <UserGuidance />
         
         <div className="flex flex-col md:flex-row justify-between items-center mb-6">
           <div>
             <h2 className="text-3xl font-bold mb-2 text-white">Welcome, {username}</h2>
-            <div className="flex items-center gap-2">
-              <p className="text-slate-400">🎯 Demo Account - Your financial journey at a glance</p>
-              {userLevel === 'basic' && (
-                <Button 
-                  size="sm"
-                  onClick={handleUpgrade}
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  <Crown className="h-3 w-3 mr-1" />
-                  Upgrade
-                </Button>
-              )}
-            </div>
+            <p className="text-slate-400">🎯 Demo Account - Your financial journey at a glance</p>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Balance and Card Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <CashCardUpdated availableBalance={accountBalance} />
-          
+          <VirtualCard userLevel={userLevel} balance={accountBalance} />
           <SavingsBox 
             availableBalance={accountBalance} 
             onBalanceUpdate={handleBalanceUpdate}
           />
-          
-          <VirtualCard userLevel={userLevel} balance={accountBalance} />
-          
-          <ATMAnimation 
-            balance={accountBalance} 
-            onBalanceUpdate={handleBalanceUpdate}
-          />
         </div>
+
+        {/* Start Trading Feature */}
+        <Card className="bg-gradient-to-r from-green-900/50 to-emerald-800/50 border-green-600/50">
+          <CardContent className="p-6 text-center">
+            <h3 className="text-3xl font-bold text-green-300 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+              Ready to Start Trading?
+            </h3>
+            <p className="text-green-200 mb-6 text-lg">
+              Begin your investment journey with our virtual trading platform
+            </p>
+            <Button 
+              size="lg"
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg font-semibold"
+              onClick={() => {
+                handleFeatureClick("Start Trading", "Begin your investment journey with virtual money to learn without risk");
+                window.location.href = '/trading';
+              }}
+            >
+              Click Here to Start Trading
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* New Savings Groups Section */}
         <SavingsGroups userLevel={userLevel} />
@@ -168,7 +171,10 @@ const Dashboard = () => {
               </div>
               <Button 
                 className="w-full mt-3 bg-purple-600 hover:bg-purple-700"
-                onClick={() => window.location.href = '/learning'}
+                onClick={() => {
+                  handleFeatureClick("Learning Center", "Improve your financial literacy with interactive lessons and quizzes");
+                  window.location.href = '/learning';
+                }}
               >
                 Continue Learning
               </Button>
@@ -182,64 +188,40 @@ const Dashboard = () => {
             <CardContent className="space-y-3">
               <Button 
                 className="w-full bg-green-800 hover:bg-green-700"
-                onClick={() => window.location.href = '/trading'}
+                onClick={() => {
+                  handleFeatureClick("Trading Platform", "Access real-time stock data and make virtual trades to learn investing");
+                  window.location.href = '/trading';
+                }}
               >
                 <TrendingUp className="mr-2 h-4 w-4" />
                 Start Trading
               </Button>
               <Button 
                 className="w-full bg-blue-800 hover:bg-blue-700"
-                onClick={() => toast("💰 Tip", { 
-                  description: "Use savings groups to reach goals faster with friends and family!",
-                  className: "bg-green-600 border-green-700 text-white"
-                })}
+                onClick={() => {
+                  handleFeatureClick("Savings Groups", "Join or create savings groups to reach financial goals together with friends and family");
+                  toast("💰 Tip", { 
+                    description: "Use savings groups to reach goals faster with friends and family!",
+                    className: "bg-green-600 border-green-700 text-white"
+                  });
+                }}
               >
                 <Users className="mr-2 h-4 w-4" />
                 Join Groups
               </Button>
               <Button 
                 className="w-full bg-purple-800 hover:bg-purple-700"
-                onClick={() => window.location.href = '/goals'}
+                onClick={() => {
+                  handleFeatureClick("Financial Goals", "Set and track your financial objectives with personalized recommendations");
+                  window.location.href = '/goals';
+                }}
               >
                 Set Goals
               </Button>
             </CardContent>
           </Card>
 
-          {/* Premium Features Preview */}
-          <Card className="md:col-span-2 bg-gradient-to-r from-purple-900/50 to-pink-900/50 border-purple-600/50">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Crown className="h-5 w-5 text-yellow-400" />
-                Premium Features Preview
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="p-2 bg-slate-800/50 rounded">
-                  <span className="text-purple-300">✨ Unlimited Stock Access</span>
-                </div>
-                <div className="p-2 bg-slate-800/50 rounded">
-                  <span className="text-purple-300">🤖 AI Trade Suggestions</span>
-                </div>
-                <div className="p-2 bg-slate-800/50 rounded">
-                  <span className="text-purple-300">👥 Unlimited Savings Groups</span>
-                </div>
-                <div className="p-2 bg-slate-800/50 rounded">
-                  <span className="text-purple-300">💳 Advanced Card Features</span>
-                </div>
-              </div>
-              <Button 
-                onClick={handleUpgrade}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-              >
-                Upgrade to Premium
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          {/* Recent Activity and Financial Health Cards */}
           <Card className="md:col-span-2 bg-slate-800 border-slate-700">
             <CardHeader>
               <CardTitle className="text-white">Recent Activity</CardTitle>
@@ -276,7 +258,14 @@ const Dashboard = () => {
                     </div>
                   ))}
                   
-                  <Button variant="ghost" className="w-full mt-2 text-green-400" onClick={() => window.location.href = '/transactions'}>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full mt-2 text-green-400" 
+                    onClick={() => {
+                      handleFeatureClick("Transaction History", "View all your past transactions and account activity");
+                      window.location.href = '/transactions';
+                    }}
+                  >
                     View All Transactions
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
@@ -296,7 +285,9 @@ const Dashboard = () => {
               )}
             </CardContent>
           </Card>
-          
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
               <CardTitle className="text-white">Financial Health</CardTitle>
@@ -328,7 +319,13 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <Button className="w-full bg-green-600 hover:bg-green-700 mt-2" onClick={() => window.location.href = '/learning'}>
+              <Button 
+                className="w-full bg-green-600 hover:bg-green-700 mt-2" 
+                onClick={() => {
+                  handleFeatureClick("Continue Learning", "Resume your financial education journey with the next lesson");
+                  window.location.href = '/learning';
+                }}
+              >
                 Continue Learning
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
@@ -346,6 +343,16 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* ATM positioned at bottom right corner */}
+      <div className="fixed bottom-4 right-4 z-40">
+        <div className="w-80">
+          <ATMAnimation 
+            balance={accountBalance} 
+            onBalanceUpdate={handleBalanceUpdate}
+          />
+        </div>
       </div>
     </div>
   );
