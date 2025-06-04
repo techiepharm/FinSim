@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { BookOpen, ArrowRight, TrendingUp, Bell, PiggyBank, Crown, Users, DollarSign, Target, Calendar } from "lucide-react";
+import { BookOpen, ArrowRight, TrendingUp, Bell, PiggyBank, Crown, Users, DollarSign, Target, Calendar, PieChart, Receipt } from "lucide-react";
 import CashCardUpdated from './CashCardUpdated';
 import SavingsBox from './SavingsBox';
 import VirtualCard from './VirtualCard';
