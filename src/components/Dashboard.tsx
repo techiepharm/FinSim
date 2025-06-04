@@ -10,6 +10,7 @@ import ATMAnimation from './ATMAnimation';
 import SavingsGroups from './SavingsGroups';
 import UserGuidance from './UserGuidance';
 import { toast } from "@/components/ui/sonner";
+import SavingsManagement from './SavingsManagement';
 
 const Dashboard = () => {
   // User info
@@ -25,6 +26,8 @@ const Dashboard = () => {
   const completedLessons = 4;
   const totalLessons = 12;
   
+  const [showSavingsManagement, setShowSavingsManagement] = useState(false);
+
   // Load transactions and account balance from localStorage
   const updateDataFromStorage = () => {
     try {
@@ -179,10 +182,7 @@ const Dashboard = () => {
               <Button 
                 size="sm" 
                 className="w-full bg-green-600 hover:bg-green-700"
-                onClick={() => {
-                  handleFeatureClick("Savings Account", "Build your savings with automatic deposits and interest");
-                  toast("💰 Savings Active", { description: "Your savings account is earning virtual interest!" });
-                }}
+                onClick={() => setShowSavingsManagement(true)}
               >
                 Click Here to Manage Savings
               </Button>
@@ -544,6 +544,13 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      <SavingsManagement
+        isOpen={showSavingsManagement}
+        onClose={() => setShowSavingsManagement(false)}
+        availableBalance={accountBalance}
+        onBalanceUpdate={handleBalanceUpdate}
+      />
     </div>
   );
 };

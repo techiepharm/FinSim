@@ -6,11 +6,12 @@ import Dashboard from "@/components/Dashboard";
 import LearningCenter from "@/components/LearningCenter";
 import EnhancedStockSimulator from "@/components/EnhancedStockSimulator";
 import Portfolio from "@/components/Portfolio";
-import FinancialBot from "@/components/FinancialBot";
+import FinancialBotWithLimits from "@/components/FinancialBotWithLimits";
 import Goals from "@/components/Goals";
 import CalendarView from "@/components/CalendarView";
 import TransactionHistory from "@/components/TransactionHistory";
 import AuthModal from "@/components/AuthModal";
+import PremiumUpgrade from "@/components/PremiumUpgrade";
 import { Button } from "@/components/ui/button";
 import { Bot } from "lucide-react";
 import {
@@ -25,13 +26,17 @@ const Index = ({ activePage: initialPage = 'dashboard' }) => {
   const location = useLocation();
   const [activePage, setActivePage] = useState(initialPage);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showPremiumUpgrade, setShowPremiumUpgrade] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [userLevel, setUserLevel] = useState<'basic' | 'premium'>('basic');
   const [isLoading, setIsLoading] = useState(true);
+  const [accountBalance, setAccountBalance] = useState(1000);
   
   useEffect(() => {
     // Check if user is logged in
     const storedUser = localStorage.getItem('currentUser');
     const isLoggedIn = localStorage.getItem('isLoggedIn');
+    const storedLevel = localStorage.getItem('userLevel') || 'basic';
     
     if (storedUser && isLoggedIn === 'true') {
       setCurrentUser(JSON.parse(storedUser));
@@ -40,12 +45,41 @@ const Index = ({ activePage: initialPage = 'dashboard' }) => {
       setShowAuthModal(true);
     }
     
+    setUserLevel(storedLevel as 'basic' | 'premium');
+    
+    // Load account balance
+    const portfolioData = localStorage.getItem('portfolio');
+    if (portfolioData) {
+      const portfolio = JSON.parse(portfolioData);
+      setAccountBalance(portfolio.cash);
+    }
+    
     // If the URL is /trading, set the active page to 'trading'
     if (location.pathname === '/trading') {
       setActivePage('trading');
     }
     
     setIsLoading(false);
+
+    // Listen for storage updates
+    const handleStorageUpdate = () => {
+      const newLevel = localStorage.getItem('userLevel') || 'basic';
+      setUserLevel(newLevel as 'basic' | 'premium');
+      
+      const portfolioData = localStorage.getItem('portfolio');
+      if (portfolioData) {
+        const portfolio = JSON.parse(portfolioData);
+        setAccountBalance(portfolio.cash);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageUpdate);
+    window.addEventListener('storageUpdate', handleStorageUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageUpdate);
+      window.removeEventListener('storageUpdate', handleStorageUpdate);
+    };
   }, [location.pathname]);
 
   const handleAuthSuccess = (user: any) => {
@@ -56,8 +90,20 @@ const Index = ({ activePage: initialPage = 'dashboard' }) => {
   const handleLogout = () => {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userLevel');
+    localStorage.removeItem('botMessagesUsed');
     setCurrentUser(null);
+    setUserLevel('basic');
     setShowAuthModal(true);
+  };
+
+  const handleUpgradeSuccess = () => {
+    setUserLevel('premium');
+    const portfolioData = localStorage.getItem('portfolio');
+    if (portfolioData) {
+      const portfolio = JSON.parse(portfolioData);
+      setAccountBalance(portfolio.cash);
+    }
   };
   
   // Map of page IDs to components
@@ -120,7 +166,7 @@ const Index = ({ activePage: initialPage = 'dashboard' }) => {
               <DrawerTitle className="text-center text-white">Your Financial Assistant</DrawerTitle>
             </DrawerHeader>
             <div className="px-4 pb-8 h-[80vh] overflow-y-auto">
-              <FinancialBot />
+              <FinancialBotWithLimits />
             </div>
           </DrawerContent>
         </Drawer>
@@ -130,6 +176,13 @@ const Index = ({ activePage: initialPage = 'dashboard' }) => {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onAuthSuccess={handleAuthSuccess}
+      />
+
+      <PremiumUpgrade
+        isOpen={showPremiumUpgrade}
+        onClose={() => setShowPremiumUpgrade(false)}
+        onUpgradeSuccess={handleUpgradeSuccess}
+        currentBalance={accountBalance}
       />
     </div>
   );
