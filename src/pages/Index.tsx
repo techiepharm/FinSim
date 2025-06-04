@@ -12,7 +12,7 @@ import CalendarView from "@/components/CalendarView";
 import TransactionHistory from "@/components/TransactionHistory";
 import AuthModal from "@/components/AuthModal";
 import { Button } from "@/components/ui/button";
-import { Bot, User } from "lucide-react";
+import { Bot } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -26,27 +26,38 @@ const Index = ({ activePage: initialPage = 'dashboard' }) => {
   const [activePage, setActivePage] = useState(initialPage);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     // Check if user is logged in
     const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    
+    if (storedUser && isLoggedIn === 'true') {
       setCurrentUser(JSON.parse(storedUser));
+      setShowAuthModal(false);
+    } else {
+      setShowAuthModal(true);
     }
     
     // If the URL is /trading, set the active page to 'trading'
     if (location.pathname === '/trading') {
       setActivePage('trading');
     }
+    
+    setIsLoading(false);
   }, [location.pathname]);
 
   const handleAuthSuccess = (user: any) => {
     setCurrentUser(user);
+    setShowAuthModal(false);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('isLoggedIn');
     setCurrentUser(null);
+    setShowAuthModal(true);
   };
   
   // Map of page IDs to components
@@ -59,6 +70,28 @@ const Index = ({ activePage: initialPage = 'dashboard' }) => {
     'calendar': <CalendarView />,
     'transactions': <TransactionHistory />
   };
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show auth modal if not logged in
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-900 text-white">
+        <AuthModal 
+          isOpen={showAuthModal}
+          onClose={() => {}} // Prevent closing when not authenticated
+          onAuthSuccess={handleAuthSuccess}
+        />
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col bg-slate-900 text-white">
@@ -91,17 +124,6 @@ const Index = ({ activePage: initialPage = 'dashboard' }) => {
             </div>
           </DrawerContent>
         </Drawer>
-
-        {/* Auth Button for non-logged users */}
-        {!currentUser && (
-          <Button 
-            className="fixed top-4 right-4 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg z-50"
-            onClick={() => setShowAuthModal(true)}
-          >
-            <User size={20} className="mr-2" />
-            Login
-          </Button>
-        )}
       </main>
 
       <AuthModal 

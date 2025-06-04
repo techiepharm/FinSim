@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import UserProfile from "./UserProfile";
 import { 
   Home, 
   BookOpen, 
@@ -69,15 +70,11 @@ const Header = ({ activePage, setActivePage, currentUser, onShowAuth, onLogout }
           </svg>
         </Button>
         
-        {/* User button */}
+        {/* User Profile or Login button */}
         {currentUser ? (
-          <Button 
-            variant="outline" 
-            className="rounded-full p-2 hidden md:flex"
-            onClick={onLogout}
-          >
-            <User size={20} />
-          </Button>
+          <div className="hidden md:flex">
+            <UserProfile user={currentUser} onLogout={onLogout} />
+          </div>
         ) : (
           <Button 
             variant="outline" 
@@ -108,6 +105,26 @@ const Header = ({ activePage, setActivePage, currentUser, onShowAuth, onLogout }
               <span>{item.label}</span>
             </Button>
           ))}
+          
+          {/* Mobile User Profile */}
+          {currentUser && (
+            <div className="border-t border-slate-600 pt-2">
+              <div className="px-6 py-3 flex items-center gap-3">
+                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold">
+                  {currentUser.name.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-white">{currentUser.name}</span>
+              </div>
+              <Button
+                variant="ghost"
+                className="w-full flex items-center gap-2 justify-start px-6 py-3 text-red-400"
+                onClick={onLogout}
+              >
+                <User size={20} />
+                <span>Log out</span>
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </header>
