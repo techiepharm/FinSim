@@ -3,7 +3,9 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bot, Send, User, RefreshCw, Lightbulb } from "lucide-react";
+import { Bot, Send, User, RefreshCw, Lightbulb, Crown, Lock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "@/components/ui/sonner";
 
 interface Message {
   id: number;
@@ -13,6 +15,20 @@ interface Message {
 }
 
 const FinancialBot = () => {
+  // Get user level from localStorage or default to basic
+  const [userLevel] = useState<'basic' | 'premium'>(() => {
+    try {
+      const storedUser = localStorage.getItem('currentUser');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        return user.level || 'basic';
+      }
+    } catch (e) {
+      console.error('Error reading user level:', e);
+    }
+    return 'basic';
+  });
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -23,10 +39,16 @@ const FinancialBot = () => {
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [messageCount, setMessageCount] = useState(0);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Sample questions for inspiration
+  // Message limits for basic users
+  const MAX_MESSAGES_BASIC = 10;
+  const userMessages = messages.filter(m => m.sender === 'user').length;
+  const canSendMessage = userLevel === 'premium' || userMessages < MAX_MESSAGES_BASIC;
+  
+  // Sample questions for inspiration - Enhanced with financial analysis
   const sampleQuestions = [
     "What is compound interest?",
     "How do I build a diversified portfolio?",
@@ -34,6 +56,7 @@ const FinancialBot = () => {
     "What's the difference between stocks and bonds?",
     "How can I create an emergency fund?",
     "Explain dollar-cost averaging",
+    "Analyze my financial history and give me advice", // New suggestion
   ];
   
   // Scroll to bottom of messages
@@ -50,7 +73,9 @@ const FinancialBot = () => {
     // This is a simple mock response system
     const lowerCaseMessage = userMessage.toLowerCase();
     
-    if (lowerCaseMessage.includes('compound interest')) {
+    if (lowerCaseMessage.includes('analyze') && (lowerCaseMessage.includes('financial') || lowerCaseMessage.includes('history') || lowerCaseMessage.includes('finance'))) {
+      return "Based on your demo account activity, here's my financial analysis:\n\n📊 **Current Financial Health**: Excellent\n💰 **Account Balance**: $1,000 (Virtual)\n📈 **Spending Pattern**: Conservative and learning-focused\n🎯 **Recommendation**: You're doing great with virtual trading! Consider:\n\n1. Continue learning with small virtual trades\n2. Set up automatic savings goals\n3. Diversify your virtual portfolio\n4. Track your learning progress\n\n💡 **Next Steps**: Try investing in different sectors to understand market dynamics. Your demo account is perfect for risk-free learning!";
+    } else if (lowerCaseMessage.includes('compound interest')) {
       return "Compound interest is when you earn interest on both the money you've saved and the interest you earn. It's like a snowball effect that helps your money grow faster over time. For example, if you invest $1,000 with an annual 5% return, after the first year you'd have $1,050. In the second year, you'd earn 5% on $1,050, which is $52.50, giving you $1,102.50, and so on.";
     } else if (lowerCaseMessage.includes('portfolio') && lowerCaseMessage.includes('diversif')) {
       return "Diversification means spreading your investments across different asset classes to reduce risk. A well-diversified portfolio typically includes a mix of stocks, bonds, cash, and potentially alternative investments like real estate. Within each category, you should diversify further (e.g., stocks from different industries and company sizes). The goal is that when some investments perform poorly, others might perform well, helping to stabilize your overall returns.";
@@ -70,6 +95,16 @@ const FinancialBot = () => {
   const handleSendMessage = () => {
     if (input.trim() === '') return;
     
+    // Check message limit for basic users
+    if (!canSendMessage) {
+      toast("🔒 Message Limit Reached", {
+        description: `Basic users are limited to ${MAX_MESSAGES_BASIC} messages. Upgrade to Premium for unlimited conversations!`,
+        className: "bg-purple-600 border-purple-700 text-white",
+        duration: 5000,
+      });
+      return;
+    }
+    
     const userMessage: Message = {
       id: messages.length + 1,
       text: input,
@@ -80,6 +115,7 @@ const FinancialBot = () => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsTyping(true);
+    setMessageCount(prev => prev + 1);
     
     // Simulate bot response delay
     setTimeout(() => {
@@ -99,8 +135,23 @@ const FinancialBot = () => {
     <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-finance-primary">Financial Assistant</h2>
-          <p className="text-muted-foreground mt-1">Get answers to your financial questions</p>
+          <h2 className="text-3xl font-bold text-finance-primary flex items-center gap-2">
+            Financial Assistant
+            {userLevel === 'basic' && (
+              <Badge variant="outline" className="text-yellow-400 border-yellow-600">
+                <Crown className="h-3 w-3 mr-1" />
+                Basic
+              </Badge>
+            )}
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            Get answers to your financial questions
+            {userLevel === 'basic' && (
+              <span className="text-yellow-400 ml-2">
+                ({userMessages}/{MAX_MESSAGES_BASIC} messages used)
+              </span>
+            )}
+          </p>
         </div>
       </div>
       
@@ -121,14 +172,39 @@ const FinancialBot = () => {
               <Button 
                 key={index} 
                 variant="outline" 
-                className="w-full justify-start text-left h-auto py-2"
+                className={`w-full justify-start text-left h-auto py-2 ${
+                  !canSendMessage ? 'opacity-50' : ''
+                }`}
+                disabled={!canSendMessage}
                 onClick={() => {
-                  setInput(question);
+                  if (canSendMessage) {
+                    setInput(question);
+                  }
                 }}
               >
+                {question === "Analyze my financial history and give me advice" && (
+                  <span className="text-blue-400 mr-2">⭐</span>
+                )}
                 {question}
               </Button>
             ))}
+            
+            {/* Premium upgrade prompt for basic users */}
+            {userLevel === 'basic' && (
+              <div className="mt-4 p-3 bg-purple-900/30 border border-purple-600/50 rounded-lg text-center">
+                <Crown className="h-5 w-5 text-purple-400 mx-auto mb-2" />
+                <p className="text-purple-300 text-xs mb-2">
+                  Upgrade for unlimited conversations
+                </p>
+                <Button 
+                  size="sm" 
+                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  onClick={() => toast("Coming Soon!", { description: "Premium features will be available soon!" })}
+                >
+                  Upgrade to Premium
+                </Button>
+              </div>
+            )}
           </CardContent>
           <CardFooter>
             <Button 
@@ -141,6 +217,7 @@ const FinancialBot = () => {
                   sender: 'bot',
                   timestamp: new Date(),
                 }]);
+                setMessageCount(0);
               }}
             >
               <RefreshCw className="h-4 w-4" />
@@ -155,9 +232,19 @@ const FinancialBot = () => {
             <CardTitle className="flex items-center gap-2">
               <Bot className="h-5 w-5 text-finance-primary" />
               Financial Assistant
+              {userLevel === 'basic' && (
+                <Badge className="bg-yellow-600/20 text-yellow-300 text-xs">
+                  {MAX_MESSAGES_BASIC - userMessages} messages left
+                </Badge>
+              )}
             </CardTitle>
             <CardDescription>
               Ask questions about financial literacy, investing, and trading
+              {userLevel === 'basic' && (
+                <span className="block text-yellow-400 text-sm mt-1">
+                  💎 Upgrade to Premium for unlimited conversations and advanced features
+                </span>
+              )}
             </CardDescription>
           </CardHeader>
           
@@ -202,6 +289,31 @@ const FinancialBot = () => {
                 </div>
               )}
               
+              {/* Message limit warning */}
+              {userLevel === 'basic' && userMessages >= MAX_MESSAGES_BASIC - 2 && userMessages < MAX_MESSAGES_BASIC && (
+                <div className="bg-yellow-900/30 border border-yellow-600/50 rounded-lg p-3 text-center">
+                  <p className="text-yellow-300 text-sm">
+                    ⚠️ You have {MAX_MESSAGES_BASIC - userMessages} message{MAX_MESSAGES_BASIC - userMessages !== 1 ? 's' : ''} remaining
+                  </p>
+                </div>
+              )}
+              
+              {/* Upgrade prompt when limit reached */}
+              {userLevel === 'basic' && !canSendMessage && (
+                <div className="bg-purple-900/30 border border-purple-600/50 rounded-lg p-4 text-center">
+                  <Lock className="h-8 w-8 text-purple-400 mx-auto mb-2" />
+                  <p className="text-purple-300 text-sm mb-3">
+                    You've reached your message limit. Upgrade to Premium for unlimited conversations!
+                  </p>
+                  <Button 
+                    className="bg-purple-600 hover:bg-purple-700"
+                    onClick={() => toast("Coming Soon!", { description: "Premium upgrade coming soon!" })}
+                  >
+                    Click Here to Upgrade to Premium
+                  </Button>
+                </div>
+              )}
+              
               <div ref={messagesEndRef} />
             </div>
           </CardContent>
@@ -215,16 +327,16 @@ const FinancialBot = () => {
               }}
             >
               <Input
-                placeholder="Type your financial question..."
+                placeholder={canSendMessage ? "Type your financial question..." : "Upgrade to Premium to continue chatting..."}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 className="flex-1"
-                disabled={isTyping}
+                disabled={isTyping || !canSendMessage}
               />
               <Button 
                 type="submit"
                 className="bg-finance-primary"
-                disabled={input.trim() === '' || isTyping}
+                disabled={input.trim() === '' || isTyping || !canSendMessage}
               >
                 <Send className="h-4 w-4" />
                 <span className="sr-only">Send</span>

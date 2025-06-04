@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { BookOpen, ArrowRight, TrendingUp, Bell, PiggyBank, Crown, Users } from "lucide-react";
+import { BookOpen, ArrowRight, TrendingUp, Bell, PiggyBank, Crown, Users, DollarSign, Target, Calendar } from "lucide-react";
 import CashCardUpdated from './CashCardUpdated';
 import SavingsBox from './SavingsBox';
 import VirtualCard from './VirtualCard';
@@ -116,31 +116,89 @@ const Dashboard = () => {
       <div className="container mx-auto p-4 space-y-6 max-h-screen overflow-y-auto pb-20">
         <UserGuidance />
         
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-          <div>
+        {/* Header with ATM */}
+        <div className="flex flex-col md:flex-row justify-between items-start mb-6 relative">
+          <div className="flex-1">
             <h2 className="text-3xl font-bold mb-2 text-white">Welcome, {username}</h2>
             <p className="text-slate-400">🎯 Demo Account - Your financial journey at a glance</p>
+          </div>
+          
+          {/* Small ATM positioned at top right */}
+          <div className="absolute top-0 right-0 z-30">
+            <div className="w-48 h-40 scale-75 origin-top-right">
+              <ATMAnimation 
+                balance={accountBalance} 
+                onBalanceUpdate={handleBalanceUpdate}
+              />
+            </div>
           </div>
         </div>
         
         {/* Balance and Card Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <CashCardUpdated availableBalance={accountBalance} />
-          <VirtualCard userLevel={userLevel} balance={accountBalance} />
-          <SavingsBox 
-            availableBalance={accountBalance} 
-            onBalanceUpdate={handleBalanceUpdate}
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-16">
+          <div className="space-y-4">
+            <CashCardUpdated availableBalance={accountBalance} />
+            <div className="text-center">
+              <p className="text-sm text-slate-400 mb-2">💳 Cash Management Feature</p>
+              <Button 
+                size="sm" 
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                onClick={() => {
+                  handleFeatureClick("Cash Management", "Manage your cash balance and view transaction history");
+                  toast("💰 Demo Cash", { description: "Your virtual cash balance is ready for trading and savings!" });
+                }}
+              >
+                Click Here to Manage Cash
+              </Button>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <VirtualCard userLevel={userLevel} balance={accountBalance} />
+            <div className="text-center">
+              <p className="text-sm text-slate-400 mb-2">💳 Virtual Card Feature</p>
+              <Button 
+                size="sm" 
+                className="w-full bg-purple-600 hover:bg-purple-700"
+                onClick={() => {
+                  handleFeatureClick("Virtual Card", "Use your virtual debit card for demo transactions");
+                  toast("💳 Virtual Card Ready", { description: "Your demo card is active and ready to use!" });
+                }}
+              >
+                Click Here to Use Virtual Card
+              </Button>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <SavingsBox 
+              availableBalance={accountBalance} 
+              onBalanceUpdate={handleBalanceUpdate}
+            />
+            <div className="text-center">
+              <p className="text-sm text-slate-400 mb-2">🏦 Savings Feature</p>
+              <Button 
+                size="sm" 
+                className="w-full bg-green-600 hover:bg-green-700"
+                onClick={() => {
+                  handleFeatureClick("Savings Account", "Build your savings with automatic deposits and interest");
+                  toast("💰 Savings Active", { description: "Your savings account is earning virtual interest!" });
+                }}
+              >
+                Click Here to Manage Savings
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Start Trading Feature */}
         <Card className="bg-gradient-to-r from-green-900/50 to-emerald-800/50 border-green-600/50">
           <CardContent className="p-6 text-center">
             <h3 className="text-3xl font-bold text-green-300 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
-              Ready to Start Trading?
+              📈 Stock Trading Platform
             </h3>
             <p className="text-green-200 mb-6 text-lg">
-              Begin your investment journey with our virtual trading platform
+              Begin your investment journey with our virtual trading platform featuring real-time data and detailed stock charts
             </p>
             <Button 
               size="lg"
@@ -155,76 +213,128 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* New Savings Groups Section */}
-        <SavingsGroups userLevel={userLevel} />
+        {/* Enhanced Savings Groups Section */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-blue-400" />
+                💰 Savings Groups Feature
+              </div>
+              {userLevel === 'basic' && (
+                <Crown className="h-5 w-5 text-yellow-400" />
+              )}
+            </CardTitle>
+            <CardDescription className="text-slate-300">
+              Join or create savings groups to reach financial goals together
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <SavingsGroups userLevel={userLevel} />
+            <div className="text-center pt-4 border-t border-slate-600">
+              <Button 
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                onClick={() => {
+                  handleFeatureClick("Savings Groups", "Collaborate with family and friends to reach savings goals faster");
+                  toast("👥 Demo Groups Available", { description: "Join Family or Friends groups, or upgrade for more options!" });
+                }}
+              >
+                Click Here to Join Savings Groups
+              </Button>
+              {userLevel === 'basic' && (
+                <p className="text-xs text-slate-400 mt-2">
+                  💎 Upgrade to Premium to create custom groups beyond Family & Friends
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Learning Progress */}
           <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle className="text-white">Learning Progress</CardTitle>
+              <CardTitle className="text-white flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                📚 Learning Center
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <Progress value={learningProgress} className="h-2 mb-2" />
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm mb-3">
                 <span className="text-slate-400">Completed: {completedLessons}/{totalLessons} lessons</span>
                 <span className="text-green-400">{learningProgress}%</span>
               </div>
+              <p className="text-sm text-slate-300 mb-3">Interactive financial education with quizzes and real-world examples</p>
               <Button 
-                className="w-full mt-3 bg-purple-600 hover:bg-purple-700"
+                className="w-full bg-purple-600 hover:bg-purple-700"
                 onClick={() => {
                   handleFeatureClick("Learning Center", "Improve your financial literacy with interactive lessons and quizzes");
                   window.location.href = '/learning';
                 }}
               >
-                Continue Learning
+                Click Here to Continue Learning
               </Button>
             </CardContent>
           </Card>
           
+          {/* Quick Actions */}
           <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle className="text-white">Quick Actions</CardTitle>
+              <CardTitle className="text-white flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                ⚡ Quick Actions
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button 
-                className="w-full bg-green-800 hover:bg-green-700"
-                onClick={() => {
-                  handleFeatureClick("Trading Platform", "Access real-time stock data and make virtual trades to learn investing");
-                  window.location.href = '/trading';
-                }}
-              >
-                <TrendingUp className="mr-2 h-4 w-4" />
-                Start Trading
-              </Button>
-              <Button 
-                className="w-full bg-blue-800 hover:bg-blue-700"
-                onClick={() => {
-                  handleFeatureClick("Savings Groups", "Join or create savings groups to reach financial goals together with friends and family");
-                  toast("💰 Tip", { 
-                    description: "Use savings groups to reach goals faster with friends and family!",
-                    className: "bg-green-600 border-green-700 text-white"
-                  });
-                }}
-              >
-                <Users className="mr-2 h-4 w-4" />
-                Join Groups
-              </Button>
-              <Button 
-                className="w-full bg-purple-800 hover:bg-purple-700"
-                onClick={() => {
-                  handleFeatureClick("Financial Goals", "Set and track your financial objectives with personalized recommendations");
-                  window.location.href = '/goals';
-                }}
-              >
-                Set Goals
-              </Button>
+              <div className="space-y-2">
+                <p className="text-xs text-slate-400">📊 Trading Platform</p>
+                <Button 
+                  className="w-full bg-green-800 hover:bg-green-700"
+                  onClick={() => {
+                    handleFeatureClick("Trading Platform", "Access real-time stock data and make virtual trades to learn investing");
+                    window.location.href = '/trading';
+                  }}
+                >
+                  Click Here to Trade Stocks
+                </Button>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs text-slate-400">🎯 Financial Goals</p>
+                <Button 
+                  className="w-full bg-purple-800 hover:bg-purple-700"
+                  onClick={() => {
+                    handleFeatureClick("Financial Goals", "Set and track your financial objectives with personalized recommendations");
+                    window.location.href = '/goals';
+                  }}
+                >
+                  <Target className="mr-2 h-4 w-4" />
+                  Click Here to Set Goals
+                </Button>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs text-slate-400">📅 Calendar & Planning</p>
+                <Button 
+                  className="w-full bg-indigo-800 hover:bg-indigo-700"
+                  onClick={() => {
+                    handleFeatureClick("Calendar View", "Track financial events, bill due dates, and investment milestones");
+                    window.location.href = '/calendar';
+                  }}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Click Here to View Calendar
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
           {/* Recent Activity and Financial Health Cards */}
           <Card className="md:col-span-2 bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle className="text-white">Recent Activity</CardTitle>
+              <CardTitle className="text-white flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                💼 Recent Activity Feature
+              </CardTitle>
             </CardHeader>
             <CardContent className="max-h-80 overflow-y-auto">
               {recentTransactions.length > 0 ? (
@@ -266,7 +376,7 @@ const Dashboard = () => {
                       window.location.href = '/transactions';
                     }}
                   >
-                    View All Transactions
+                    Click Here to View All Transactions
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>
@@ -274,11 +384,25 @@ const Dashboard = () => {
                 <div className="text-center py-8 text-slate-500">
                   <p className="mb-4">No transactions yet. Start your financial journey!</p>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button size="sm" onClick={() => window.location.href = '/trading'}>
-                      Try Trading
+                    <Button 
+                      size="sm" 
+                      onClick={() => {
+                        handleFeatureClick("Demo Trading", "Try virtual trading to learn without risk");
+                        window.location.href = '/trading';
+                      }}
+                    >
+                      Click Here to Try Trading
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => window.location.href = '/add-funds'}>
-                      Add Funds
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => {
+                        handleFeatureClick("Add Virtual Funds", "Add demo money to your account");
+                        toast("💰 Demo Funds", { description: "Added $500 virtual funds to your account!" });
+                        setAccountBalance(prev => prev + 500);
+                      }}
+                    >
+                      Click Here to Add Demo Funds
                     </Button>
                   </div>
                 </div>
@@ -290,7 +414,10 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle className="text-white">Financial Health</CardTitle>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                📊 Financial Health Feature
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
@@ -298,12 +425,13 @@ const Dashboard = () => {
                 <span className="text-green-400">Excellent</span>
               </div>
               <Progress value={85} className="h-2 mb-2" />
+              <p className="text-sm text-slate-300 mb-3">Get comprehensive analysis of your financial health with actionable insights</p>
               
               <Button 
                 onClick={generateFinancialReport}
                 className="w-full bg-slate-700 hover:bg-slate-600"
               >
-                View Demo Report
+                Click Here to Generate Financial Report
               </Button>
 
               <div className="mt-4 space-y-2">
@@ -326,8 +454,70 @@ const Dashboard = () => {
                   window.location.href = '/learning';
                 }}
               >
-                Continue Learning
+                Click Here to Continue Learning
                 <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Portfolio Overview */}
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <PieChart className="h-5 w-5" />
+                📈 Portfolio Feature
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-400">${accountBalance.toFixed(2)}</p>
+                <p className="text-sm text-slate-400">Total Portfolio Value</p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Cash</span>
+                  <span className="text-white">${accountBalance.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Stocks</span>
+                  <span className="text-white">$0.00</span>
+                </div>
+              </div>
+              <p className="text-sm text-slate-300">View detailed portfolio analysis and performance metrics</p>
+              <Button 
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                onClick={() => {
+                  handleFeatureClick("Portfolio Management", "Track your investments and analyze performance");
+                  window.location.href = '/portfolio';
+                }}
+              >
+                Click Here to View Portfolio
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Transaction History */}
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Receipt className="h-5 w-5" />
+                📋 Transaction History Feature
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-400">{recentTransactions.length}</p>
+                <p className="text-sm text-slate-400">Recent Transactions</p>
+              </div>
+              <p className="text-sm text-slate-300">Complete transaction history with filtering and export options</p>
+              <Button 
+                className="w-full bg-indigo-600 hover:bg-indigo-700"
+                onClick={() => {
+                  handleFeatureClick("Transaction History", "View complete transaction history with advanced filtering");
+                  window.location.href = '/transactions';
+                }}
+              >
+                Click Here to View All Transactions
               </Button>
             </CardContent>
           </Card>
@@ -337,22 +527,22 @@ const Dashboard = () => {
         <Card className="bg-slate-800 border-slate-700 border-l-4 border-l-green-500">
           <CardContent className="p-4 flex items-start">
             <Bell className="h-6 w-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
-            <div>
-              <h3 className="font-medium text-white mb-1">💡 Daily Financial Tip</h3>
-              <p className="text-slate-300">{financialTip}</p>
+            <div className="flex-1">
+              <h3 className="font-medium text-white mb-1">💡 Daily Financial Tip Feature</h3>
+              <p className="text-slate-300 mb-3">{financialTip}</p>
+              <Button 
+                size="sm"
+                className="bg-green-600 hover:bg-green-700"
+                onClick={() => {
+                  handleFeatureClick("Financial Tips", "Get daily personalized financial advice and tips");
+                  toast("💡 More Tips Available", { description: "Visit the Learning Center for comprehensive financial education!" });
+                }}
+              >
+                Click Here for More Financial Tips
+              </Button>
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      {/* ATM positioned at bottom right corner */}
-      <div className="fixed bottom-4 right-4 z-40">
-        <div className="w-80">
-          <ATMAnimation 
-            balance={accountBalance} 
-            onBalanceUpdate={handleBalanceUpdate}
-          />
-        </div>
       </div>
     </div>
   );

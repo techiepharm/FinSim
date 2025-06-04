@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, AlertTriangle, Lightbulb, Lock, Crown } from "lucide-react";
+import { TrendingUp, TrendingDown, AlertTriangle, Lightbulb, Lock, Crown, BarChart3 } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { toast } from "@/components/ui/sonner";
 
 interface Stock {
@@ -26,15 +28,47 @@ interface Suggestion {
   confidence: number;
   explanation: string;
   isPremium: boolean;
+  chartData: Array<{ time: string; price: number; volume: number; }>;
 }
 
 const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [selectedSuggestion, setSelectedSuggestion] = useState<Suggestion | null>(null);
+  const [showChart, setShowChart] = useState<string | null>(null);
 
   useEffect(() => {
     generateSuggestions();
   }, [stocks]);
+
+  // Generate demo chart data for stocks
+  const generateChartData = (basePrice: number, trend: 'up' | 'down' | 'volatile') => {
+    const data = [];
+    let currentPrice = basePrice;
+    
+    for (let i = 0; i < 30; i++) {
+      let change = 0;
+      switch (trend) {
+        case 'up':
+          change = (Math.random() - 0.3) * 5; // Slightly bullish
+          break;
+        case 'down':
+          change = (Math.random() - 0.7) * 5; // Slightly bearish
+          break;
+        case 'volatile':
+          change = (Math.random() - 0.5) * 8; // More volatile
+          break;
+      }
+      
+      currentPrice += change;
+      data.push({
+        time: `Day ${i + 1}`,
+        price: Math.max(currentPrice, basePrice * 0.7), // Prevent negative prices
+        volume: Math.floor(Math.random() * 1000000) + 500000
+      });
+    }
+    
+    return data;
+  };
 
   const generateSuggestions = () => {
     // Don't generate suggestions if we don't have enough stock data
@@ -55,7 +89,8 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
         reason: 'Strong upward momentum with 12.45% gain',
         confidence: 85,
         explanation: 'Tesla is showing strong bullish signals with high trading volume. The automotive sector is performing well, and the company has positive news flow. Minimum purchase: 0.05 shares.',
-        isPremium: false
+        isPremium: false,
+        chartData: generateChartData(teslaStock.currentPrice, 'up')
       });
     }
 
@@ -68,7 +103,8 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
         reason: 'Recent decline of -3.41% indicates potential weakness',
         confidence: 70,
         explanation: 'Apple has been showing some weakness recently. Consider waiting for a better entry point or implement a dollar-cost averaging strategy with minimum 0.05 shares.',
-        isPremium: false
+        isPremium: false,
+        chartData: generateChartData(appleStock.currentPrice, 'down')
       });
     }
 
@@ -81,7 +117,8 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
         reason: 'AI-powered analysis suggests strong fundamentals',
         confidence: 92,
         explanation: 'Advanced technical analysis shows multiple bullish indicators converging. The stock has strong fundamentals and is trading below its fair value. Start with minimum 0.05 shares.',
-        isPremium: true
+        isPremium: true,
+        chartData: generateChartData(googleStock.currentPrice, 'up')
       });
     }
 
@@ -94,7 +131,8 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
         reason: 'Premium algorithm detects potential reversal pattern',
         confidence: 78,
         explanation: 'Our advanced pattern recognition system has identified a potential head and shoulders formation, suggesting a possible price reversal. Consider selling in increments of 0.05 shares.',
-        isPremium: true
+        isPremium: true,
+        chartData: generateChartData(microsoftStock.currentPrice, 'volatile')
       });
     }
 
@@ -137,6 +175,10 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
     });
   };
 
+  const toggleChart = (suggestionId: string) => {
+    setShowChart(showChart === suggestionId ? null : suggestionId);
+  };
+
   const visibleSuggestions = userLevel === 'basic' 
     ? suggestions.slice(0, 2) 
     : suggestions;
@@ -161,42 +203,140 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
         {visibleSuggestions.length > 0 ? (
           <>
             {visibleSuggestions.map((suggestion) => (
-              <div 
-                key={suggestion.id}
-                className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                  suggestion.isPremium && userLevel === 'basic'
-                    ? 'bg-slate-700/50 border border-purple-600/50'
-                    : 'bg-slate-700 hover:bg-slate-600'
-                }`}
-                onClick={() => handleSuggestionClick(suggestion)}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3 flex-1">
-                    {getTypeIcon(suggestion.type)}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-white font-medium">{suggestion.stock.symbol}</span>
-                        <Badge className={getTypeColor(suggestion.type)}>
-                          {suggestion.type.toUpperCase()}
-                        </Badge>
-                        {suggestion.isPremium && (
-                          <Lock className="h-3 w-3 text-purple-400" />
-                        )}
-                      </div>
-                      <p className="text-slate-300 text-sm">{suggestion.reason}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-slate-400">Confidence:</span>
-                        <div className="flex-1 bg-slate-600 rounded-full h-1.5">
-                          <div 
-                            className="bg-green-400 h-1.5 rounded-full"
-                            style={{ width: `${suggestion.confidence}%` }}
-                          />
+              <div key={suggestion.id} className="space-y-3">
+                <div 
+                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                    suggestion.isPremium && userLevel === 'basic'
+                      ? 'bg-slate-700/50 border border-purple-600/50'
+                      : 'bg-slate-700 hover:bg-slate-600'
+                  }`}
+                  onClick={() => handleSuggestionClick(suggestion)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3 flex-1">
+                      {getTypeIcon(suggestion.type)}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-white font-medium">{suggestion.stock.symbol}</span>
+                          <Badge className={getTypeColor(suggestion.type)}>
+                            {suggestion.type.toUpperCase()}
+                          </Badge>
+                          {suggestion.isPremium && (
+                            <Lock className="h-3 w-3 text-purple-400" />
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleChart(suggestion.id);
+                            }}
+                            className="ml-auto p-1 h-6 w-6"
+                          >
+                            <BarChart3 className="h-3 w-3" />
+                          </Button>
                         </div>
-                        <span className="text-xs text-green-400">{suggestion.confidence}%</span>
+                        <p className="text-slate-300 text-sm">{suggestion.reason}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-slate-400">Confidence:</span>
+                          <div className="flex-1 bg-slate-600 rounded-full h-1.5">
+                            <div 
+                              className="bg-green-400 h-1.5 rounded-full"
+                              style={{ width: `${suggestion.confidence}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-green-400">{suggestion.confidence}%</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Detailed Chart */}
+                {showChart === suggestion.id && (
+                  <Card className="bg-slate-700 border-slate-600">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-white text-sm flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4" />
+                        {suggestion.stock.symbol} - 30 Day Price Chart
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-48 mb-4">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={suggestion.chartData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                            <XAxis 
+                              dataKey="time" 
+                              stroke="#9CA3AF"
+                              fontSize={10}
+                              interval="preserveStartEnd"
+                            />
+                            <YAxis 
+                              stroke="#9CA3AF"
+                              fontSize={10}
+                              domain={['dataMin - 5', 'dataMax + 5']}
+                            />
+                            <Tooltip 
+                              contentStyle={{
+                                backgroundColor: '#1F2937',
+                                border: '1px solid #374151',
+                                borderRadius: '6px',
+                                color: '#F9FAFB'
+                              }}
+                              formatter={(value: any, name: string) => [
+                                name === 'price' ? `$${value.toFixed(2)}` : value.toLocaleString(),
+                                name === 'price' ? 'Price' : 'Volume'
+                              ]}
+                            />
+                            <Area 
+                              type="monotone" 
+                              dataKey="price" 
+                              stroke={suggestion.type === 'buy' ? '#10B981' : suggestion.type === 'sell' ? '#EF4444' : '#F59E0B'}
+                              fill={`${suggestion.type === 'buy' ? '#10B981' : suggestion.type === 'sell' ? '#EF4444' : '#F59E0B'}20`}
+                              strokeWidth={2}
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                      
+                      {/* Chart Statistics */}
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <p className="text-slate-400">Current Price</p>
+                          <p className="text-white font-medium">${suggestion.stock.currentPrice.toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-400">30-Day Change</p>
+                          <p className={`font-medium ${suggestion.stock.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {suggestion.stock.change >= 0 ? '+' : ''}{suggestion.stock.change.toFixed(2)}%
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-slate-400">Avg Volume</p>
+                          <p className="text-white font-medium">
+                            {(suggestion.chartData.reduce((sum, d) => sum + d.volume, 0) / suggestion.chartData.length / 1000000).toFixed(1)}M
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-slate-600">
+                        <Button 
+                          className="w-full bg-blue-600 hover:bg-blue-700"
+                          onClick={() => {
+                            toast("📊 Stock Analysis", {
+                              description: `Detailed chart analysis for ${suggestion.stock.symbol} with 30-day price movement and volume data.`,
+                              className: "bg-blue-600 border-blue-700 text-white",
+                              duration: 4000,
+                            });
+                          }}
+                        >
+                          Click Here to Analyze {suggestion.stock.symbol} Stock
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             ))}
 
@@ -204,14 +344,14 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
               <div className="mt-4 p-3 bg-purple-900/30 border border-purple-600/50 rounded-lg text-center">
                 <Crown className="h-6 w-6 text-purple-400 mx-auto mb-2" />
                 <p className="text-purple-300 text-sm mb-2">
-                  Unlock {suggestions.length - 2} more AI-powered suggestions
+                  Unlock {suggestions.length - 2} more AI-powered suggestions with detailed charts
                 </p>
                 <Button 
                   size="sm" 
                   className="bg-purple-600 hover:bg-purple-700"
                   onClick={() => toast("Coming Soon!", { description: "Premium features will be available soon!" })}
                 >
-                  Upgrade to Premium
+                  Click Here to Upgrade to Premium
                 </Button>
               </div>
             )}
@@ -220,7 +360,7 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
           <div className="text-center py-8 text-slate-500">
             <Lightbulb className="h-12 w-12 text-slate-600 mx-auto mb-4" />
             <p className="mb-2">Loading AI suggestions...</p>
-            <p className="text-sm">Waiting for stock data to generate personalized recommendations.</p>
+            <p className="text-sm">Waiting for stock data to generate personalized recommendations with detailed charts.</p>
           </div>
         )}
       </CardContent>
