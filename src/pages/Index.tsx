@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Header from "@/components/Header";
@@ -12,6 +11,7 @@ import CalendarView from "@/components/CalendarView";
 import TransactionHistory from "@/components/TransactionHistory";
 import AuthModal from "@/components/AuthModal";
 import PremiumUpgrade from "@/components/PremiumUpgrade";
+import TransactionNotifications from "@/components/TransactionNotifications";
 import { Button } from "@/components/ui/button";
 import { Bot } from "lucide-react";
 import {
@@ -141,6 +141,7 @@ const Index = ({ activePage: initialPage = 'dashboard' }) => {
   
   return (
     <div className="min-h-screen flex flex-col bg-slate-900 text-white">
+      <TransactionNotifications />
       <Header 
         activePage={activePage} 
         setActivePage={setActivePage}

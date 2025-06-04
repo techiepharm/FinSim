@@ -79,60 +79,60 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
 
     const newSuggestions: Suggestion[] = [];
 
-    // Only add suggestions if we have valid stocks
-    const teslaStock = stocks.find(s => s.symbol === 'TSLA') || stocks[0];
-    if (teslaStock) {
+    // Nigerian stock suggestions based on real companies
+    const dangcemStock = stocks.find(s => s.symbol === 'DANGCEM') || stocks[0];
+    if (dangcemStock) {
       newSuggestions.push({
         id: '1',
         type: 'buy',
-        stock: teslaStock,
-        reason: 'Strong upward momentum with 12.45% gain',
+        stock: dangcemStock,
+        reason: 'Strong infrastructure demand driving cement sector growth',
         confidence: 85,
-        explanation: 'Tesla is showing strong bullish signals with high trading volume. The automotive sector is performing well, and the company has positive news flow. Minimum purchase: 0.05 shares.',
+        explanation: 'Dangote Cement is Nigeria\'s largest cement producer with strong market position. Infrastructure development and urbanization are driving demand. Consider minimum 1 share.',
         isPremium: false,
-        chartData: generateChartData(teslaStock.currentPrice, 'up')
+        chartData: generateChartData(dangcemStock.currentPrice, 'up')
       });
     }
 
-    const appleStock = stocks.find(s => s.symbol === 'AAPL') || stocks[1];
-    if (appleStock) {
+    const gtcoStock = stocks.find(s => s.symbol === 'GTCO') || stocks[1];
+    if (gtcoStock) {
       newSuggestions.push({
         id: '2',
         type: 'caution',
-        stock: appleStock,
-        reason: 'Recent decline of -3.41% indicates potential weakness',
+        stock: gtcoStock,
+        reason: 'Banking sector facing regulatory headwinds',
         confidence: 70,
-        explanation: 'Apple has been showing some weakness recently. Consider waiting for a better entry point or implement a dollar-cost averaging strategy with minimum 0.05 shares.',
+        explanation: 'While GTCO has strong fundamentals, the banking sector is facing regulatory pressures. Consider waiting for clearer policy direction before increasing position.',
         isPremium: false,
-        chartData: generateChartData(appleStock.currentPrice, 'down')
+        chartData: generateChartData(gtcoStock.currentPrice, 'down')
       });
     }
 
-    const googleStock = stocks.find(s => s.symbol === 'GOOGL') || stocks[2];
-    if (googleStock) {
+    const mtnnStock = stocks.find(s => s.symbol === 'MTNN') || stocks[2];
+    if (mtnnStock) {
       newSuggestions.push({
         id: '3',
         type: 'buy',
-        stock: googleStock,
-        reason: 'AI-powered analysis suggests strong fundamentals',
+        stock: mtnnStock,
+        reason: 'AI-powered analysis shows telecom sector strength',
         confidence: 92,
-        explanation: 'Advanced technical analysis shows multiple bullish indicators converging. The stock has strong fundamentals and is trading below its fair value. Start with minimum 0.05 shares.',
+        explanation: 'MTN Nigeria shows strong subscriber growth and digital transformation initiatives. 5G rollout and fintech expansion present significant upside potential.',
         isPremium: true,
-        chartData: generateChartData(googleStock.currentPrice, 'up')
+        chartData: generateChartData(mtnnStock.currentPrice, 'up')
       });
     }
 
-    const microsoftStock = stocks.find(s => s.symbol === 'MSFT') || stocks[3];
-    if (microsoftStock) {
+    const seplatStock = stocks.find(s => s.symbol === 'SEPLAT') || stocks[3];
+    if (seplatStock) {
       newSuggestions.push({
         id: '4',
         type: 'sell',
-        stock: microsoftStock,
-        reason: 'Premium algorithm detects potential reversal pattern',
+        stock: seplatStock,
+        reason: 'Premium algorithm detects oil sector volatility pattern',
         confidence: 78,
-        explanation: 'Our advanced pattern recognition system has identified a potential head and shoulders formation, suggesting a possible price reversal. Consider selling in increments of 0.05 shares.',
+        explanation: 'Advanced pattern recognition shows increased volatility in oil & gas sector. Global energy transition and local policy changes create uncertainty.',
         isPremium: true,
-        chartData: generateChartData(microsoftStock.currentPrice, 'volatile')
+        chartData: generateChartData(seplatStock.currentPrice, 'volatile')
       });
     }
 
@@ -189,7 +189,7 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
         <CardTitle className="text-white flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5 text-yellow-400" />
-            AI Trade Suggestions
+            Nigerian Stock AI Suggestions
           </div>
           {userLevel === 'basic' && (
             <Badge variant="outline" className="text-yellow-400 border-yellow-600">
@@ -258,7 +258,7 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
                     <CardHeader className="pb-2">
                       <CardTitle className="text-white text-sm flex items-center gap-2">
                         <BarChart3 className="h-4 w-4" />
-                        {suggestion.stock.symbol} - 30 Day Price Chart
+                        {suggestion.stock.symbol} - 30 Day Price Chart (NGN)
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -285,7 +285,7 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
                                 color: '#F9FAFB'
                               }}
                               formatter={(value: any, name: string) => [
-                                name === 'price' ? `$${value.toFixed(2)}` : value.toLocaleString(),
+                                name === 'price' ? `₦${value.toLocaleString()}` : value.toLocaleString(),
                                 name === 'price' ? 'Price' : 'Volume'
                               ]}
                             />
@@ -304,7 +304,7 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
                           <p className="text-slate-400">Current Price</p>
-                          <p className="text-white font-medium">${suggestion.stock.currentPrice.toFixed(2)}</p>
+                          <p className="text-white font-medium">₦{suggestion.stock.currentPrice.toLocaleString()}</p>
                         </div>
                         <div>
                           <p className="text-slate-400">30-Day Change</p>
@@ -324,14 +324,14 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
                         <Button 
                           className="w-full bg-blue-600 hover:bg-blue-700"
                           onClick={() => {
-                            toast("📊 Stock Analysis", {
-                              description: `Detailed chart analysis for ${suggestion.stock.symbol} with 30-day price movement and volume data.`,
+                            toast("📊 Nigerian Stock Analysis", {
+                              description: `Detailed chart analysis for ${suggestion.stock.symbol} - a Nigerian company in the ${suggestion.stock.industry} sector.`,
                               className: "bg-blue-600 border-blue-700 text-white",
                               duration: 4000,
                             });
                           }}
                         >
-                          Click Here to Analyze {suggestion.stock.symbol} Stock
+                          Analyze {suggestion.stock.symbol} Nigerian Stock
                         </Button>
                       </div>
                     </CardContent>
@@ -344,14 +344,14 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
               <div className="mt-4 p-3 bg-purple-900/30 border border-purple-600/50 rounded-lg text-center">
                 <Crown className="h-6 w-6 text-purple-400 mx-auto mb-2" />
                 <p className="text-purple-300 text-sm mb-2">
-                  Unlock {suggestions.length - 2} more AI-powered suggestions with detailed charts
+                  Unlock {suggestions.length - 2} more AI-powered Nigerian stock suggestions with detailed charts
                 </p>
                 <Button 
                   size="sm" 
                   className="bg-purple-600 hover:bg-purple-700"
                   onClick={() => toast("Coming Soon!", { description: "Premium features will be available soon!" })}
                 >
-                  Click Here to Upgrade to Premium
+                  Upgrade to Premium for Nigerian Market Insights
                 </Button>
               </div>
             )}
@@ -359,8 +359,8 @@ const TradeSuggestions = ({ stocks, userLevel }: TradeSuggestionsProps) => {
         ) : (
           <div className="text-center py-8 text-slate-500">
             <Lightbulb className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-            <p className="mb-2">Loading AI suggestions...</p>
-            <p className="text-sm">Waiting for stock data to generate personalized recommendations with detailed charts.</p>
+            <p className="mb-2">Loading Nigerian stock suggestions...</p>
+            <p className="text-sm">Waiting for Nigerian Stock Exchange data to generate personalized recommendations.</p>
           </div>
         )}
       </CardContent>

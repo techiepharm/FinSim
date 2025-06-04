@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -40,18 +41,23 @@ const generateStockData = (symbol, basePrice) => {
   return data;
 };
 
-// Initial stock definitions with proper typing
+// Nigerian Stock Exchange companies with real data (prices in NGN)
 const initialStocks = [
-  { symbol: 'AAPL', name: 'Apple Inc.', price: 178.72, change: 1.25, industry: 'Technology' },
-  { symbol: 'MSFT', name: 'Microsoft Corporation', price: 338.47, change: -0.38, industry: 'Technology' },
-  { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 134.99, change: 0.73, industry: 'Technology' },
-  { symbol: 'AMZN', name: 'Amazon.com Inc.', price: 178.29, change: 2.14, industry: 'E-Commerce' },
-  { symbol: 'TSLA', name: 'Tesla, Inc.', price: 237.49, change: -3.25, industry: 'Automotive' },
-  { symbol: 'JPM', name: 'JPMorgan Chase & Co.', price: 192.70, change: 0.45, industry: 'Financial Services' },
-  { symbol: 'JNJ', name: 'Johnson & Johnson', price: 152.36, change: -0.68, industry: 'Healthcare' },
-  { symbol: 'V', name: 'Visa Inc.', price: 272.46, change: 1.02, industry: 'Financial Services' },
-  { symbol: 'PG', name: 'Procter & Gamble Co.', price: 162.95, change: 0.32, industry: 'Consumer Goods' },
-  { symbol: 'DIS', name: 'The Walt Disney Company', price: 112.73, change: 1.85, industry: 'Entertainment' },
+  { symbol: 'DANGCEM', name: 'Dangote Cement Plc', price: 285.50, change: 2.15, industry: 'Building Materials' },
+  { symbol: 'GTCO', name: 'Guaranty Trust Holding Company Plc', price: 32.40, change: -1.22, industry: 'Banking' },
+  { symbol: 'MTNN', name: 'MTN Nigeria Communications Plc', price: 178.20, change: 0.85, industry: 'Telecommunications' },
+  { symbol: 'AIRTELAFRI', name: 'Airtel Africa Plc', price: 1420.00, change: 3.45, industry: 'Telecommunications' },
+  { symbol: 'BUACEMENT', name: 'BUA Cement Plc', price: 102.30, change: -0.67, industry: 'Building Materials' },
+  { symbol: 'ZENITHBANK', name: 'Zenith Bank Plc', price: 28.15, change: 1.78, industry: 'Banking' },
+  { symbol: 'ACCESSCORP', name: 'Access Holdings Plc', price: 18.95, change: -2.35, industry: 'Banking' },
+  { symbol: 'FBNH', name: 'FBN Holdings Plc', price: 14.70, change: 0.95, industry: 'Banking' },
+  { symbol: 'SEPLAT', name: 'Seplat Energy Plc', price: 3250.00, change: 4.20, industry: 'Oil & Gas' },
+  { symbol: 'NESTLE', name: 'Nestle Nigeria Plc', price: 1385.00, change: -1.15, industry: 'Consumer Goods' },
+  { symbol: 'UNILEVER', name: 'Unilever Nigeria Plc', price: 16.50, change: 2.40, industry: 'Consumer Goods' },
+  { symbol: 'FLOURMILL', name: 'Flour Mills of Nigeria Plc', price: 42.80, change: 1.65, industry: 'Consumer Goods' },
+  { symbol: 'OANDO', name: 'Oando Plc', price: 62.50, change: -3.10, industry: 'Oil & Gas' },
+  { symbol: 'STERLNBANK', name: 'Sterling Bank Plc', price: 4.25, change: 0.55, industry: 'Banking' },
+  { symbol: 'UBA', name: 'United Bank for Africa Plc', price: 22.85, change: -0.88, industry: 'Banking' },
 ];
 
 // Function to update stock price with realistic movement
@@ -77,7 +83,7 @@ const processTransaction = (symbol, shares, price, type) => {
   try {
     // Get existing portfolio
     const portfolioData = localStorage.getItem('portfolio');
-    const portfolio = portfolioData ? JSON.parse(portfolioData) : { cash: 1000, holdings: [] };
+    const portfolio = portfolioData ? JSON.parse(portfolioData) : { cash: 100000, holdings: [] }; // Start with ₦100,000
     
     const transactionAmount = shares * price;
     
@@ -156,7 +162,7 @@ const processTransaction = (symbol, shares, price, type) => {
 const StockSimulator = () => {
   const [selectedStock, setSelectedStock] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [portfolio, setPortfolio] = useState({ cash: 1000, holdings: [] });
+  const [portfolio, setPortfolio] = useState({ cash: 100000, holdings: [] }); // Start with ₦100,000
   const [shares, setShares] = useState(1);
   const [showReceipt, setShowReceipt] = useState(false);
   const [receipt, setReceipt] = useState(null);
@@ -166,14 +172,14 @@ const StockSimulator = () => {
   
   // Initialize stocks with current prices and data
   useEffect(() => {
-    console.log("Initializing stocks...");
+    console.log("Initializing Nigerian stocks...");
     const initializedStocks = initialStocks.map(stock => ({
       ...stock,
       data: generateStockData(stock.symbol, stock.price),
       currentPrice: stock.price
     }));
     setStocks(initializedStocks);
-    console.log("Stocks initialized:", initializedStocks.length);
+    console.log("Nigerian stocks initialized:", initializedStocks.length);
   }, []);
   
   // Update stock prices every 3 seconds for realistic movement
@@ -183,9 +189,9 @@ const StockSimulator = () => {
       return;
     }
     
-    console.log("Setting up stock price update interval...");
+    console.log("Setting up Nigerian stock price update interval...");
     const interval = setInterval(() => {
-      console.log("Updating stock prices...");
+      console.log("Updating Nigerian stock prices...");
       setStocks(prevStocks => {
         const updatedStocks = prevStocks.map(updateStockPrice);
         console.log("Updated stocks:", updatedStocks.slice(0, 2)); // Log first 2 for verification
@@ -194,7 +200,7 @@ const StockSimulator = () => {
     }, 3000);
     
     return () => {
-      console.log("Clearing stock price update interval");
+      console.log("Clearing Nigerian stock price update interval");
       clearInterval(interval);
     };
   }, [stocks.length]);
@@ -212,9 +218,9 @@ const StockSimulator = () => {
     
     // Show demo notification
     setTimeout(() => {
-      toast("🎯 Demo Trading Account", {
-        description: "You're using a demo account with virtual money. Perfect for learning!",
-        className: "bg-blue-600 border-blue-700 text-white",
+      toast("🇳🇬 Nigerian Stock Exchange", {
+        description: "Trading Nigerian companies with live price simulation. Prices shown in NGN (Naira).",
+        className: "bg-green-600 border-green-700 text-white",
         duration: 6000,
       });
     }, 2000);
@@ -248,7 +254,7 @@ const StockSimulator = () => {
       setShowReceipt(true);
       
       toast("✅ Purchase Successful", {
-        description: `Bought ${shares} shares of ${selectedStock.symbol} for $${(selectedStock.currentPrice * shares).toFixed(2)}`,
+        description: `Bought ${shares} shares of ${selectedStock.symbol} for ₦${(selectedStock.currentPrice * shares).toLocaleString()}`,
         className: "bg-green-600 border-green-700 text-white",
         duration: 4000,
       });
@@ -284,7 +290,7 @@ const StockSimulator = () => {
       setShowReceipt(true);
       
       toast("✅ Sale Successful", {
-        description: `Sold ${shares} shares of ${selectedStock.symbol} for $${(selectedStock.currentPrice * shares).toFixed(2)}`,
+        description: `Sold ${shares} shares of ${selectedStock.symbol} for ₦${(selectedStock.currentPrice * shares).toLocaleString()}`,
         className: "bg-green-600 border-green-700 text-white",
         duration: 4000,
       });
@@ -351,13 +357,13 @@ const StockSimulator = () => {
     const losers = stocks.filter(s => Number(s.change) < 0);
     
     return {
-      overview: "The market is showing mixed signals with tech stocks leading gains while healthcare continues to lag.",
+      overview: "The Nigerian stock market is showing mixed signals with banking stocks leading gains while oil & gas sector continues to face pressure.",
       momentum: "Positive",
       gainers: gainers.length,
       losers: losers.length,
-      strongestSector: "Technology",
-      weakestSector: "Healthcare",
-      recommendation: "Consider increasing technology sector exposure while maintaining a diversified portfolio."
+      strongestSector: "Banking",
+      weakestSector: "Oil & Gas",
+      recommendation: "Consider increasing exposure to banking and telecom stocks while maintaining diversification across sectors."
     };
   };
   
@@ -365,8 +371,8 @@ const StockSimulator = () => {
     <div className="container mx-auto p-4 max-h-screen overflow-y-auto">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <div>
-          <h2 className="text-3xl font-bold text-white">Stock Trading Simulator</h2>
-          <p className="text-slate-400">🎯 Demo Account - Practice trading with virtual cash</p>
+          <h2 className="text-3xl font-bold text-white">Nigerian Stock Exchange Simulator</h2>
+          <p className="text-slate-400">🇳🇬 Practice trading Nigerian companies with virtual money (NGN)</p>
         </div>
         
         <div className="flex space-x-4 mt-4 md:mt-0">
@@ -375,7 +381,7 @@ const StockSimulator = () => {
             onClick={showAnalyzeMarket}
           >
             <PieChart className="mr-2 h-4 w-4" />
-            Analyze Market
+            Analyze NSE Market
           </Button>
           <Button className="bg-green-600 hover:bg-green-700" onClick={() => window.location.href = '/'}>
             <PieChart className="mr-2 h-4 w-4" />
@@ -388,11 +394,11 @@ const StockSimulator = () => {
         <Card className="md:col-span-2 bg-slate-800 border-slate-700">
           <CardHeader className="pb-2">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-white">Stock Market</CardTitle>
+              <CardTitle className="text-white">Nigerian Stock Exchange (NSE)</CardTitle>
               <div className="relative w-64">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-500" />
                 <Input 
-                  placeholder="Search stocks..."
+                  placeholder="Search Nigerian stocks..."
                   className="pl-8 bg-slate-700 border-slate-600 text-white"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -410,12 +416,13 @@ const StockSimulator = () => {
                 >
                   <div className="flex flex-col md:flex-row items-start md:items-center mb-2 md:mb-0">
                     <div className="font-medium text-white mr-4">{stock.symbol}</div>
-                    <div className="text-slate-400">{stock.name}</div>
+                    <div className="text-slate-400 text-sm">{stock.name}</div>
+                    <div className="text-xs text-slate-500 ml-0 md:ml-2">({stock.industry})</div>
                   </div>
                   
                   <div className="flex items-center space-x-6">
                     <div>
-                      <div className="text-white font-medium">${stock.currentPrice.toFixed(2)}</div>
+                      <div className="text-white font-medium">₦{stock.currentPrice.toLocaleString()}</div>
                       <div className={`text-xs flex items-center ${Number(stock.change) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                         {Number(stock.change) >= 0 ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <ArrowDownRight className="h-3 w-3 mr-1" />}
                         {Number(stock.change) >= 0 ? '+' : ''}{Number(stock.change).toFixed(2)}%
@@ -442,10 +449,10 @@ const StockSimulator = () => {
         <div className="space-y-6">
           <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle className="text-white">Demo Account Balance</CardTitle>
+              <CardTitle className="text-white">Portfolio Balance</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-white mb-4">${portfolio.cash.toFixed(2)}</div>
+              <div className="text-3xl font-bold text-white mb-4">₦{portfolio.cash.toLocaleString()}</div>
               <Button 
                 variant="outline" 
                 className="w-full border-green-600 text-green-400 hover:bg-green-800/20"
@@ -459,11 +466,11 @@ const StockSimulator = () => {
           {selectedStock && (
             <Card className="bg-slate-800 border-slate-700">
               <CardHeader>
-                <CardTitle className="text-white">{selectedStock.symbol}: {selectedStock.name}</CardTitle>
+                <CardTitle className="text-white text-sm">{selectedStock.symbol}: {selectedStock.name}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <div className="text-2xl font-bold text-white">${selectedStock.currentPrice.toFixed(2)}</div>
+                  <div className="text-2xl font-bold text-white">₦{selectedStock.currentPrice.toLocaleString()}</div>
                   <div className={`flex items-center ${Number(selectedStock.change) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {Number(selectedStock.change) >= 0 ? <TrendingUp className="mr-1 h-4 w-4" /> : <TrendingDown className="mr-1 h-4 w-4" />}
                     {Number(selectedStock.change) >= 0 ? '+' : ''}{Number(selectedStock.change).toFixed(2)}%
@@ -485,6 +492,7 @@ const StockSimulator = () => {
                       <Tooltip
                         contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#f9fafb' }}
                         labelStyle={{ color: '#f9fafb' }}
+                        formatter={(value) => [`₦${value.toLocaleString()}`, 'Price']}
                       />
                       <Area type="monotone" dataKey="price" stroke="#10b981" fill="url(#colorPrice)" />
                     </AreaChart>
@@ -503,9 +511,9 @@ const StockSimulator = () => {
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="text-sm text-slate-400 mb-1 block">Total</label>
+                    <label className="text-sm text-slate-400 mb-1 block">Total (NGN)</label>
                     <div className="bg-slate-700 border border-slate-600 rounded-md h-10 flex items-center px-3 text-white">
-                      ${(selectedStock.currentPrice * shares).toFixed(2)}
+                      ₦{(selectedStock.currentPrice * shares).toLocaleString()}
                     </div>
                   </div>
                 </div>
@@ -574,21 +582,21 @@ const StockSimulator = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Price per share:</span>
-                  <span className="text-white">${receipt.price.toFixed(2)}</span>
+                  <span className="text-white">₦{receipt.price.toLocaleString()}</span>
                 </div>
                 <div className="border-t border-slate-600 pt-2 mt-2"></div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Transaction Fee:</span>
-                  <span className="text-white">${receipt.fee.toFixed(2)}</span>
+                  <span className="text-white">₦{receipt.fee.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400 font-bold">Total:</span>
-                  <span className="text-white font-bold">${receipt.total.toFixed(2)}</span>
+                  <span className="text-white font-bold">₦{receipt.total.toLocaleString()}</span>
                 </div>
                 <div className="border-t border-slate-600 pt-2 mt-2"></div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Updated Balance:</span>
-                  <span className="text-white font-bold">${portfolio.cash.toFixed(2)}</span>
+                  <span className="text-white font-bold">₦{portfolio.cash.toLocaleString()}</span>
                 </div>
               </div>
               
@@ -632,6 +640,7 @@ const StockSimulator = () => {
                         <Tooltip
                           contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#f9fafb' }}
                           labelStyle={{ color: '#f9fafb' }}
+                          formatter={(value) => [`₦${value.toLocaleString()}`, 'Price']}
                         />
                         <Area type="monotone" dataKey="price" stroke="#10b981" fill="url(#colorAnalysis)" />
                       </AreaChart>
@@ -647,12 +656,12 @@ const StockSimulator = () => {
                       <div className="bg-slate-700 rounded-md p-4 space-y-2">
                         <div className="flex justify-between">
                           <span className="text-slate-400">Current Price:</span>
-                          <span className="text-white">${selectedStock.currentPrice.toFixed(2)}</span>
+                          <span className="text-white">₦{selectedStock.currentPrice.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-400">10-Day Change:</span>
                           <span className={Number(analysis.recent.percentChange) >= 0 ? 'text-green-400' : 'text-red-400'}>
-                            {Number(analysis.recent.percentChange) >= 0 ? '+' : ''}{analysis.recent.percentChange}% (${analysis.recent.change})
+                            {Number(analysis.recent.percentChange) >= 0 ? '+' : ''}{analysis.recent.percentChange}% (₦{analysis.recent.change})
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -665,11 +674,11 @@ const StockSimulator = () => {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-400">Support Level:</span>
-                          <span className="text-white">${analysis.support}</span>
+                          <span className="text-white">₦{Number(analysis.support).toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-400">Resistance Level:</span>
-                          <span className="text-white">${analysis.resistance}</span>
+                          <span className="text-white">₦{Number(analysis.resistance).toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-400">Industry:</span>
@@ -726,9 +735,9 @@ const StockSimulator = () => {
       <Dialog open={marketAnalysis} onOpenChange={setMarketAnalysis}>
         <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-white">Market Analysis</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-white">Nigerian Stock Exchange Analysis</DialogTitle>
             <DialogDescription className="text-slate-300">
-              Current market conditions and sector performance
+              Current NSE market conditions and sector performance
             </DialogDescription>
           </DialogHeader>
           
@@ -745,44 +754,37 @@ const StockSimulator = () => {
                 <h3 className="font-medium text-white mb-2">Sector Performance</h3>
                 <div className="bg-slate-700 rounded-md p-4 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-400">Technology</span>
+                    <span className="text-slate-400">Banking</span>
                     <div className="flex items-center">
-                      <span className="text-green-400 mr-2">+2.4%</span>
+                      <span className="text-green-400 mr-2">+1.8%</span>
                       <Progress value={85} className="h-2 w-24" />
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-400">Financial Services</span>
+                    <span className="text-slate-400">Telecommunications</span>
                     <div className="flex items-center">
-                      <span className="text-green-400 mr-2">+1.1%</span>
-                      <Progress value={65} className="h-2 w-24" />
+                      <span className="text-green-400 mr-2">+1.4%</span>
+                      <Progress value={75} className="h-2 w-24" />
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400">Consumer Goods</span>
                     <div className="flex items-center">
-                      <span className="text-green-400 mr-2">+0.6%</span>
+                      <span className="text-green-400 mr-2">+0.8%</span>
+                      <Progress value={65} className="h-2 w-24" />
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">Building Materials</span>
+                    <div className="flex items-center">
+                      <span className="text-green-400 mr-2">+0.3%</span>
                       <Progress value={55} className="h-2 w-24" />
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-400">Entertainment</span>
+                    <span className="text-slate-400">Oil & Gas</span>
                     <div className="flex items-center">
-                      <span className="text-green-400 mr-2">+0.2%</span>
-                      <Progress value={52} className="h-2 w-24" />
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400">Automotive</span>
-                    <div className="flex items-center">
-                      <span className="text-red-400 mr-2">-0.8%</span>
-                      <Progress value={35} className="h-2 w-24" />
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400">Healthcare</span>
-                    <div className="flex items-center">
-                      <span className="text-red-400 mr-2">-1.2%</span>
+                      <span className="text-red-400 mr-2">-1.5%</span>
                       <Progress value={25} className="h-2 w-24" />
                     </div>
                   </div>
@@ -817,7 +819,7 @@ const StockSimulator = () => {
             </div>
             
             <div>
-              <h3 className="font-medium text-white mb-2">Trending Stocks</h3>
+              <h3 className="font-medium text-white mb-2">Top Nigerian Stocks</h3>
               <div className="bg-slate-700 rounded-md divide-y divide-slate-600">
                 {stocks.filter(s => Math.abs(Number(s.change)) > 1).slice(0, 4).map(stock => (
                   <div key={stock.symbol} className="p-3 flex justify-between items-center">
@@ -826,7 +828,7 @@ const StockSimulator = () => {
                       <div className="text-sm text-slate-400">{stock.industry}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-white">${stock.currentPrice.toFixed(2)}</div>
+                      <div className="text-white">₦{stock.currentPrice.toLocaleString()}</div>
                       <div className={`text-sm ${Number(stock.change) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                         {Number(stock.change) >= 0 ? '+' : ''}{Number(stock.change).toFixed(2)}%
                       </div>
@@ -839,7 +841,7 @@ const StockSimulator = () => {
             <div className="bg-slate-900 border border-green-900/50 rounded-md p-4">
               <h3 className="font-medium text-white flex items-center mb-2">
                 <AlertCircle className="h-4 w-4 text-green-400 mr-2" />
-                Recommendation
+                NSE Recommendation
               </h3>
               <p className="text-slate-300">{getMarketAnalysis().recommendation}</p>
             </div>
