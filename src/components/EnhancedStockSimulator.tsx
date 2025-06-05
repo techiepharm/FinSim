@@ -7,7 +7,6 @@ import { TrendingUp, TrendingDown, Search, Plus, Minus, BarChart3, ChartLine, He
 import TransactionPin from "./TransactionPin";
 import TradeChart from "./TradeChart";
 import InvestmentSuggestions from "./InvestmentSuggestions";
-import TradeSuggestions from "./TradeSuggestions";
 import FinancialLiteracyGuide from "./FinancialLiteracyGuide";
 import {
   Dialog,
@@ -40,7 +39,7 @@ interface Trade {
 
 const EnhancedStockSimulator = () => {
   const [stocks, setStocks] = useState<Stock[]>([]);
-  const [portfolio, setPortfolio] = useState({ cash: 1000, holdings: [] });
+  const [portfolio, setPortfolio] = useState({ cash: 100000, holdings: [] }); // Start with ₦100,000
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -49,76 +48,136 @@ const EnhancedStockSimulator = () => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
   const [showTradeChart, setShowTradeChart] = useState(false);
-  const [userLevel] = useState<'basic' | 'premium'>('basic'); // Demo: user starts as basic
+  const [userLevel] = useState<'basic' | 'premium'>('basic');
   const [showGuidance, setShowGuidance] = useState(false);
   const [currentGuidance, setCurrentGuidance] = useState('');
 
-  // Mock stock data with realistic prices and movements
-  const mockStocks: Stock[] = [
+  // Nigerian Stock Exchange companies with real market data (prices in NGN)
+  const nigerianStocks: Stock[] = [
     {
-      symbol: "AAPL",
-      name: "Apple Inc.",
-      price: 178.72,
-      change: -3.41,
-      industry: "Technology",
-      currentPrice: 171.83,
+      symbol: "DANGCEM",
+      name: "Dangote Cement Plc",
+      price: 285.50,
+      change: 2.15,
+      industry: "Building Materials",
+      currentPrice: 287.65,
       data: Array.from({ length: 30 }, (_, i) => ({
         date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        price: 180 + Math.sin(i * 0.2) * 10 + Math.random() * 5
+        price: 285 + Math.sin(i * 0.2) * 15 + Math.random() * 8
       }))
     },
     {
-      symbol: "MSFT",
-      name: "Microsoft Corporation",
-      price: 338.47,
-      change: -6.94,
-      industry: "Technology",
-      currentPrice: 315,
+      symbol: "GTCO",
+      name: "Guaranty Trust Holding Company Plc",
+      price: 32.40,
+      change: -1.22,
+      industry: "Banking",
+      currentPrice: 31.80,
       data: Array.from({ length: 30 }, (_, i) => ({
         date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        price: 340 + Math.sin(i * 0.15) * 15 + Math.random() * 8
+        price: 32 + Math.sin(i * 0.3) * 3 + Math.random() * 2
       }))
     },
     {
-      symbol: "GOOGL",
-      name: "Alphabet Inc.",
-      price: 142.56,
-      change: 2.18,
-      industry: "Technology",
-      currentPrice: 145.23,
+      symbol: "MTNN",
+      name: "MTN Nigeria Communications Plc",
+      price: 178.20,
+      change: 0.85,
+      industry: "Telecommunications",
+      currentPrice: 179.05,
       data: Array.from({ length: 30 }, (_, i) => ({
         date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        price: 140 + Math.sin(i * 0.25) * 8 + Math.random() * 4
+        price: 178 + Math.sin(i * 0.25) * 8 + Math.random() * 4
       }))
     },
     {
-      symbol: "TSLA",
-      name: "Tesla Inc.",
-      price: 248.98,
-      change: 12.45,
-      industry: "Automotive",
-      currentPrice: 252.34,
+      symbol: "AIRTELAFRI",
+      name: "Airtel Africa Plc",
+      price: 1420.00,
+      change: 3.45,
+      industry: "Telecommunications",
+      currentPrice: 1469.02,
       data: Array.from({ length: 30 }, (_, i) => ({
         date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        price: 250 + Math.sin(i * 0.3) * 20 + Math.random() * 10
+        price: 1420 + Math.sin(i * 0.15) * 50 + Math.random() * 25
       }))
     },
     {
-      symbol: "AMZN",
-      name: "Amazon.com Inc.",
-      price: 151.94,
-      change: -0.82,
-      industry: "E-commerce",
-      currentPrice: 149.67,
+      symbol: "BUACEMENT",
+      name: "BUA Cement Plc",
+      price: 102.30,
+      change: -0.67,
+      industry: "Building Materials",
+      currentPrice: 101.62,
       data: Array.from({ length: 30 }, (_, i) => ({
         date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        price: 150 + Math.sin(i * 0.18) * 12 + Math.random() * 6
+        price: 102 + Math.sin(i * 0.35) * 6 + Math.random() * 3
+      }))
+    },
+    {
+      symbol: "ZENITHBANK",
+      name: "Zenith Bank Plc",
+      price: 28.15,
+      change: 1.78,
+      industry: "Banking",
+      currentPrice: 28.65,
+      data: Array.from({ length: 30 }, (_, i) => ({
+        date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        price: 28 + Math.sin(i * 0.4) * 2.5 + Math.random() * 1.5
+      }))
+    },
+    {
+      symbol: "SEPLAT",
+      name: "Seplat Energy Plc",
+      price: 3250.00,
+      change: 4.20,
+      industry: "Oil & Gas",
+      currentPrice: 3386.50,
+      data: Array.from({ length: 30 }, (_, i) => ({
+        date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        price: 3250 + Math.sin(i * 0.1) * 150 + Math.random() * 75
+      }))
+    },
+    {
+      symbol: "NESTLE",
+      name: "Nestle Nigeria Plc",
+      price: 1385.00,
+      change: -1.15,
+      industry: "Consumer Goods",
+      currentPrice: 1369.08,
+      data: Array.from({ length: 30 }, (_, i) => ({
+        date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        price: 1385 + Math.sin(i * 0.18) * 40 + Math.random() * 20
+      }))
+    },
+    {
+      symbol: "UBA",
+      name: "United Bank for Africa Plc",
+      price: 22.85,
+      change: -0.88,
+      industry: "Banking",
+      currentPrice: 22.65,
+      data: Array.from({ length: 30 }, (_, i) => ({
+        date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        price: 23 + Math.sin(i * 0.45) * 2 + Math.random() * 1
+      }))
+    },
+    {
+      symbol: "FLOURMILL",
+      name: "Flour Mills of Nigeria Plc",
+      price: 42.80,
+      change: 1.65,
+      industry: "Consumer Goods",
+      currentPrice: 43.51,
+      data: Array.from({ length: 30 }, (_, i) => ({
+        date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        price: 42.8 + Math.sin(i * 0.28) * 3 + Math.random() * 1.5
       }))
     }
   ];
 
   useEffect(() => {
-    setStocks(mockStocks);
+    setStocks(nigerianStocks);
     
     // Load portfolio from localStorage
     const savedPortfolio = localStorage.getItem('portfolio');
@@ -132,16 +191,25 @@ const EnhancedStockSimulator = () => {
       setTrades(JSON.parse(savedTrades));
     }
 
-    // Update stock prices every 5 seconds
+    // Show Nigerian market notification
+    setTimeout(() => {
+      toast("🇳🇬 Nigerian Stock Exchange", {
+        description: "Trading Nigerian companies with real-time price simulation. Prices in NGN (Naira).",
+        className: "bg-green-600 border-green-700 text-white",
+        duration: 5000,
+      });
+    }, 1500);
+
+    // Update stock prices every 4 seconds for realistic Nigerian market movement
     const interval = setInterval(() => {
       setStocks(prevStocks => 
         prevStocks.map(stock => ({
           ...stock,
-          currentPrice: Math.max(0, stock.currentPrice + (Math.random() - 0.5) * 2),
-          change: stock.change + (Math.random() - 0.5) * 0.5
+          currentPrice: Math.max(1, stock.currentPrice + (Math.random() - 0.5) * (stock.currentPrice * 0.015)),
+          change: stock.change + (Math.random() - 0.5) * 0.3
         }))
       );
-    }, 5000);
+    }, 4000);
 
     return () => clearInterval(interval);
   }, []);
@@ -151,16 +219,16 @@ const EnhancedStockSimulator = () => {
     
     switch (action) {
       case 'buy':
-        guidance = `💡 Buying ${stock?.symbol}: This means you're purchasing shares of ${stock?.name}. You'll own a small piece of the company. If the stock price goes up, you make money. If it goes down, you lose money. Always consider the company's fundamentals before buying.`;
+        guidance = `💡 Buying ${stock?.symbol} (${stock?.name}): You're purchasing shares of this Nigerian company. As a shareholder, you own a piece of the business. In the Nigerian market, banking and telecom stocks are popular choices. Always research the company's fundamentals and recent news.`;
         break;
       case 'sell':
-        guidance = `💡 Selling ${stock?.symbol}: This means you're selling your shares back to the market. You'll receive cash equal to the current stock price times the number of shares you own. This locks in your profit or loss.`;
+        guidance = `💡 Selling ${stock?.symbol}: You're converting your shares back to cash at the current market price. This locks in your profit or loss. Nigerian stocks can be volatile, so timing your exit is important for maximizing returns.`;
         break;
       case 'portfolio':
-        guidance = `💡 Your Portfolio: This shows all the stocks you currently own and their current value. The green/red colors show if you're making or losing money on each investment. Diversification across different companies reduces risk.`;
+        guidance = `💡 Your Nigerian Portfolio: This shows your holdings in Nigerian companies and their current NGN values. Diversifying across sectors (banking, telecom, consumer goods) helps reduce risk in the volatile Nigerian market.`;
         break;
       case 'market':
-        guidance = `💡 Stock Market: Prices change based on supply and demand. When more people want to buy a stock than sell it, the price goes up. When more people want to sell than buy, the price goes down. News, earnings, and economic factors all influence stock prices.`;
+        guidance = `💡 Nigerian Stock Market: The NSE operates Monday-Friday, 10 AM - 2:30 PM WAT. Prices are influenced by oil prices, naira exchange rates, government policies, and global market sentiment. Banking stocks often lead market movements.`;
         break;
     }
     
@@ -181,7 +249,7 @@ const EnhancedStockSimulator = () => {
     
     if (total > portfolio.cash) {
       toast("Insufficient Funds", {
-        description: `You need $${total.toFixed(2)} but only have $${portfolio.cash.toFixed(2)}`,
+        description: `You need ₦${total.toLocaleString()} but only have ₦${portfolio.cash.toLocaleString()}`,
         className: "bg-red-600 border-red-700 text-white",
       });
       return;
@@ -291,7 +359,7 @@ const EnhancedStockSimulator = () => {
     localStorage.setItem('transactions', JSON.stringify(transactions));
 
     toast(`${type === 'buy' ? 'Purchase' : 'Sale'} Successful`, {
-      description: `${type === 'buy' ? 'Bought' : 'Sold'} ${shares} shares of ${stock.symbol} for $${total.toFixed(2)}`,
+      description: `${type === 'buy' ? 'Bought' : 'Sold'} ${shares} shares of ${stock.symbol} for ₦${total.toLocaleString()}`,
       className: "bg-green-600 border-green-700 text-white",
     });
 
@@ -318,7 +386,7 @@ const EnhancedStockSimulator = () => {
         hour: '2-digit', 
         minute: '2-digit' 
       }),
-      price: basePrice + Math.sin(i * 0.3) * 3 + Math.random() * 2
+      price: basePrice + Math.sin(i * 0.3) * (basePrice * 0.02) + Math.random() * (basePrice * 0.01)
     }));
   };
 
@@ -326,12 +394,12 @@ const EnhancedStockSimulator = () => {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold text-white">Enhanced Stock Trading</h2>
-          <p className="text-slate-400">Trade with enhanced security and detailed analytics</p>
+          <h2 className="text-3xl font-bold text-white">Nigerian Stock Exchange Trading</h2>
+          <p className="text-slate-400">Trade Nigerian companies with enhanced security and real-time data</p>
         </div>
         <div className="text-right">
           <p className="text-sm text-slate-400">Available Cash</p>
-          <p className="text-2xl font-bold text-green-400">${(portfolio.cash || 0).toFixed(2)}</p>
+          <p className="text-2xl font-bold text-green-400">₦{(portfolio.cash || 0).toLocaleString()}</p>
           <Button
             size="sm"
             variant="outline"
@@ -339,18 +407,15 @@ const EnhancedStockSimulator = () => {
             className="mt-1 text-blue-400 border-blue-600"
           >
             <HelpCircle className="h-3 w-3 mr-1" />
-            Learn About Trading
+            Learn About NSE Trading
           </Button>
         </div>
       </div>
 
-      {/* AI Trade Suggestions - New Feature */}
-      <TradeSuggestions stocks={stocks} userLevel={userLevel} />
-
-      {/* Financial Literacy Guide - New Feature */}
+      {/* Financial Literacy Guide */}
       <FinancialLiteracyGuide userLevel={userLevel} />
 
-      {/* Investment Suggestions - Now prominently displayed */}
+      {/* Investment Suggestions for Nigerian Market */}
       <InvestmentSuggestions stocks={stocks} />
 
       {/* Recent Trades with Enhanced Chart Access */}
@@ -360,7 +425,7 @@ const EnhancedStockSimulator = () => {
             <CardTitle className="text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
-                Recent Trades & Analytics
+                Recent Nigerian Stock Trades
               </div>
               <Button
                 variant="outline"
@@ -398,11 +463,11 @@ const EnhancedStockSimulator = () => {
                     </span>
                     <div>
                       <p className="text-white font-medium">{trade.symbol}</p>
-                      <p className="text-slate-400 text-sm">{trade.shares} shares at ${(trade.price || 0).toFixed(2)}</p>
+                      <p className="text-slate-400 text-sm">{trade.shares} shares at ₦{(trade.price || 0).toLocaleString()}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white">${(trade.total || 0).toFixed(2)}</p>
+                    <p className="text-white">₦{(trade.total || 0).toLocaleString()}</p>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -422,31 +487,31 @@ const EnhancedStockSimulator = () => {
         <Card className="bg-slate-800 border-slate-700">
           <CardContent className="text-center py-8">
             <ChartLine className="h-12 w-12 text-slate-500 mx-auto mb-4" />
-            <h3 className="text-white font-medium mb-2">No Trades Yet</h3>
+            <h3 className="text-white font-medium mb-2">No Nigerian Stock Trades Yet</h3>
             <p className="text-slate-400 text-sm mb-4">
-              Start trading to see detailed charts and analytics of your positions
+              Start trading Nigerian companies to see detailed charts and analytics
             </p>
             <p className="text-slate-500 text-xs">
-              Charts will show profit/loss, price movements, and position details
+              Charts will show profit/loss, price movements, and position details for NSE stocks
             </p>
           </CardContent>
         </Card>
       )}
 
-      {/* Stock Search */}
+      {/* Nigerian Stock Search */}
       <div className="relative">
         <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
         <Input
-          placeholder="Search stocks by symbol or name..."
+          placeholder="Search Nigerian stocks by symbol or company name..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10 bg-slate-800 border-slate-700 text-white"
         />
       </div>
 
-      {/* Stock List */}
+      {/* Nigerian Stock List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredStocks.slice(0, userLevel === 'basic' ? 3 : filteredStocks.length).map((stock) => {
+        {filteredStocks.slice(0, userLevel === 'basic' ? 6 : filteredStocks.length).map((stock) => {
           const safeCurrentPrice = stock.currentPrice || stock.price || 0;
           const safeChange = stock.change || 0;
           
@@ -460,10 +525,10 @@ const EnhancedStockSimulator = () => {
                     <p className="text-xs text-slate-500">{stock.industry}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-white">${safeCurrentPrice.toFixed(2)}</p>
+                    <p className="text-lg font-bold text-white">₦{safeCurrentPrice.toLocaleString()}</p>
                     <div className={`flex items-center text-sm ${safeChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {safeChange >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
-                      {safeChange >= 0 ? '+' : ''}{safeChange.toFixed(2)}
+                      {safeChange >= 0 ? '+' : ''}{safeChange.toFixed(2)}%
                     </div>
                   </div>
                 </div>
@@ -496,7 +561,7 @@ const EnhancedStockSimulator = () => {
                 </div>
                 
                 <div className="text-center text-sm text-slate-400">
-                  Total: ${(safeCurrentPrice * quantity).toFixed(2)}
+                  Total: ₦{(safeCurrentPrice * quantity).toLocaleString()}
                 </div>
                 
                 <div className="flex gap-2">
@@ -508,10 +573,7 @@ const EnhancedStockSimulator = () => {
                     Buy
                   </Button>
                   <Button
-                    onClick={() => {
-                      showStepByStepGuidance('sell', stock);
-                      // Original sell logic here
-                    }}
+                    onClick={() => handleSellStock(stock)}
                     variant="outline"
                     className="flex-1 border-red-600 text-red-400 hover:bg-red-600/10"
                     size="sm"
@@ -525,12 +587,12 @@ const EnhancedStockSimulator = () => {
         })}
       </div>
 
-      {userLevel === 'basic' && filteredStocks.length > 3 && (
+      {userLevel === 'basic' && filteredStocks.length > 6 && (
         <Card className="bg-purple-900/30 border-purple-600/50">
           <CardContent className="text-center py-6">
-            <h3 className="text-purple-300 font-medium mb-2">More Stocks Available</h3>
+            <h3 className="text-purple-300 font-medium mb-2">More Nigerian Stocks Available</h3>
             <p className="text-purple-400 text-sm mb-4">
-              Basic users can view {filteredStocks.length - 3} additional stocks with Premium
+              Basic users can view {filteredStocks.length - 6} additional Nigerian companies with Premium
             </p>
             <Button className="bg-purple-600 hover:bg-purple-700">
               Upgrade to Premium
@@ -543,9 +605,9 @@ const EnhancedStockSimulator = () => {
       <Dialog open={showGuidance} onOpenChange={setShowGuidance}>
         <DialogContent className="bg-slate-800 text-white border-slate-700">
           <DialogHeader>
-            <DialogTitle>Step-by-Step Guidance</DialogTitle>
+            <DialogTitle>Nigerian Market Guidance</DialogTitle>
             <DialogDescription className="text-slate-300">
-              Understanding your financial actions
+              Understanding Nigerian stock market investments
             </DialogDescription>
           </DialogHeader>
           <div className="p-4 bg-slate-700 rounded-lg">
@@ -574,13 +636,13 @@ const EnhancedStockSimulator = () => {
         />
       )}
 
-      {/* Trade Chart Dialog - Enhanced */}
+      {/* Trade Chart Dialog */}
       <Dialog open={showTradeChart} onOpenChange={setShowTradeChart}>
         <DialogContent className="max-w-4xl bg-slate-800 text-white border-slate-700">
           <DialogHeader>
-            <DialogTitle>Trade Analysis & Performance</DialogTitle>
+            <DialogTitle>Nigerian Stock Trade Analysis</DialogTitle>
             <DialogDescription className="text-slate-300">
-              Detailed view of your trade performance, price movements, and position analytics
+              Detailed view of your Nigerian stock performance and price movements
             </DialogDescription>
           </DialogHeader>
           {selectedTrade && (

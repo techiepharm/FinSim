@@ -27,37 +27,37 @@ const InvestmentSuggestions = ({ stocks }: InvestmentSuggestionsProps) => {
   const suggestions = [
     {
       type: 'bullish',
-      title: 'Nigerian Growth Opportunity',
-      description: 'Consider banking and telecom stocks showing strong momentum',
+      title: 'Nigerian Banking Growth',
+      description: 'Consider top-tier banks like GTCO and Zenith showing strong fundamentals',
       icon: TrendingUp,
       color: 'text-green-400',
-      stocks: safeStocks.filter(s => s.change > 1 && (s.industry === 'Banking' || s.industry === 'Telecommunications')).slice(0, 2)
+      stocks: safeStocks.filter(s => s.change > 0.5 && s.industry === 'Banking').slice(0, 2)
     },
     {
       type: 'diversification',
-      title: 'Diversify Across Nigerian Sectors',
-      description: 'Balance holdings across banking, telecom, and consumer goods',
+      title: 'Sector Diversification',
+      description: 'Balance across banking, telecom, and consumer goods for stability',
       icon: Lightbulb,
       color: 'text-blue-400',
-      stocks: safeStocks.filter(s => s.industry && ['Consumer Goods', 'Building Materials'].includes(s.industry)).slice(0, 2)
+      stocks: safeStocks.filter(s => ['Consumer Goods', 'Building Materials', 'Telecommunications'].includes(s.industry)).slice(0, 3)
     },
     {
       type: 'caution',
-      title: 'Nigerian Market Risk Management',
-      description: 'Monitor oil & gas sector due to volatility',
+      title: 'Oil & Gas Volatility',
+      description: 'Monitor energy sector due to oil price fluctuations and policy changes',
       icon: AlertTriangle,
       color: 'text-yellow-400',
-      stocks: safeStocks.filter(s => s.change < -1 || s.industry === 'Oil & Gas').slice(0, 2)
+      stocks: safeStocks.filter(s => s.change < -0.5 || s.industry === 'Oil & Gas').slice(0, 2)
     }
   ];
 
-  const tips = [
-    "💡 Nigerian market: Focus on banking and telecom leaders",
-    "📊 Naira volatility affects all sectors - consider hedging",
-    "🎯 Diversify across 5-7 different Nigerian companies",
-    "⏰ Monitor CBN policy changes affecting banking stocks",
-    "💰 Oil prices significantly impact Nigerian market sentiment",
-    "📈 Infrastructure development drives cement and construction stocks"
+  const nigerianMarketTips = [
+    "🏦 Banking stocks lead Nigerian market - focus on tier-1 banks",
+    "📱 Telecom giants MTN & Airtel benefit from Nigeria's growing digital economy",
+    "🏗️ Cement companies gain from infrastructure development projects",
+    "💰 Naira devaluation affects import-dependent companies differently",
+    "⚡ Power sector reforms create opportunities in energy stocks",
+    "🛒 Consumer goods stocks benefit from Nigeria's large population"
   ];
 
   return (
@@ -65,7 +65,7 @@ const InvestmentSuggestions = ({ stocks }: InvestmentSuggestionsProps) => {
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2">
           <Lightbulb className="h-5 w-5 text-yellow-400" />
-          Nigerian Market Insights & Suggestions
+          Nigerian Market Investment Insights
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -105,16 +105,27 @@ const InvestmentSuggestions = ({ stocks }: InvestmentSuggestionsProps) => {
           })}
         </div>
 
-        {/* Investment Tips */}
+        {/* Nigerian Market Tips */}
         <div className="border-t border-slate-600 pt-4">
-          <h4 className="text-white font-medium text-sm mb-3">Nigerian Market Tips</h4>
+          <h4 className="text-white font-medium text-sm mb-3">Nigerian Stock Market Tips</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {tips.slice(0, 4).map((tip, index) => (
+            {nigerianMarketTips.slice(0, 4).map((tip, index) => (
               <div key={index} className="text-slate-300 text-xs p-2 bg-slate-700/50 rounded">
                 {tip}
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Market Status Indicator */}
+        <div className="bg-slate-900 border border-green-900/50 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+            <span className="text-green-400 text-sm font-medium">NSE Market Active</span>
+          </div>
+          <p className="text-slate-400 text-xs">
+            Nigerian Stock Exchange trading hours: 10:00 AM - 2:30 PM WAT
+          </p>
         </div>
       </CardContent>
     </Card>
