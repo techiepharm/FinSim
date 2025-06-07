@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,20 +48,24 @@ interface Transaction {
   description: string;
 }
 
-// Mock current prices for portfolio calculations
-const currentPrices: { [key: string]: number } = {
-  'AAPL': 183.58,
-  'MSFT': 412.72,
-  'NVDA': 924.79,
-  'GOOGL': 154.92,
-  'AMZN': 176.53,
-  'TSLA': 252.34
+// Current prices for Nigerian stocks in NGN
+const nigerianStockPrices: { [key: string]: number } = {
+  'DANGCEM': 287.65,
+  'GTCO': 31.80,
+  'MTNN': 179.05,
+  'AIRTELAFRI': 1469.02,
+  'BUACEMENT': 101.62,
+  'ZENITHBANK': 28.65,
+  'SEPLAT': 3386.50,
+  'NESTLE': 1369.08,
+  'UBA': 22.65,
+  'FLOURMILL': 43.51
 };
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 const Portfolio = () => {
-  const [portfolio, setPortfolio] = useState<PortfolioData>({ cash: 1000, holdings: [] });
+  const [portfolio, setPortfolio] = useState<PortfolioData>({ cash: 100000, holdings: [] });
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [animate, setAnimate] = useState(false);
@@ -74,22 +79,22 @@ const Portfolio = () => {
     if (savedPortfolio) {
       try {
         const parsedPortfolio = JSON.parse(savedPortfolio);
-        // Ensure portfolio has valid structure and safe values
         const safePortfolio = {
-          cash: typeof parsedPortfolio.cash === 'number' ? parsedPortfolio.cash : 1000,
+          cash: typeof parsedPortfolio.cash === 'number' ? parsedPortfolio.cash : 100000,
           holdings: Array.isArray(parsedPortfolio.holdings) ? parsedPortfolio.holdings.filter(holding => 
             holding && 
             typeof holding.symbol === 'string' &&
             typeof holding.shares === 'number' &&
             typeof holding.avgCost === 'number' &&
             !isNaN(holding.shares) &&
-            !isNaN(holding.avgCost)
+            !isNaN(holding.avgCost) &&
+            nigerianStockPrices[holding.symbol] // Only Nigerian stocks
           ) : []
         };
         setPortfolio(safePortfolio);
       } catch (e) {
         console.error('Error parsing portfolio data:', e);
-        setPortfolio({ cash: 1000, holdings: [] });
+        setPortfolio({ cash: 100000, holdings: [] });
       }
     }
 
@@ -107,23 +112,21 @@ const Portfolio = () => {
 
     setTimeout(() => {
       setAnimate(true);
-      toast("Portfolio Loaded", {
-        description: "View your investments and performance metrics.",
+      toast("Nigerian Portfolio Loaded", {
+        description: "View your Nigerian stock investments and performance metrics in NGN.",
+        className: "bg-green-600 border-green-700 text-white",
       });
     }, 300);
   }, []);
 
-  // Calculate portfolio metrics with safe number handling
+  // Calculate portfolio metrics with Nigerian stock prices
   const calculatePortfolioValue = () => {
     const holdingsValue = portfolio.holdings.reduce((total, holding) => {
       if (!holding || typeof holding.shares !== 'number' || typeof holding.avgCost !== 'number') {
         return total;
       }
       
-      const currentPrice = (typeof currentPrices[holding.symbol] === 'number') 
-        ? currentPrices[holding.symbol] 
-        : (typeof holding.avgCost === 'number' ? holding.avgCost : 0);
-      
+      const currentPrice = nigerianStockPrices[holding.symbol] || holding.avgCost;
       return total + (holding.shares * currentPrice);
     }, 0);
     
@@ -137,10 +140,7 @@ const Portfolio = () => {
         return total;
       }
       
-      const currentPrice = (typeof currentPrices[holding.symbol] === 'number') 
-        ? currentPrices[holding.symbol] 
-        : (typeof holding.avgCost === 'number' ? holding.avgCost : 0);
-      
+      const currentPrice = nigerianStockPrices[holding.symbol] || holding.avgCost;
       const currentValue = holding.shares * currentPrice;
       const costBasis = holding.shares * holding.avgCost;
       return total + (currentValue - costBasis);
@@ -148,24 +148,21 @@ const Portfolio = () => {
   };
 
   const calculateDayChange = () => {
-    // Mock day change calculation
-    return 412.89;
+    // Simulate day change in NGN
+    return 8750.50;
   };
 
   const totalValue = calculatePortfolioValue();
   const totalGain = calculateTotalGain();
   const totalGainPercent = portfolio.holdings.length > 0 && totalValue > 0 ? (totalGain / (totalValue - totalGain)) * 100 : 0;
   const dayChange = calculateDayChange();
-  const dayChangePercent = 0.38;
+  const dayChangePercent = 1.25;
 
-  // Prepare allocation data for pie chart with safe calculations
+  // Prepare allocation data for pie chart
   const allocationData = portfolio.holdings
     .filter(holding => holding && typeof holding.shares === 'number' && typeof holding.avgCost === 'number')
     .map(holding => {
-      const currentPrice = (typeof currentPrices[holding.symbol] === 'number') 
-        ? currentPrices[holding.symbol] 
-        : (typeof holding.avgCost === 'number' ? holding.avgCost : 0);
-      
+      const currentPrice = nigerianStockPrices[holding.symbol] || holding.avgCost;
       const value = holding.shares * currentPrice;
       return {
         name: holding.symbol,
@@ -183,32 +180,24 @@ const Portfolio = () => {
     });
   }
 
-  // Performance data for line chart
-  const performanceData = [
-    { date: "Jan 1", value: 1000 },
-    { date: "Jan 15", value: 1080 },
-    { date: "Feb 1", value: 1150 },
-    { date: "Feb 15", value: 1200 },
-    { date: "Mar 1", value: totalValue },
-  ];
-
+  // Performance data for Nigerian market simulation
   const generateEnhancedPerformanceData = () => {
     const data = [];
-    let value = 1000;
+    let value = 100000; // Starting with ₦100,000
     const today = new Date();
     
     for (let i = 90; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       
-      // More realistic market simulation
-      const change = (Math.random() - 0.48) * 30; // Slight upward bias
-      value = Math.max(value + change, 800); // Floor at 800
+      // Nigerian market volatility simulation
+      const change = (Math.random() - 0.47) * 2500; // Slight upward bias with Nigerian market volatility
+      value = Math.max(value + change, 80000); // Floor at ₦80,000
       
       data.push({
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         value: value,
-        benchmark: 1000 + (90 - i) * 2 // Simple benchmark growth
+        benchmark: 100000 + (90 - i) * 850 // NSE benchmark growth
       });
     }
     
@@ -223,8 +212,8 @@ const Portfolio = () => {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      toast.success("Statement Downloaded", {
-        description: "Your portfolio statement has been downloaded.",
+      toast.success("Nigerian Portfolio Statement Downloaded", {
+        description: "Your portfolio statement with NGN values has been downloaded.",
       });
     }, 1000);
   };
@@ -239,19 +228,35 @@ const Portfolio = () => {
 
   const handleTrade = (symbol: string, action: 'buy' | 'sell') => {
     toast(`${action.toUpperCase()} ${symbol}`, {
-      description: `Redirecting to trading page for ${symbol}...`,
+      description: `Redirecting to Nigerian stock trading for ${symbol}...`,
       className: "bg-blue-600 border-blue-700 text-white",
     });
-    // In a real app, this would navigate to the trading page
     window.location.href = '/trading';
+  };
+
+  // Get Nigerian stock industry mapping
+  const getNigerianStockIndustry = (symbol: string) => {
+    const industries: { [key: string]: string } = {
+      'DANGCEM': 'Building Materials',
+      'GTCO': 'Banking',
+      'MTNN': 'Telecommunications',
+      'AIRTELAFRI': 'Telecommunications',
+      'BUACEMENT': 'Building Materials',
+      'ZENITHBANK': 'Banking',
+      'SEPLAT': 'Oil & Gas',
+      'NESTLE': 'Consumer Goods',
+      'UBA': 'Banking',
+      'FLOURMILL': 'Consumer Goods'
+    };
+    return industries[symbol] || 'Other';
   };
 
   return (
     <div className="p-6 space-y-6 animate-fade-in min-h-screen bg-slate-900">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-white">Portfolio</h2>
-          <p className="text-slate-400 mt-1">Track your investments and performance</p>
+          <h2 className="text-3xl font-bold text-white">Nigerian Stock Portfolio</h2>
+          <p className="text-slate-400 mt-1">Track your Nigerian investments and performance in NGN</p>
         </div>
         
         <Button 
@@ -260,7 +265,7 @@ const Portfolio = () => {
           disabled={isLoading}
         >
           <FileText className="h-4 w-4" />
-          {isLoading ? "Generating..." : "Download Statement"}
+          {isLoading ? "Generating..." : "Download NGN Statement"}
         </Button>
       </div>
       
@@ -270,7 +275,7 @@ const Portfolio = () => {
             <CardTitle className="text-sm font-medium text-slate-400">Total Portfolio Value</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">${(totalValue || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <div className="text-2xl font-bold text-white">₦{(totalValue || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
             <div className="flex items-center text-sm mt-1">
               {(totalGain || 0) >= 0 ? (
                 <>
@@ -293,7 +298,7 @@ const Portfolio = () => {
             <CardTitle className="text-sm font-medium text-slate-400">Day's Change</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">+${(dayChange || 0).toFixed(2)}</div>
+            <div className="text-2xl font-bold text-white">+₦{(dayChange || 0).toFixed(2)}</div>
             <div className="flex items-center text-sm mt-1">
               <ArrowUp className="mr-1 h-4 w-4 text-green-400" />
               <span className="text-green-400">+{(dayChangePercent || 0).toFixed(2)}%</span>
@@ -308,7 +313,7 @@ const Portfolio = () => {
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${(totalGain || 0) >= 0 ? "text-green-400" : "text-red-400"}`}>
-              {(totalGain || 0) >= 0 ? "+" : ""}${(totalGain || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              {(totalGain || 0) >= 0 ? "+" : ""}₦{(totalGain || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </div>
             <div className="flex items-center text-sm mt-1">
               {(totalGainPercent || 0) >= 0 ? (
@@ -332,18 +337,18 @@ const Portfolio = () => {
             <CardTitle className="text-sm font-medium text-slate-400">Available Cash</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">${(portfolio.cash || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-            <div className="text-sm text-slate-400 mt-1">Available for trading</div>
+            <div className="text-2xl font-bold text-white">₦{(portfolio.cash || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <div className="text-sm text-slate-400 mt-1">Available for NSE trading</div>
           </CardContent>
         </Card>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Enhanced Holdings with Stock Analysis */}
+        {/* Enhanced Holdings with Nigerian Stock Analysis */}
         <Card className={`lg:col-span-2 hover:shadow-lg transition-all duration-300 bg-slate-800 border-slate-700 ${animate ? 'animate-fade-in' : 'opacity-0'}`}>
           <CardHeader>
             <CardTitle className="text-white flex items-center justify-between">
-              <span>Holdings & Analysis</span>
+              <span>Nigerian Stock Holdings & Analysis</span>
               <Button 
                 size="sm"
                 onClick={() => setShowFinancialReport(true)}
@@ -354,19 +359,19 @@ const Portfolio = () => {
               </Button>
             </CardTitle>
             <CardDescription className="text-slate-400">
-              Click on any stock for detailed analysis and recommendations
+              Click on any Nigerian stock for detailed analysis and recommendations
             </CardDescription>
           </CardHeader>
           <CardContent>
             {portfolio.holdings.length > 0 ? (
               <div className="space-y-4">
-                {/* Compact Holdings Table */}
+                {/* Nigerian Stock Holdings Table */}
                 <div className="rounded-md border border-slate-600">
                   <div className="grid grid-cols-6 bg-slate-700 p-3 text-xs font-medium text-slate-400">
-                    <div>Symbol</div>
+                    <div>NSE Symbol</div>
                     <div className="text-right">Shares</div>
-                    <div className="text-right">Price</div>
-                    <div className="text-right">Value</div>
+                    <div className="text-right">Price (₦)</div>
+                    <div className="text-right">Value (₦)</div>
                     <div className="text-right">Gain/Loss</div>
                     <div className="text-right">Action</div>
                   </div>
@@ -375,10 +380,7 @@ const Portfolio = () => {
                     {portfolio.holdings
                       .filter(holding => holding && typeof holding.shares === 'number' && typeof holding.avgCost === 'number')
                       .map((holding) => {
-                        const currentPrice = (typeof currentPrices[holding.symbol] === 'number') 
-                          ? currentPrices[holding.symbol] 
-                          : (typeof holding.avgCost === 'number' ? holding.avgCost : 0);
-                        
+                        const currentPrice = nigerianStockPrices[holding.symbol] || holding.avgCost;
                         const currentValue = (holding.shares || 0) * (currentPrice || 0);
                         const costBasis = (holding.shares || 0) * (holding.avgCost || 0);
                         const gain = currentValue - costBasis;
@@ -428,20 +430,20 @@ const Portfolio = () => {
                   </div>
                 </div>
 
-                {/* Stock Analysis Dialog */}
+                {/* Nigerian Stock Analysis Dialog */}
                 <Dialog open={!!selectedStock} onOpenChange={() => setSelectedStock(null)}>
                   <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle className="text-white">Stock Analysis</DialogTitle>
+                      <DialogTitle className="text-white">Nigerian Stock Analysis - {selectedStock}</DialogTitle>
                     </DialogHeader>
                     {selectedStock && (
                       <StockAnalysis
                         symbol={selectedStock}
                         name={portfolio.holdings.find(h => h.symbol === selectedStock)?.name || selectedStock}
-                        currentPrice={currentPrices[selectedStock] || 0}
+                        currentPrice={nigerianStockPrices[selectedStock] || 0}
                         shares={portfolio.holdings.find(h => h.symbol === selectedStock)?.shares || 0}
                         avgCost={portfolio.holdings.find(h => h.symbol === selectedStock)?.avgCost || 0}
-                        industry="Technology"
+                        industry={getNigerianStockIndustry(selectedStock)}
                         onTrade={handleTrade}
                       />
                     )}
@@ -450,13 +452,13 @@ const Portfolio = () => {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-slate-400 mb-4">No holdings yet. Start trading to build your portfolio!</p>
+                <p className="text-slate-400 mb-4">No Nigerian stock holdings yet. Start trading NSE stocks to build your portfolio!</p>
                 <Button 
                   onClick={() => window.location.href = '/trading'}
                   className="bg-green-600 hover:bg-green-700"
                 >
                   <TrendingUp className="h-4 w-4 mr-2" />
-                  Start Trading
+                  Start NSE Trading
                 </Button>
               </div>
             )}
@@ -472,7 +474,7 @@ const Portfolio = () => {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <PieChart className="h-5 w-5" />
-                Allocation
+                Nigerian Portfolio Allocation
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -507,7 +509,7 @@ const Portfolio = () => {
                 </div>
               ) : (
                 <div className="h-[200px] flex items-center justify-center">
-                  <p className="text-slate-400">No data to display</p>
+                  <p className="text-slate-400">No Nigerian stock data to display</p>
                 </div>
               )}
             </CardContent>
@@ -518,12 +520,12 @@ const Portfolio = () => {
       {/* Enhanced Portfolio Analysis */}
       <Card className={`hover:shadow-lg transition-all duration-300 bg-slate-800 border-slate-700 ${animate ? 'animate-fade-in' : 'opacity-0'}`}>
         <CardHeader>
-          <CardTitle className="text-white">Portfolio Performance & Analysis</CardTitle>
+          <CardTitle className="text-white">Nigerian Stock Portfolio Performance & Analysis</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-4">
-              <TabsTrigger value="performance">Enhanced Performance</TabsTrigger>
+              <TabsTrigger value="performance">NSE Performance</TabsTrigger>
               <TabsTrigger value="transactions">Recent Activity</TabsTrigger>
               <TabsTrigger value="education">Learning</TabsTrigger>
             </TabsList>
@@ -534,7 +536,7 @@ const Portfolio = () => {
                   <AreaChart data={enhancedPerformanceData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis dataKey="date" stroke="#9CA3AF" />
-                    <YAxis stroke="#9CA3AF" tickFormatter={(value) => `₦${value}`} />
+                    <YAxis stroke="#9CA3AF" tickFormatter={(value) => `₦${value.toLocaleString()}`} />
                     <RechartsTooltip 
                       contentStyle={{
                         backgroundColor: '#1F2937',
@@ -544,7 +546,7 @@ const Portfolio = () => {
                       }}
                       formatter={(value: any, name: string) => [
                         `₦${value.toLocaleString()}`, 
-                        name === 'value' ? 'Portfolio Value' : 'Benchmark'
+                        name === 'value' ? 'Portfolio Value' : 'NSE Benchmark'
                       ]}
                     />
                     <Area
@@ -568,25 +570,25 @@ const Portfolio = () => {
                 </ResponsiveContainer>
               </div>
               
-              {/* Performance Metrics */}
+              {/* Performance Metrics in NGN */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                 <div className="text-center p-3 bg-slate-700 rounded-lg">
                   <p className="text-slate-400 text-sm">90-Day Return</p>
                   <p className="text-green-400 font-bold text-lg">
-                    +{((totalValue - 1000) / 1000 * 100).toFixed(2)}%
+                    +{((totalValue - 100000) / 100000 * 100).toFixed(2)}%
                   </p>
                 </div>
                 <div className="text-center p-3 bg-slate-700 rounded-lg">
                   <p className="text-slate-400 text-sm">Best Day</p>
-                  <p className="text-green-400 font-bold text-lg">+₦127.50</p>
+                  <p className="text-green-400 font-bold text-lg">+₦12,750</p>
                 </div>
                 <div className="text-center p-3 bg-slate-700 rounded-lg">
                   <p className="text-slate-400 text-sm">Worst Day</p>
-                  <p className="text-red-400 font-bold text-lg">-₦89.30</p>
+                  <p className="text-red-400 font-bold text-lg">-₦8,930</p>
                 </div>
                 <div className="text-center p-3 bg-slate-700 rounded-lg">
-                  <p className="text-slate-400 text-sm">Volatility</p>
-                  <p className="text-yellow-400 font-bold text-lg">12.5%</p>
+                  <p className="text-slate-400 text-sm">NSE Volatility</p>
+                  <p className="text-yellow-400 font-bold text-lg">15.2%</p>
                 </div>
               </div>
             </TabsContent>
@@ -610,7 +612,7 @@ const Portfolio = () => {
                       </div>
                       <div className="text-right">
                         <p className={`font-medium ${tx.total >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {tx.total >= 0 ? '+' : ''}${tx.total.toFixed(2)}
+                          {tx.total >= 0 ? '+' : ''}₦{Math.abs(tx.total).toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -623,13 +625,13 @@ const Portfolio = () => {
                       onClick={handleViewAllTransactions}
                       className="hover:bg-slate-700"
                     >
-                      View All Transactions
+                      View All NGN Transactions
                     </Button>
                   </div>
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-slate-400">No transactions yet</p>
+                  <p className="text-slate-400">No Nigerian stock transactions yet</p>
                 </div>
               )}
             </TabsContent>
@@ -645,7 +647,7 @@ const Portfolio = () => {
       <Dialog open={showFinancialReport} onOpenChange={setShowFinancialReport}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-white">Comprehensive Financial Report</DialogTitle>
+            <DialogTitle className="text-white">Comprehensive Nigerian Stock Financial Report</DialogTitle>
           </DialogHeader>
           <FinancialReportAnalysis
             transactions={transactions}
