@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -122,7 +121,7 @@ const VideoEducation = ({ topic = "general", compact = false }: VideoEducationPr
               <div className="flex-1">
                 <h4 className="text-white font-medium text-sm">{video.title}</h4>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge size="sm" className={getLevelColor(video.level)}>
+                  <Badge className={getLevelColor(video.level)}>
                     {video.level}
                   </Badge>
                   <div className="flex items-center gap-1 text-slate-400">

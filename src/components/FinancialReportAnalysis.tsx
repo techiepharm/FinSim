@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -279,7 +278,6 @@ const FinancialReportAnalysis = ({
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="text-white font-medium">{rec.title}</h4>
                     <Badge 
-                      size="sm"
                       className={
                         rec.priority === 'high' 
                           ? 'bg-red-600/20 text-red-300' 
