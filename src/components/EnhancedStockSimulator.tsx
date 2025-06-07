@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/sonner";
-import { TrendingUp, TrendingDown, Search, Plus, Minus, BarChart3, ChartLine, HelpCircle } from "lucide-react";
+import { TrendingUp, TrendingDown, Search, Plus, Minus, BarChart3, ChartLine, HelpCircle, BarChart2 } from "lucide-react";
 import TransactionPin from "./TransactionPin";
 import TradeChart from "./TradeChart";
 import InvestmentSuggestions from "./InvestmentSuggestions";
 import FinancialLiteracyGuide from "./FinancialLiteracyGuide";
+import StockAnalysis from "./StockAnalysis";
 import {
   Dialog,
   DialogContent,
@@ -51,6 +52,8 @@ const EnhancedStockSimulator = () => {
   const [userLevel] = useState<'basic' | 'premium'>('basic');
   const [showGuidance, setShowGuidance] = useState(false);
   const [currentGuidance, setCurrentGuidance] = useState('');
+  const [showStockAnalysis, setShowStockAnalysis] = useState(false);
+  const [analysisStock, setAnalysisStock] = useState<Stock | null>(null);
 
   // Nigerian Stock Exchange companies with real market data (prices in NGN)
   const nigerianStocks: Stock[] = [
@@ -194,7 +197,7 @@ const EnhancedStockSimulator = () => {
     // Show Nigerian market notification
     setTimeout(() => {
       toast("🇳🇬 Nigerian Stock Exchange", {
-        description: "Trading Nigerian companies with real-time price simulation. Prices in NGN (Naira).",
+        description: "Trading Nigerian companies with real-time price simulation. All prices in Nigerian Naira (₦).",
         className: "bg-green-600 border-green-700 text-white",
         duration: 5000,
       });
@@ -240,6 +243,17 @@ const EnhancedStockSimulator = () => {
     stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
     stock.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleAnalyseStock = (stock: Stock) => {
+    setAnalysisStock(stock);
+    setShowStockAnalysis(true);
+    
+    toast("📊 Stock Analysis Loading", {
+      description: `Analyzing ${stock.symbol} trends, charts, and recommendations...`,
+      className: "bg-blue-600 border-blue-700 text-white",
+      duration: 3000,
+    });
+  };
 
   const handleBuyStock = (stock: Stock) => {
     showStepByStepGuidance('buy', stock);
@@ -341,7 +355,7 @@ const EnhancedStockSimulator = () => {
     setPortfolio(updatedPortfolio);
     localStorage.setItem('portfolio', JSON.stringify(updatedPortfolio));
 
-    // Save transaction
+    // Save transaction (amounts already in NGN)
     const transaction = {
       id: Date.now(),
       date: new Date().toISOString(),
@@ -388,6 +402,18 @@ const EnhancedStockSimulator = () => {
       }),
       price: basePrice + Math.sin(i * 0.3) * (basePrice * 0.02) + Math.random() * (basePrice * 0.01)
     }));
+  };
+
+  const handleTradeFromAnalysis = (symbol: string, action: 'buy' | 'sell') => {
+    const stock = stocks.find(s => s.symbol === symbol);
+    if (stock) {
+      setShowStockAnalysis(false);
+      if (action === 'buy') {
+        handleBuyStock(stock);
+      } else {
+        handleSellStock(stock);
+      }
+    }
   };
 
   return (
@@ -509,7 +535,7 @@ const EnhancedStockSimulator = () => {
         />
       </div>
 
-      {/* Nigerian Stock List */}
+      {/* Nigerian Stock List with Analyse Stock Button */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredStocks.slice(0, userLevel === 'basic' ? 6 : filteredStocks.length).map((stock) => {
           const safeCurrentPrice = stock.currentPrice || stock.price || 0;
@@ -534,6 +560,16 @@ const EnhancedStockSimulator = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
+                {/* Analyse Stock Button */}
+                <Button
+                  onClick={() => handleAnalyseStock(stock)}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  size="sm"
+                >
+                  <BarChart2 className="h-4 w-4 mr-2" />
+                  Analyse Stock
+                </Button>
+                
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
@@ -600,6 +636,31 @@ const EnhancedStockSimulator = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Stock Analysis Dialog */}
+      <Dialog open={showStockAnalysis} onOpenChange={setShowStockAnalysis}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-slate-800 text-white border-slate-700">
+          <DialogHeader>
+            <DialogTitle>
+              {analysisStock ? `${analysisStock.symbol} - Complete Stock Analysis` : 'Stock Analysis'}
+            </DialogTitle>
+            <DialogDescription className="text-slate-300">
+              Comprehensive analysis including trends, charts, and financial recommendations
+            </DialogDescription>
+          </DialogHeader>
+          {analysisStock && (
+            <StockAnalysis
+              symbol={analysisStock.symbol}
+              name={analysisStock.name}
+              currentPrice={analysisStock.currentPrice || analysisStock.price}
+              shares={portfolio.holdings.find((h: any) => h.symbol === analysisStock.symbol)?.shares || 0}
+              avgCost={portfolio.holdings.find((h: any) => h.symbol === analysisStock.symbol)?.avgCost || analysisStock.currentPrice || analysisStock.price}
+              industry={analysisStock.industry}
+              onTrade={handleTradeFromAnalysis}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Guidance Dialog */}
       <Dialog open={showGuidance} onOpenChange={setShowGuidance}>

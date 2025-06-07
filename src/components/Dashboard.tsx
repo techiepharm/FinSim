@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -18,8 +17,8 @@ const Dashboard = () => {
   const username = "Ezra Folorunso";
   const [userLevel] = useState<'basic' | 'premium'>('basic'); // Demo: starts as basic
   
-  // User account info - converting to Nigerian Naira (₦)
-  const [accountBalance, setAccountBalance] = useState(415000); // ₦415,000 (converted from $1000 USD)
+  // User account info - Nigerian Naira only
+  const [accountBalance, setAccountBalance] = useState(415000); // ₦415,000
   const [recentTransactions, setRecentTransactions] = useState([]);
   
   // Learning progress
@@ -32,12 +31,11 @@ const Dashboard = () => {
   // Load transactions and account balance from localStorage
   const updateDataFromStorage = () => {
     try {
-      // Load portfolio for balance
+      // Load portfolio for balance (already in NGN)
       const storedPortfolio = localStorage.getItem('portfolio');
       if (storedPortfolio) {
         const portfolio = JSON.parse(storedPortfolio);
-        // Convert USD to NGN (1 USD = 415 NGN approximately)
-        setAccountBalance(portfolio.cash * 415);
+        setAccountBalance(portfolio.cash || 0);
       }
       
       // Load transactions
@@ -364,7 +362,7 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <div className={transaction.amount >= 0 ? "text-green-400" : "text-red-400"}>
-                        {transaction.amount >= 0 ? '+' : ''}₦{(Math.abs(Number(transaction.amount)) * 415).toFixed(2)}
+                        {transaction.amount >= 0 ? '+' : ''}₦{Math.abs(Number(transaction.amount)).toFixed(2)}
                       </div>
                     </div>
                   ))}

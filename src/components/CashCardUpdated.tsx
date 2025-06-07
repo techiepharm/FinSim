@@ -15,14 +15,14 @@ const CashCardUpdated = ({ availableBalance }: CashCardUpdatedProps) => {
   useEffect(() => {
     setBalance(availableBalance);
     
-    // Also listen for storage events to update in real-time
+    // Listen for storage events to update in real-time
     const handleStorageChange = () => {
       try {
         const portfolioData = localStorage.getItem('portfolio');
         if (portfolioData) {
           const portfolio = JSON.parse(portfolioData);
-          // Convert USD to NGN (1 USD = 415 NGN approximately)
-          setBalance(portfolio.cash * 415);
+          // Portfolio cash is already in NGN
+          setBalance(portfolio.cash || 0);
         }
       } catch (e) {
         console.error("Error updating balance:", e);
