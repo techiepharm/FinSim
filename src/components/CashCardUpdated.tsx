@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Wallet, PlusCircle } from "lucide-react";
@@ -20,7 +21,8 @@ const CashCardUpdated = ({ availableBalance }: CashCardUpdatedProps) => {
         const portfolioData = localStorage.getItem('portfolio');
         if (portfolioData) {
           const portfolio = JSON.parse(portfolioData);
-          setBalance(portfolio.cash);
+          // Convert USD to NGN (1 USD = 415 NGN approximately)
+          setBalance(portfolio.cash * 415);
         }
       } catch (e) {
         console.error("Error updating balance:", e);
@@ -48,12 +50,12 @@ const CashCardUpdated = ({ availableBalance }: CashCardUpdatedProps) => {
     <Card className="bg-slate-800 border-slate-700 overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-green-900/50 to-emerald-800/50 pb-2">
         <CardTitle className="text-white flex justify-between items-center">
-          <span>Available Cash</span>
-          <span className="text-xs bg-blue-600 px-2 py-1 rounded-full">DEMO</span>
+          <span>Available Nigerian Naira Cash</span>
+          <span className="text-xs bg-blue-600 px-2 py-1 rounded-full">🇳🇬 DEMO</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-6">
-        <div className="text-3xl font-bold text-white mb-4">${balance.toFixed(2)}</div>
+        <div className="text-3xl font-bold text-white mb-4">₦{balance.toLocaleString()}</div>
         
         <div className="space-y-2">
           <Button 
@@ -62,7 +64,7 @@ const CashCardUpdated = ({ availableBalance }: CashCardUpdatedProps) => {
             onClick={handleWithdraw}
           >
             <Wallet className="mr-2 h-4 w-4" />
-            Withdraw Funds
+            Withdraw Nigerian Naira
           </Button>
           
           <Button 
@@ -71,13 +73,13 @@ const CashCardUpdated = ({ availableBalance }: CashCardUpdatedProps) => {
             onClick={handleAddFunds}
           >
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Demo Funds
+            Add Demo Nigerian Naira
           </Button>
         </div>
         
         <div className="mt-4 p-2 bg-blue-900/30 border border-blue-700/50 rounded-md">
           <p className="text-blue-400 text-xs text-center">
-            💡 Virtual money for safe learning
+            💡 Virtual Nigerian Naira for safe NSE learning
           </p>
         </div>
       </CardContent>

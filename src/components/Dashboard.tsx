@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -17,8 +18,8 @@ const Dashboard = () => {
   const username = "Ezra Folorunso";
   const [userLevel] = useState<'basic' | 'premium'>('basic'); // Demo: starts as basic
   
-  // User account info
-  const [accountBalance, setAccountBalance] = useState(1000);
+  // User account info - converting to Nigerian Naira (₦)
+  const [accountBalance, setAccountBalance] = useState(415000); // ₦415,000 (converted from $1000 USD)
   const [recentTransactions, setRecentTransactions] = useState([]);
   
   // Learning progress
@@ -35,7 +36,8 @@ const Dashboard = () => {
       const storedPortfolio = localStorage.getItem('portfolio');
       if (storedPortfolio) {
         const portfolio = JSON.parse(storedPortfolio);
-        setAccountBalance(portfolio.cash);
+        // Convert USD to NGN (1 USD = 415 NGN approximately)
+        setAccountBalance(portfolio.cash * 415);
       }
       
       // Load transactions
@@ -71,8 +73,8 @@ const Dashboard = () => {
       "Consider saving 20% of your income for long-term goals and emergencies.",
       "Track your expenses to identify areas where you can cut back.",
       "Try to limit debt repayments to less than 36% of your gross income.",
-      "Invest regularly even in small amounts to benefit from compound interest.",
-      "Consider allocating 50% to needs, 30% to wants, and 20% to savings and debt repayment."
+      "Invest regularly even in small amounts to benefit from compound interest in the Nigerian Stock Exchange.",
+      "Consider allocating 50% to needs, 30% to wants, and 20% to savings and debt repayment in Nigerian Naira."
     ];
     
     // Show a tip on load
@@ -81,8 +83,8 @@ const Dashboard = () => {
     
     // Show demo account reminder
     setTimeout(() => {
-      toast("🎯 Demo Account Active", {
-        description: "You're using virtual money - perfect for learning without risk!",
+      toast("🎯 Nigerian Demo Account Active", {
+        description: "You're using virtual Nigerian Naira - perfect for learning NSE trading without risk!",
         className: "bg-blue-600 border-blue-700 text-white",
         duration: 6000,
       });
@@ -105,9 +107,9 @@ const Dashboard = () => {
   };
 
   const generateFinancialReport = () => {
-    handleFeatureClick("Financial Report", "Get insights into your spending patterns and financial health");
-    toast("📊 Financial Report Generated", {
-      description: "Your demo financial health report shows excellent progress! Keep up the great work.",
+    handleFeatureClick("Nigerian Financial Report", "Get insights into your Nigerian Naira spending patterns and NSE investment health");
+    toast("📊 Nigerian Financial Report Generated", {
+      description: "Your demo financial health report shows excellent progress in Nigerian market! Keep up the great work.",
       className: "bg-green-600 border-green-700 text-white",
       duration: 4000,
     });
@@ -122,7 +124,7 @@ const Dashboard = () => {
         <div className="flex flex-col md:flex-row justify-between items-start mb-6 relative">
           <div className="flex-1">
             <h2 className="text-3xl font-bold mb-2 text-white">Welcome, {username}</h2>
-            <p className="text-slate-400">🎯 Demo Account - Your financial journey at a glance</p>
+            <p className="text-slate-400">🇳🇬 Nigerian Demo Account - Your financial journey at a glance</p>
           </div>
           
           {/* Small ATM positioned at top right */}
@@ -141,16 +143,16 @@ const Dashboard = () => {
           <div className="space-y-4">
             <CashCardUpdated availableBalance={accountBalance} />
             <div className="text-center">
-              <p className="text-sm text-slate-400 mb-2">💳 Cash Management Feature</p>
+              <p className="text-sm text-slate-400 mb-2">🇳🇬 Nigerian Naira Cash Management</p>
               <Button 
                 size="sm" 
                 className="w-full bg-blue-600 hover:bg-blue-700"
                 onClick={() => {
-                  handleFeatureClick("Cash Management", "Manage your cash balance and view transaction history");
-                  toast("💰 Demo Cash", { description: "Your virtual cash balance is ready for trading and savings!" });
+                  handleFeatureClick("Nigerian Cash Management", "Manage your Nigerian Naira balance and view NSE transaction history");
+                  toast("💰 Demo Nigerian Naira", { description: "Your virtual ₦ balance is ready for NSE trading and savings!" });
                 }}
               >
-                Click Here to Manage Cash
+                Click Here to Manage ₦ Cash
               </Button>
             </div>
           </div>
@@ -158,16 +160,16 @@ const Dashboard = () => {
           <div className="space-y-4">
             <VirtualCard userLevel={userLevel} balance={accountBalance} />
             <div className="text-center">
-              <p className="text-sm text-slate-400 mb-2">💳 Virtual Card Feature</p>
+              <p className="text-sm text-slate-400 mb-2">💳 Nigerian Virtual Card Feature</p>
               <Button 
                 size="sm" 
                 className="w-full bg-purple-600 hover:bg-purple-700"
                 onClick={() => {
-                  handleFeatureClick("Virtual Card", "Use your virtual debit card for demo transactions");
-                  toast("💳 Virtual Card Ready", { description: "Your demo card is active and ready to use!" });
+                  handleFeatureClick("Nigerian Virtual Card", "Use your virtual Nigerian debit card for demo transactions");
+                  toast("💳 Nigerian Virtual Card Ready", { description: "Your demo card is active and ready for ₦ transactions!" });
                 }}
               >
-                Click Here to Use Virtual Card
+                Click Here to Use Nigerian Virtual Card
               </Button>
             </div>
           </div>
@@ -178,13 +180,13 @@ const Dashboard = () => {
               onBalanceUpdate={handleBalanceUpdate}
             />
             <div className="text-center">
-              <p className="text-sm text-slate-400 mb-2">🏦 Savings Feature</p>
+              <p className="text-sm text-slate-400 mb-2">🇳🇬 Nigerian Naira Savings Feature</p>
               <Button 
                 size="sm" 
                 className="w-full bg-green-600 hover:bg-green-700"
                 onClick={() => setShowSavingsManagement(true)}
               >
-                Click Here to Manage Savings
+                Click Here to Manage ₦ Savings
               </Button>
             </div>
           </div>
@@ -194,20 +196,20 @@ const Dashboard = () => {
         <Card className="bg-gradient-to-r from-green-900/50 to-emerald-800/50 border-green-600/50">
           <CardContent className="p-6 text-center">
             <h3 className="text-3xl font-bold text-green-300 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
-              📈 Stock Trading Platform
+              📈 Nigerian Stock Exchange (NSE) Trading Platform
             </h3>
             <p className="text-green-200 mb-6 text-lg">
-              Begin your investment journey with our virtual trading platform featuring real-time data and detailed stock charts
+              Begin your investment journey in the Nigerian Stock Exchange with virtual Nigerian Naira, featuring real-time NSE data and detailed stock charts
             </p>
             <Button 
               size="lg"
               className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg font-semibold"
               onClick={() => {
-                handleFeatureClick("Start Trading", "Begin your investment journey with virtual money to learn without risk");
+                handleFeatureClick("Start NSE Trading", "Begin your Nigerian investment journey with virtual Naira to learn NSE trading without risk");
                 window.location.href = '/trading';
               }}
             >
-              Click Here to Start Trading
+              Click Here to Start NSE Trading
             </Button>
           </CardContent>
         </Card>
@@ -255,7 +257,7 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <BookOpen className="h-5 w-5" />
-                📚 Learning Center
+                📚 Nigerian Financial Learning Center
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -264,11 +266,11 @@ const Dashboard = () => {
                 <span className="text-slate-400">Completed: {completedLessons}/{totalLessons} lessons</span>
                 <span className="text-green-400">{learningProgress}%</span>
               </div>
-              <p className="text-sm text-slate-300 mb-3">Interactive financial education with quizzes and real-world examples</p>
+              <p className="text-sm text-slate-300 mb-3">Interactive Nigerian financial education with NSE trading quizzes and real-world examples</p>
               <Button 
                 className="w-full bg-purple-600 hover:bg-purple-700"
                 onClick={() => {
-                  handleFeatureClick("Learning Center", "Improve your financial literacy with interactive lessons and quizzes");
+                  handleFeatureClick("Nigerian Learning Center", "Improve your Nigerian financial literacy with interactive NSE lessons and quizzes");
                   window.location.href = '/learning';
                 }}
               >
@@ -282,46 +284,46 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
-                ⚡ Quick Actions
+                ⚡ Quick NSE Actions
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
-                <p className="text-xs text-slate-400">📊 Trading Platform</p>
+                <p className="text-xs text-slate-400">📊 NSE Trading Platform</p>
                 <Button 
                   className="w-full bg-green-800 hover:bg-green-700"
                   onClick={() => {
-                    handleFeatureClick("Trading Platform", "Access real-time stock data and make virtual trades to learn investing");
+                    handleFeatureClick("NSE Trading Platform", "Access real-time Nigerian Stock Exchange data and make virtual trades to learn investing");
                     window.location.href = '/trading';
                   }}
                 >
-                  Click Here to Trade Stocks
+                  Click Here to Trade NSE Stocks
                 </Button>
               </div>
               <div className="space-y-2">
-                <p className="text-xs text-slate-400">🎯 Financial Goals</p>
+                <p className="text-xs text-slate-400">🎯 Nigerian Financial Goals</p>
                 <Button 
                   className="w-full bg-purple-800 hover:bg-purple-700"
                   onClick={() => {
-                    handleFeatureClick("Financial Goals", "Set and track your financial objectives with personalized recommendations");
+                    handleFeatureClick("Nigerian Financial Goals", "Set and track your Nigerian financial objectives with personalized recommendations");
                     window.location.href = '/goals';
                   }}
                 >
                   <Target className="mr-2 h-4 w-4" />
-                  Click Here to Set Goals
+                  Click Here to Set ₦ Goals
                 </Button>
               </div>
               <div className="space-y-2">
-                <p className="text-xs text-slate-400">📅 Calendar & Planning</p>
+                <p className="text-xs text-slate-400">📅 Nigerian Calendar & Planning</p>
                 <Button 
                   className="w-full bg-indigo-800 hover:bg-indigo-700"
                   onClick={() => {
-                    handleFeatureClick("Calendar View", "Track financial events, bill due dates, and investment milestones");
+                    handleFeatureClick("Nigerian Calendar View", "Track Nigerian financial events, bill due dates, and NSE investment milestones");
                     window.location.href = '/calendar';
                   }}
                 >
                   <Calendar className="mr-2 h-4 w-4" />
-                  Click Here to View Calendar
+                  Click Here to View Nigerian Calendar
                 </Button>
               </div>
             </CardContent>
@@ -332,7 +334,7 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                💼 Recent Activity Feature
+                💼 Recent Nigerian Activity Feature
               </CardTitle>
             </CardHeader>
             <CardContent className="max-h-80 overflow-y-auto">
@@ -362,7 +364,7 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <div className={transaction.amount >= 0 ? "text-green-400" : "text-red-400"}>
-                        {transaction.amount >= 0 ? '+' : ''}${Math.abs(Number(transaction.amount)).toFixed(2)}
+                        {transaction.amount >= 0 ? '+' : ''}₦{(Math.abs(Number(transaction.amount)) * 415).toFixed(2)}
                       </div>
                     </div>
                   ))}
@@ -371,37 +373,37 @@ const Dashboard = () => {
                     variant="ghost" 
                     className="w-full mt-2 text-green-400" 
                     onClick={() => {
-                      handleFeatureClick("Transaction History", "View all your past transactions and account activity");
+                      handleFeatureClick("Nigerian Transaction History", "View all your past Nigerian transactions and NSE account activity");
                       window.location.href = '/transactions';
                     }}
                   >
-                    Click Here to View All Transactions
+                    Click Here to View All Nigerian Transactions
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>
               ) : (
                 <div className="text-center py-8 text-slate-500">
-                  <p className="mb-4">No transactions yet. Start your financial journey!</p>
+                  <p className="mb-4">No Nigerian transactions yet. Start your NSE financial journey!</p>
                   <div className="grid grid-cols-2 gap-2">
                     <Button 
                       size="sm" 
                       onClick={() => {
-                        handleFeatureClick("Demo Trading", "Try virtual trading to learn without risk");
+                        handleFeatureClick("Demo NSE Trading", "Try virtual Nigerian Stock Exchange trading to learn without risk");
                         window.location.href = '/trading';
                       }}
                     >
-                      Click Here to Try Trading
+                      Click Here to Try NSE Trading
                     </Button>
                     <Button 
                       size="sm" 
                       variant="outline" 
                       onClick={() => {
-                        handleFeatureClick("Add Virtual Funds", "Add demo money to your account");
-                        toast("💰 Demo Funds", { description: "Added $500 virtual funds to your account!" });
-                        setAccountBalance(prev => prev + 500);
+                        handleFeatureClick("Add Virtual Nigerian Funds", "Add demo Nigerian Naira to your account");
+                        toast("💰 Demo Nigerian Funds", { description: "Added ₦207,500 virtual funds to your account!" });
+                        setAccountBalance(prev => prev + 207500);
                       }}
                     >
-                      Click Here to Add Demo Funds
+                      Click Here to Add Demo ₦ Funds
                     </Button>
                   </div>
                 </div>
@@ -416,22 +418,22 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Target className="h-5 w-5" />
-                📊 Financial Health Feature
+                📊 Nigerian Financial Health Feature
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-slate-400">Demo Progress:</span>
+                <span className="text-slate-400">Nigerian Demo Progress:</span>
                 <span className="text-green-400">Excellent</span>
               </div>
               <Progress value={85} className="h-2 mb-2" />
-              <p className="text-sm text-slate-300 mb-3">Get comprehensive analysis of your financial health with actionable insights</p>
+              <p className="text-sm text-slate-300 mb-3">Get comprehensive analysis of your Nigerian financial health with actionable NSE insights</p>
               
               <Button 
                 onClick={generateFinancialReport}
                 className="w-full bg-slate-700 hover:bg-slate-600"
               >
-                Click Here to Generate Financial Report
+                Click Here to Generate Nigerian Financial Report
               </Button>
 
               <div className="mt-4 space-y-2">
@@ -441,7 +443,7 @@ const Dashboard = () => {
                   </div>
                   <div>
                     <h4 className="font-medium text-white">Next Lesson</h4>
-                    <p className="text-sm text-slate-400">Budgeting Basics</p>
+                    <p className="text-sm text-slate-400">Nigerian Budgeting Basics</p>
                     <Progress value={75} className="h-1 mt-1" />
                   </div>
                 </div>
@@ -450,7 +452,7 @@ const Dashboard = () => {
               <Button 
                 className="w-full bg-green-600 hover:bg-green-700 mt-2" 
                 onClick={() => {
-                  handleFeatureClick("Continue Learning", "Resume your financial education journey with the next lesson");
+                  handleFeatureClick("Continue Nigerian Learning", "Resume your Nigerian financial education journey with the next lesson");
                   window.location.href = '/learning';
                 }}
               >
@@ -465,33 +467,33 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <PieChart className="h-5 w-5" />
-                📈 Portfolio Feature
+                📈 Nigerian Portfolio Feature
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-green-400">${accountBalance.toFixed(2)}</p>
-                <p className="text-sm text-slate-400">Total Portfolio Value</p>
+                <p className="text-2xl font-bold text-green-400">₦{accountBalance.toLocaleString()}</p>
+                <p className="text-sm text-slate-400">Total Nigerian Portfolio Value</p>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Cash</span>
-                  <span className="text-white">${accountBalance.toFixed(2)}</span>
+                  <span className="text-slate-400">Cash (₦)</span>
+                  <span className="text-white">₦{accountBalance.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Stocks</span>
-                  <span className="text-white">$0.00</span>
+                  <span className="text-slate-400">NSE Stocks</span>
+                  <span className="text-white">₦0.00</span>
                 </div>
               </div>
-              <p className="text-sm text-slate-300">View detailed portfolio analysis and performance metrics</p>
+              <p className="text-sm text-slate-300">View detailed Nigerian portfolio analysis and NSE performance metrics</p>
               <Button 
                 className="w-full bg-blue-600 hover:bg-blue-700"
                 onClick={() => {
-                  handleFeatureClick("Portfolio Management", "Track your investments and analyze performance");
+                  handleFeatureClick("Nigerian Portfolio Management", "Track your NSE investments and analyze performance in Nigerian Naira");
                   window.location.href = '/portfolio';
                 }}
               >
-                Click Here to View Portfolio
+                Click Here to View Nigerian Portfolio
               </Button>
             </CardContent>
           </Card>
@@ -501,23 +503,23 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Receipt className="h-5 w-5" />
-                📋 Transaction History Feature
+                📋 Nigerian Transaction History Feature
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-blue-400">{recentTransactions.length}</p>
-                <p className="text-sm text-slate-400">Recent Transactions</p>
+                <p className="text-sm text-slate-400">Recent Nigerian Transactions</p>
               </div>
-              <p className="text-sm text-slate-300">Complete transaction history with filtering and export options</p>
+              <p className="text-sm text-slate-300">Complete Nigerian transaction history with filtering and export options</p>
               <Button 
                 className="w-full bg-indigo-600 hover:bg-indigo-700"
                 onClick={() => {
-                  handleFeatureClick("Transaction History", "View complete transaction history with advanced filtering");
+                  handleFeatureClick("Nigerian Transaction History", "View complete Nigerian transaction history with advanced filtering");
                   window.location.href = '/transactions';
                 }}
               >
-                Click Here to View All Transactions
+                Click Here to View All Nigerian Transactions
               </Button>
             </CardContent>
           </Card>
@@ -528,17 +530,17 @@ const Dashboard = () => {
           <CardContent className="p-4 flex items-start">
             <Bell className="h-6 w-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
             <div className="flex-1">
-              <h3 className="font-medium text-white mb-1">💡 Daily Financial Tip Feature</h3>
+              <h3 className="font-medium text-white mb-1">💡 Daily Nigerian Financial Tip Feature</h3>
               <p className="text-slate-300 mb-3">{financialTip}</p>
               <Button 
                 size="sm"
                 className="bg-green-600 hover:bg-green-700"
                 onClick={() => {
-                  handleFeatureClick("Financial Tips", "Get daily personalized financial advice and tips");
-                  toast("💡 More Tips Available", { description: "Visit the Learning Center for comprehensive financial education!" });
+                  handleFeatureClick("Nigerian Financial Tips", "Get daily personalized Nigerian financial advice and NSE tips");
+                  toast("💡 More Nigerian Tips Available", { description: "Visit the Learning Center for comprehensive Nigerian financial education!" });
                 }}
               >
-                Click Here for More Financial Tips
+                Click Here for More Nigerian Financial Tips
               </Button>
             </div>
           </CardContent>
