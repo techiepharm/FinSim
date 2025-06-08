@@ -5,20 +5,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState } from "react";
-import Index from "./pages/Index";
+import IndexSupabase from "./pages/IndexSupabase";
 import NotFound from "./pages/NotFound";
 import Goals from "./components/Goals";
 import CalendarView from "./components/CalendarView";
 import TransactionHistory from "./components/TransactionHistory";
 import WithdrawFunds from "./components/WithdrawFunds";
 import AddFunds from "./components/AddFunds";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 
 // Create the client as a component function
 const App = () => {
@@ -50,13 +43,13 @@ const App = () => {
         />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<IndexSupabase />} />
             <Route path="/goals" element={<Goals />} />
             <Route path="/calendar" element={<CalendarView />} />
             <Route path="/transactions" element={<TransactionHistory />} />
             <Route path="/withdraw" element={<WithdrawFunds />} />
             <Route path="/add-funds" element={<AddFunds />} />
-            <Route path="/trading" element={<Index activePage="trading" />} />
+            <Route path="/trading" element={<IndexSupabase activePage="trading" />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

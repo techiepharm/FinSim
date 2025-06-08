@@ -9,13 +9,348 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      locked_savings: {
+        Row: {
+          amount: number
+          can_use_as_collateral: boolean | null
+          created_at: string | null
+          id: string
+          interest_rate: number | null
+          is_active: boolean | null
+          lock_date: string | null
+          unlock_date: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          can_use_as_collateral?: boolean | null
+          created_at?: string | null
+          id?: string
+          interest_rate?: number | null
+          is_active?: boolean | null
+          lock_date?: string | null
+          unlock_date: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          can_use_as_collateral?: boolean | null
+          created_at?: string | null
+          id?: string
+          interest_rate?: number | null
+          is_active?: boolean | null
+          lock_date?: string | null
+          unlock_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          bvn: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          email: string
+          full_name: string
+          id: string
+          nin: string | null
+          phone_number: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          bvn?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          email: string
+          full_name: string
+          id: string
+          nin?: string | null
+          phone_number?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          bvn?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          nin?: string | null
+          phone_number?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_credit_scores: {
+        Row: {
+          credit_mix_score: number | null
+          credit_score: number
+          credit_utilization_score: number | null
+          factors_affecting_score: Json | null
+          id: string
+          length_of_credit_score: number | null
+          new_credit_score: number | null
+          payment_history_score: number | null
+          score_date: string | null
+          user_id: string
+        }
+        Insert: {
+          credit_mix_score?: number | null
+          credit_score?: number
+          credit_utilization_score?: number | null
+          factors_affecting_score?: Json | null
+          id?: string
+          length_of_credit_score?: number | null
+          new_credit_score?: number | null
+          payment_history_score?: number | null
+          score_date?: string | null
+          user_id: string
+        }
+        Update: {
+          credit_mix_score?: number | null
+          credit_score?: number
+          credit_utilization_score?: number | null
+          factors_affecting_score?: Json | null
+          id?: string
+          length_of_credit_score?: number | null
+          new_credit_score?: number | null
+          payment_history_score?: number | null
+          score_date?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_debts: {
+        Row: {
+          created_at: string | null
+          creditor_name: string
+          current_balance: number
+          debt_type: string
+          due_date: string
+          id: string
+          interest_rate: number
+          minimum_payment: number
+          principal_amount: number
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          creditor_name: string
+          current_balance: number
+          debt_type: string
+          due_date: string
+          id?: string
+          interest_rate: number
+          minimum_payment: number
+          principal_amount: number
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          creditor_name?: string
+          current_balance?: number
+          debt_type?: string
+          due_date?: string
+          id?: string
+          interest_rate?: number
+          minimum_payment?: number
+          principal_amount?: number
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_loans: {
+        Row: {
+          collateral_amount: number | null
+          collateral_savings_id: string | null
+          created_at: string | null
+          disbursement_date: string | null
+          id: string
+          interest_rate: number
+          loan_amount: number
+          loan_type: string
+          monthly_payment: number
+          next_payment_date: string | null
+          remaining_balance: number
+          status: string | null
+          term_months: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          collateral_amount?: number | null
+          collateral_savings_id?: string | null
+          created_at?: string | null
+          disbursement_date?: string | null
+          id?: string
+          interest_rate: number
+          loan_amount: number
+          loan_type: string
+          monthly_payment: number
+          next_payment_date?: string | null
+          remaining_balance: number
+          status?: string | null
+          term_months: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          collateral_amount?: number | null
+          collateral_savings_id?: string | null
+          created_at?: string | null
+          disbursement_date?: string | null
+          id?: string
+          interest_rate?: number
+          loan_amount?: number
+          loan_type?: string
+          monthly_payment?: number
+          next_payment_date?: string | null
+          remaining_balance?: number
+          status?: string | null
+          term_months?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_loans_collateral_savings_id_fkey"
+            columns: ["collateral_savings_id"]
+            isOneToOne: false
+            referencedRelation: "locked_savings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_portfolios: {
+        Row: {
+          cash_balance: number | null
+          created_at: string | null
+          id: string
+          locked_savings: number | null
+          total_investments: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cash_balance?: number | null
+          created_at?: string | null
+          id?: string
+          locked_savings?: number | null
+          total_investments?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cash_balance?: number | null
+          created_at?: string | null
+          id?: string
+          locked_savings?: number | null
+          total_investments?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_tax_records: {
+        Row: {
+          capital_gains_tax: number | null
+          created_at: string | null
+          filing_date: string | null
+          id: string
+          income_tax: number | null
+          tax_status: string | null
+          tax_year: number
+          total_tax_paid: number | null
+          updated_at: string | null
+          user_id: string
+          withholding_tax: number | null
+        }
+        Insert: {
+          capital_gains_tax?: number | null
+          created_at?: string | null
+          filing_date?: string | null
+          id?: string
+          income_tax?: number | null
+          tax_status?: string | null
+          tax_year: number
+          total_tax_paid?: number | null
+          updated_at?: string | null
+          user_id: string
+          withholding_tax?: number | null
+        }
+        Update: {
+          capital_gains_tax?: number | null
+          created_at?: string | null
+          filing_date?: string | null
+          id?: string
+          income_tax?: number | null
+          tax_status?: string | null
+          tax_year?: number
+          total_tax_paid?: number | null
+          updated_at?: string | null
+          user_id?: string
+          withholding_tax?: number | null
+        }
+        Relationships: []
+      }
+      user_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string | null
+          id: string
+          quantity: number | null
+          symbol: string | null
+          tax_amount: number | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          quantity?: number | null
+          symbol?: string | null
+          tax_amount?: number | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          quantity?: number | null
+          symbol?: string | null
+          tax_amount?: number | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_capital_gains_tax: {
+        Args: { gain_amount: number }
+        Returns: number
+      }
+      update_credit_score: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
