@@ -12,6 +12,7 @@ import CalendarView from "./components/CalendarView";
 import TransactionHistory from "./components/TransactionHistory";
 import WithdrawFunds from "./components/WithdrawFunds";
 import AddFunds from "./components/AddFunds";
+import UserSettings from "./components/UserSettings";
 
 // Create the client as a component function
 const App = () => {
@@ -49,6 +50,7 @@ const App = () => {
             <Route path="/transactions" element={<TransactionHistory />} />
             <Route path="/withdraw" element={<WithdrawFunds />} />
             <Route path="/add-funds" element={<AddFunds />} />
+            <Route path="/settings" element={<UserSettings />} />
             <Route path="/trading" element={<IndexSupabase activePage="trading" />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

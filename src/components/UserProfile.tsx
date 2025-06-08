@@ -9,7 +9,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface UserProfileProps {
   user: {
@@ -20,10 +21,16 @@ interface UserProfileProps {
 }
 
 const UserProfile = ({ user, onLogout }: UserProfileProps) => {
+  const navigate = useNavigate();
+
   // Get initials from name (first letter of first name)
   const getInitials = (name: string) => {
     const firstName = name.split(' ')[0];
     return firstName.charAt(0).toUpperCase();
+  };
+
+  const handleSettingsClick = () => {
+    navigate('/settings');
   };
 
   return (
@@ -47,6 +54,10 @@ const UserProfile = ({ user, onLogout }: UserProfileProps) => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-slate-700" />
+        <DropdownMenuItem onClick={handleSettingsClick} className="hover:bg-slate-700">
+          <Settings className="mr-2 h-4 w-4" />
+          <span>Account Settings</span>
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={onLogout} className="text-red-400 hover:text-red-300 hover:bg-slate-700">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
