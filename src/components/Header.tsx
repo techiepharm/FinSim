@@ -33,6 +33,24 @@ const Header = ({ activePage, setActivePage, currentUser, onShowAuth, onLogout }
     { id: 'calendar', label: 'Calendar', icon: <CalendarDays size={20} /> },
     { id: 'transactions', label: 'Transactions', icon: <Receipt size={20} /> },
   ];
+
+  // Helper function to get user initials with proper null checking
+  const getUserInitials = (user: any) => {
+    if (!user) return 'U';
+    if (user.name && typeof user.name === 'string') {
+      return user.name.charAt(0).toUpperCase();
+    }
+    if (user.email && typeof user.email === 'string') {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
+  // Helper function to get display name
+  const getDisplayName = (user: any) => {
+    if (!user) return 'User';
+    return user.name || user.email || 'User';
+  };
   
   return (
     <header className="bg-slate-800 border-b border-slate-700 py-4 px-6 sticky top-0 z-50">
@@ -111,9 +129,9 @@ const Header = ({ activePage, setActivePage, currentUser, onShowAuth, onLogout }
             <div className="border-t border-slate-600 pt-2">
               <div className="px-6 py-3 flex items-center gap-3">
                 <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold">
-                  {currentUser.name.charAt(0).toUpperCase()}
+                  {getUserInitials(currentUser)}
                 </div>
-                <span className="text-white">{currentUser.name}</span>
+                <span className="text-white">{getDisplayName(currentUser)}</span>
               </div>
               <Button
                 variant="ghost"
