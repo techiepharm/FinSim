@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 
 interface UserProfileProps {
   user: {
-    name: string;
+    name?: string;
     email: string;
   };
   onLogout: () => void;
@@ -23,8 +23,12 @@ interface UserProfileProps {
 const UserProfile = ({ user, onLogout }: UserProfileProps) => {
   const navigate = useNavigate();
 
-  // Get initials from name (first letter of first name)
-  const getInitials = (name: string) => {
+  // Get initials from name (first letter of first name) with proper null checking
+  const getInitials = (name: string | undefined | null) => {
+    if (!name || typeof name !== 'string') {
+      // Fallback to first letter of email if name is not available
+      return user.email ? user.email.charAt(0).toUpperCase() : 'U';
+    }
     const firstName = name.split(' ')[0];
     return firstName.charAt(0).toUpperCase();
   };
@@ -32,6 +36,9 @@ const UserProfile = ({ user, onLogout }: UserProfileProps) => {
   const handleSettingsClick = () => {
     navigate('/settings');
   };
+
+  // Use fallback display name if user.name is not available
+  const displayName = user.name || user.email || 'User';
 
   return (
     <DropdownMenu>
@@ -47,7 +54,7 @@ const UserProfile = ({ user, onLogout }: UserProfileProps) => {
       <DropdownMenuContent className="w-56 bg-slate-800 border-slate-700 text-white" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name}</p>
+            <p className="text-sm font-medium leading-none">{displayName}</p>
             <p className="text-xs leading-none text-slate-400">
               {user.email}
             </p>
