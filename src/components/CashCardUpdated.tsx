@@ -50,7 +50,7 @@ const CashCardUpdated = ({ availableBalance }: CashCardUpdatedProps) => {
     <Card className="bg-slate-800 border-slate-700 overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-green-900/50 to-emerald-800/50 pb-2">
         <CardTitle className="text-white flex justify-between items-center">
-          <span>Available Nigerian Naira Cash</span>
+          <span>Available Cash</span>
           <span className="text-xs bg-blue-600 px-2 py-1 rounded-full">🇳🇬 DEMO</span>
         </CardTitle>
       </CardHeader>
@@ -64,7 +64,7 @@ const CashCardUpdated = ({ availableBalance }: CashCardUpdatedProps) => {
             onClick={handleWithdraw}
           >
             <Wallet className="mr-2 h-4 w-4" />
-            Withdraw Nigerian Naira
+            Withdraw Cash
           </Button>
           
           <Button 
@@ -73,13 +73,13 @@ const CashCardUpdated = ({ availableBalance }: CashCardUpdatedProps) => {
             onClick={handleAddFunds}
           >
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Demo Nigerian Naira
+            Add Demo Cash
           </Button>
         </div>
         
         <div className="mt-4 p-2 bg-blue-900/30 border border-blue-700/50 rounded-md">
           <p className="text-blue-400 text-xs text-center">
-            💡 Virtual Nigerian Naira for safe NSE learning
+            💡 Virtual cash for safe learning
           </p>
         </div>
       </CardContent>

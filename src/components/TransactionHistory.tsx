@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,42 +40,42 @@ const TransactionHistory = () => {
       date: new Date().toISOString(),
       type: 'DEPOSIT',
       description: 'Initial Demo Balance',
-      amount: 1000,
-      balance: 1000
+      amount: 415000,
+      balance: 415000
     },
     {
       id: 'demo-2',
       date: new Date(Date.now() - 86400000).toISOString(),
       type: 'BUY',
-      symbol: 'AAPL',
-      description: 'Demo Stock Purchase - Apple Inc.',
-      amount: -150,
-      balance: 850
+      symbol: 'GTCO',
+      description: 'Demo Stock Purchase - Guaranty Trust',
+      amount: -25000,
+      balance: 390000
     },
     {
       id: 'demo-3',
       date: new Date(Date.now() - 172800000).toISOString(),
       type: 'SAVINGS_DEPOSIT',
       description: 'Demo Savings Deposit',
-      amount: -100,
-      balance: 750
+      amount: -50000,
+      balance: 340000
     },
     {
       id: 'demo-4',
       date: new Date(Date.now() - 259200000).toISOString(),
       type: 'SELL',
-      symbol: 'TSLA',
-      description: 'Demo Stock Sale - Tesla Inc.',
-      amount: 200,
-      balance: 950
+      symbol: 'DANGCEM',
+      description: 'Demo Stock Sale - Dangote Cement',
+      amount: 75000,
+      balance: 415000
     },
     {
       id: 'demo-5',
       date: new Date(Date.now() - 345600000).toISOString(),
       type: 'WITHDRAWAL',
-      description: 'Demo ATM Withdrawal',
-      amount: -50,
-      balance: 900
+      description: 'ATM Withdrawal',
+      amount: -15000,
+      balance: 400000
     }
   ];
 
@@ -151,7 +150,7 @@ const TransactionHistory = () => {
   };
 
   const formatAmount = (amount: number) => {
-    return `${amount >= 0 ? '+' : ''}$${Math.abs(amount).toFixed(2)}`;
+    return `${amount >= 0 ? '+' : ''}₦${Math.abs(amount).toLocaleString()}`;
   };
 
   const getTransactionTypeLabel = (type: string) => {
@@ -203,7 +202,7 @@ const TransactionHistory = () => {
                 <div>
                   <p className="text-slate-400 text-sm">Total Income</p>
                   <p className="text-2xl font-bold text-green-400">
-                    ${calculateTotal('income').toFixed(2)}
+                    ₦{calculateTotal('income').toLocaleString()}
                   </p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-green-400" />
@@ -217,7 +216,7 @@ const TransactionHistory = () => {
                 <div>
                   <p className="text-slate-400 text-sm">Total Expenses</p>
                   <p className="text-2xl font-bold text-red-400">
-                    ${calculateTotal('expense').toFixed(2)}
+                    ₦{calculateTotal('expense').toLocaleString()}
                   </p>
                 </div>
                 <TrendingDown className="h-8 w-8 text-red-400" />
@@ -235,7 +234,7 @@ const TransactionHistory = () => {
                       ? 'text-green-400' 
                       : 'text-red-400'
                   }`}>
-                    ${(calculateTotal('income') - calculateTotal('expense')).toFixed(2)}
+                    ₦{(calculateTotal('income') - calculateTotal('expense')).toLocaleString()}
                   </p>
                 </div>
                 <CreditCard className="h-8 w-8 text-blue-400" />
@@ -332,7 +331,7 @@ const TransactionHistory = () => {
                       </p>
                       {transaction.balance !== undefined && (
                         <p className="text-xs text-slate-400">
-                          Balance: ${transaction.balance.toFixed(2)}
+                          Balance: ₦{transaction.balance.toLocaleString()}
                         </p>
                       )}
                     </div>
