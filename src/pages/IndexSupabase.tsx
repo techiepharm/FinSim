@@ -10,10 +10,7 @@ import FinancialBotWithLimits from "@/components/FinancialBotWithLimits";
 import Goals from "@/components/Goals";
 import CalendarView from "@/components/CalendarView";
 import TransactionHistory from "@/components/TransactionHistory";
-import SupabaseAuthModal from "@/components/SupabaseAuthModal";
-import PremiumUpgrade from "@/components/PremiumUpgrade";
 import TransactionNotifications from "@/components/TransactionNotifications";
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { Button } from "@/components/ui/button";
 import { Bot } from "lucide-react";
 import {
@@ -26,36 +23,29 @@ import {
 
 const IndexSupabase = ({ activePage: initialPage = 'dashboard' }) => {
   const location = useLocation();
-  const { user, loading, signOut, isAuthenticated } = useSupabaseAuth();
   const [activePage, setActivePage] = useState(initialPage);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showPremiumUpgrade, setShowPremiumUpgrade] = useState(false);
-  const [userLevel, setUserLevel] = useState<'basic' | 'premium'>('basic');
+  const [userLevel] = useState<'basic' | 'premium'>('basic');
+  
+  // Mock user for demo purposes
+  const mockUser = {
+    id: 'demo-user-123',
+    email: 'demo@finsavvy.ng',
+    name: 'Ezra Folorunso',
+    user_metadata: {
+      full_name: 'Ezra Folorunso'
+    }
+  };
   
   useEffect(() => {
     // If the URL is /trading, set the active page to 'trading'
     if (location.pathname === '/trading') {
       setActivePage('trading');
     }
+  }, [location.pathname]);
 
-    // Show auth modal if not authenticated and not loading
-    if (!loading && !isAuthenticated) {
-      setShowAuthModal(true);
-    }
-  }, [location.pathname, isAuthenticated, loading]);
-
-  const handleAuthSuccess = (user: any) => {
-    setShowAuthModal(false);
-  };
-
-  const handleLogout = async () => {
-    await signOut();
-    setUserLevel('basic');
-    setShowAuthModal(true);
-  };
-
-  const handleUpgradeSuccess = () => {
-    setUserLevel('premium');
+  const handleLogout = () => {
+    // Mock logout - just reload the page
+    window.location.reload();
   };
   
   // Map of page IDs to components
@@ -68,28 +58,6 @@ const IndexSupabase = ({ activePage: initialPage = 'dashboard' }) => {
     'calendar': <CalendarView />,
     'transactions': <TransactionHistory />
   };
-
-  // Show loading state while checking authentication
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
-        <div className="text-white text-lg">Loading your Nigerian account...</div>
-      </div>
-    );
-  }
-
-  // Show auth modal if not logged in
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex flex-col bg-slate-900 text-white">
-        <SupabaseAuthModal 
-          isOpen={showAuthModal}
-          onClose={() => {}} // Prevent closing when not authenticated
-          onAuthSuccess={handleAuthSuccess}
-        />
-      </div>
-    );
-  }
   
   return (
     <div className="min-h-screen flex flex-col bg-slate-900 text-white">
@@ -97,21 +65,21 @@ const IndexSupabase = ({ activePage: initialPage = 'dashboard' }) => {
       <Header 
         activePage={activePage} 
         setActivePage={setActivePage}
-        currentUser={user}
-        onShowAuth={() => setShowAuthModal(true)}
+        currentUser={mockUser}
+        onShowAuth={() => {}} // No auth modal needed
         onLogout={handleLogout}
       />
       
-      <main className="flex-1">
+      <main className="flex-1 max-w-7xl mx-auto w-full">
         {pageComponents[activePage] || <SupabaseDashboard />}
         
         {/* Financial Bot Button */}
         <Drawer>
           <DrawerTrigger asChild>
             <Button 
-              className="fixed bottom-4 left-4 rounded-full w-14 h-14 bg-green-600 hover:bg-green-700 shadow-lg flex items-center justify-center z-50"
+              className="fixed bottom-6 right-6 rounded-full w-16 h-16 bg-green-600 hover:bg-green-700 shadow-lg flex items-center justify-center z-50"
             >
-              <Bot size={28} />
+              <Bot size={32} />
             </Button>
           </DrawerTrigger>
           <DrawerContent className="bg-slate-800 text-white border-slate-700">
@@ -124,19 +92,6 @@ const IndexSupabase = ({ activePage: initialPage = 'dashboard' }) => {
           </DrawerContent>
         </Drawer>
       </main>
-
-      <SupabaseAuthModal 
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onAuthSuccess={handleAuthSuccess}
-      />
-
-      <PremiumUpgrade
-        isOpen={showPremiumUpgrade}
-        onClose={() => setShowPremiumUpgrade(false)}
-        onUpgradeSuccess={handleUpgradeSuccess}
-        currentBalance={1000}
-      />
     </div>
   );
 };

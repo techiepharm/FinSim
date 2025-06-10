@@ -25,36 +25,32 @@ const App = () => {
         <Toaster />
         <Sonner 
           position="top-center"
-          expand={true}
+          expand={false}
           closeButton={true}
           richColors={true}
           className="cursor-pointer" 
           toastOptions={{
             style: {
-              position: "fixed",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              maxWidth: "400px",
-              width: "calc(100% - 32px)",
-              zIndex: "100",
-              cursor: "pointer",
+              maxWidth: "380px",
+              fontSize: "14px",
             }
           }}
         />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<IndexSupabase />} />
-            <Route path="/goals" element={<Goals />} />
-            <Route path="/calendar" element={<CalendarView />} />
-            <Route path="/transactions" element={<TransactionHistory />} />
-            <Route path="/withdraw" element={<WithdrawFunds />} />
-            <Route path="/add-funds" element={<AddFunds />} />
-            <Route path="/settings" element={<UserSettings />} />
-            <Route path="/trading" element={<IndexSupabase activePage="trading" />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <div className="min-h-screen bg-slate-900">
+            <Routes>
+              <Route path="/" element={<IndexSupabase />} />
+              <Route path="/goals" element={<Goals />} />
+              <Route path="/calendar" element={<CalendarView />} />
+              <Route path="/transactions" element={<TransactionHistory />} />
+              <Route path="/withdraw" element={<WithdrawFunds />} />
+              <Route path="/add-funds" element={<AddFunds />} />
+              <Route path="/settings" element={<UserSettings />} />
+              <Route path="/trading" element={<IndexSupabase activePage="trading" />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
-import { PieChart, DollarSign, Target, PiggyBank, CreditCard, TrendingUp } from "lucide-react";
+import { PieChart, Target, PiggyBank, CreditCard, TrendingUp } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 
 interface SplitCategory {
@@ -221,7 +220,7 @@ const SmartIncomeSplit = ({ monthlyIncome, onSplitSaved }: SmartIncomeSplitProps
           className="w-full bg-green-600 hover:bg-green-700"
           disabled={Math.abs(totalPercentage - 100) > 0.1}
         >
-          <DollarSign className="h-4 w-4 mr-2" />
+          <PieChart className="h-4 w-4 mr-2" />
           Save Income Split
         </Button>
       </CardContent>
