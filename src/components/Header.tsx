@@ -1,17 +1,38 @@
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import UserProfile from "./UserProfile";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { 
-  Home, 
+  Menu, 
+  BarChart3, 
   BookOpen, 
-  TrendingUp, 
-  PieChart, 
-  User,
-  Goal,
-  CalendarDays,
-  Receipt
+  Target, 
+  Calendar, 
+  History, 
+  Settings, 
+  LogOut,
+  Trophy,
+  Brain,
+  PiggyBank,
+  Flame,
+  Newspaper,
+  TrendingUp
 } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   activePage: string;
@@ -22,129 +43,192 @@ interface HeaderProps {
 }
 
 const Header = ({ activePage, setActivePage, currentUser, onShowAuth, onLogout }: HeaderProps) => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: <Home size={20} /> },
-    { id: 'learning', label: 'Learning Center', icon: <BookOpen size={20} /> },
-    { id: 'trading', label: 'Trading', icon: <TrendingUp size={20} /> },
-    { id: 'portfolio', label: 'Portfolio', icon: <PieChart size={20} /> },
-    { id: 'goals', label: 'Goals', icon: <Goal size={20} /> },
-    { id: 'calendar', label: 'Calendar', icon: <CalendarDays size={20} /> },
-    { id: 'transactions', label: 'Transactions', icon: <Receipt size={20} /> },
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const navigationItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, path: '/' },
+    { id: 'learning', label: 'Learning', icon: BookOpen },
+    { id: 'trading', label: 'Trading', icon: TrendingUp, path: '/trading' },
+    { id: 'portfolio', label: 'Portfolio', icon: BarChart3 },
+    { id: 'goals', label: 'Goals', icon: Target, path: '/goals' },
+    { id: 'calendar', label: 'Calendar', icon: Calendar, path: '/calendar' },
+    { id: 'transactions', label: 'Transactions', icon: History, path: '/transactions' }
   ];
 
-  // Helper function to get user initials with proper null checking
-  const getUserInitials = (user: any) => {
-    if (!user) return 'U';
-    if (user.name && typeof user.name === 'string') {
-      return user.name.charAt(0).toUpperCase();
+  const newFeatures = [
+    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
+    { id: 'risk-assessment', label: 'Risk Quiz', icon: Brain, path: '/risk-assessment' },
+    { id: 'spending-advisor', label: 'AI Advisor', icon: PiggyBank, path: '/spending-advisor' },
+    { id: 'savings-rewards', label: 'Rewards', icon: Flame, path: '/savings-rewards' },
+    { id: 'news-impact', label: 'News Impact', icon: Newspaper, path: '/news-impact' }
+  ];
+
+  const handleNavigation = (item: any) => {
+    if (item.path) {
+      navigate(item.path);
+    } else {
+      setActivePage(item.id);
     }
-    if (user.email && typeof user.email === 'string') {
-      return user.email.charAt(0).toUpperCase();
-    }
-    return 'U';
+    setIsMobileMenuOpen(false);
   };
 
-  // Helper function to get display name
-  const getDisplayName = (user: any) => {
-    if (!user) return 'User';
-    return user.name || user.email || 'User';
-  };
-  
+  const userInitials = currentUser?.user_metadata?.full_name
+    ?.split(' ')
+    .map((name: string) => name[0])
+    .join('') || 'U';
+
   return (
-    <header className="bg-slate-800 border-b border-slate-700 py-4 px-6 sticky top-0 z-50">
-      <div className="container mx-auto flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="text-green-400 h-6 w-6" />
-          <h1 className="text-xl font-bold text-green-400">FinSavvy</h1>
+    <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-50 animate-slide-in-bottom">
+      <div className="flex items-center justify-between px-4 py-3">
+        {/* Logo and Brand */}
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">FS</span>
+            </div>
+            <span className="text-white font-bold text-xl">FinSavvy</span>
+            <Badge className="bg-green-600/20 text-green-300 border-green-500 text-xs">
+              🇳🇬 Nigerian Demo
+            </Badge>
+          </div>
         </div>
-        
+
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-1">
-          {navItems.map((item) => (
+        <nav className="hidden lg:flex items-center space-x-1">
+          {navigationItems.map((item) => (
             <Button
               key={item.id}
               variant={activePage === item.id ? "default" : "ghost"}
-              className={`flex items-center gap-2 ${
-                activePage === item.id ? "bg-green-600 text-white" : "text-gray-300 hover:text-green-400"
+              size="sm"
+              onClick={() => handleNavigation(item)}
+              className={`flex items-center space-x-2 transition-all duration-200 hover-scale ${
+                activePage === item.id 
+                  ? 'bg-green-600 text-white' 
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700'
               }`}
-              onClick={() => setActivePage(item.id)}
             >
-              {item.icon}
-              <span>{item.label}</span>
-            </Button>
-          ))}
-        </nav>
-        
-        {/* Mobile Navigation Button */}
-        <Button 
-          variant="ghost" 
-          className="md:hidden"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-          </svg>
-        </Button>
-        
-        {/* User Profile or Login button */}
-        {currentUser ? (
-          <div className="hidden md:flex">
-            <UserProfile user={currentUser} onLogout={onLogout} />
-          </div>
-        ) : (
-          <Button 
-            variant="outline" 
-            className="rounded-full p-2 hidden md:flex"
-            onClick={onShowAuth}
-          >
-            <User size={20} />
-          </Button>
-        )}
-      </div>
-      
-      {/* Mobile Navigation Menu */}
-      {menuOpen && (
-        <div className="md:hidden mt-4 bg-slate-700 border-t border-slate-600">
-          {navItems.map((item) => (
-            <Button
-              key={item.id}
-              variant="ghost"
-              className={`w-full flex items-center gap-2 justify-start px-6 py-3 ${
-                activePage === item.id ? "bg-slate-600 text-green-400 font-medium" : "text-gray-300"
-              }`}
-              onClick={() => {
-                setActivePage(item.id);
-                setMenuOpen(false);
-              }}
-            >
-              {item.icon}
+              <item.icon className="w-4 h-4" />
               <span>{item.label}</span>
             </Button>
           ))}
           
-          {/* Mobile User Profile */}
-          {currentUser && (
-            <div className="border-t border-slate-600 pt-2">
-              <div className="px-6 py-3 flex items-center gap-3">
-                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold">
-                  {getUserInitials(currentUser)}
-                </div>
-                <span className="text-white">{getDisplayName(currentUser)}</span>
-              </div>
-              <Button
-                variant="ghost"
-                className="w-full flex items-center gap-2 justify-start px-6 py-3 text-red-400"
-                onClick={onLogout}
-              >
-                <User size={20} />
-                <span>Log out</span>
+          {/* New Features Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-700">
+                <Flame className="w-4 h-4 mr-2" />
+                New Features
+                <Badge className="ml-2 bg-red-600 text-white text-xs">NEW</Badge>
               </Button>
-            </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-slate-800 border-slate-700" align="end">
+              <DropdownMenuLabel className="text-slate-300">🚀 Latest Features</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-slate-700" />
+              {newFeatures.map((feature) => (
+                <DropdownMenuItem
+                  key={feature.id}
+                  onClick={() => handleNavigation(feature)}
+                  className="text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer"
+                >
+                  <feature.icon className="w-4 h-4 mr-2" />
+                  {feature.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </nav>
+
+        {/* User Menu */}
+        <div className="flex items-center space-x-3">
+          {currentUser ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full hover-scale">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-green-600 text-white">
+                      {userInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-slate-800 border-slate-700" align="end">
+                <DropdownMenuLabel className="text-slate-300">
+                  {currentUser.user_metadata?.full_name || currentUser.email}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-slate-700" />
+                <DropdownMenuItem 
+                  onClick={() => navigate('/settings')}
+                  className="text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer"
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={onLogout}
+                  className="text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button onClick={onShowAuth} className="bg-green-600 hover:bg-green-700">
+              Login
+            </Button>
           )}
+
+          {/* Mobile Menu */}
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="sm" className="lg:hidden text-slate-300">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="bg-slate-800 border-slate-700">
+              <div className="py-4">
+                <div className="space-y-2">
+                  <h3 className="text-white font-medium mb-4">Navigation</h3>
+                  {navigationItems.map((item) => (
+                    <Button
+                      key={item.id}
+                      variant={activePage === item.id ? "default" : "ghost"}
+                      className={`w-full justify-start ${
+                        activePage === item.id 
+                          ? 'bg-green-600 text-white' 
+                          : 'text-slate-300'
+                      }`}
+                      onClick={() => handleNavigation(item)}
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {item.label}
+                    </Button>
+                  ))}
+                  
+                  <div className="pt-4 border-t border-slate-700">
+                    <h4 className="text-white font-medium mb-2">🚀 New Features</h4>
+                    {newFeatures.map((feature) => (
+                      <Button
+                        key={feature.id}
+                        variant="ghost"
+                        className="w-full justify-start text-slate-300"
+                        onClick={() => handleNavigation(feature)}
+                      >
+                        <feature.icon className="mr-2 h-4 w-4" />
+                        {feature.label}
+                        {feature.id === 'leaderboard' && (
+                          <Badge className="ml-auto bg-red-600 text-white text-xs">NEW</Badge>
+                        )}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
-      )}
+      </div>
     </header>
   );
 };

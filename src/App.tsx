@@ -13,6 +13,11 @@ import TransactionHistory from "./components/TransactionHistory";
 import WithdrawFunds from "./components/WithdrawFunds";
 import AddFunds from "./components/AddFunds";
 import UserSettings from "./components/UserSettings";
+import Leaderboard from "./components/Leaderboard";
+import RiskAssessmentQuiz from "./components/RiskAssessmentQuiz";
+import AISpendingAdvisor from "./components/AISpendingAdvisor";
+import SavingsStreakRewards from "./components/SavingsStreakRewards";
+import NewsImpactAnalysis from "./components/NewsImpactAnalysis";
 
 // Create the client as a component function
 const App = () => {
@@ -47,6 +52,11 @@ const App = () => {
               <Route path="/add-funds" element={<AddFunds />} />
               <Route path="/settings" element={<UserSettings />} />
               <Route path="/trading" element={<IndexSupabase activePage="trading" />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/risk-assessment" element={<RiskAssessmentQuiz />} />
+              <Route path="/spending-advisor" element={<AISpendingAdvisor />} />
+              <Route path="/savings-rewards" element={<SavingsStreakRewards />} />
+              <Route path="/news-impact" element={<NewsImpactAnalysis />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
