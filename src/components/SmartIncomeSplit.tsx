@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
-import { PieChart, DollarSign, Target, PiggyBank, CreditCard } from "lucide-react";
+import { PieChart, DollarSign, Target, PiggyBank, CreditCard, TrendingUp } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 
 interface SplitCategory {
