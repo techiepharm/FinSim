@@ -30,7 +30,9 @@ import {
   PiggyBank,
   Flame,
   Newspaper,
-  TrendingUp
+  TrendingUp,
+  Activity,
+  Globe
 } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 
@@ -56,7 +58,9 @@ const Header = ({ activePage, setActivePage, currentUser, onShowAuth, onLogout }
     { id: 'transactions', label: 'Transactions', icon: History, path: '/transactions' }
   ];
 
-  const newFeatures = [
+  const enhancedFeatures = [
+    { id: 'market-data', label: 'Live Market Data', icon: Activity, path: '/market-data', badge: 'ENHANCED' },
+    { id: 'macro-news', label: 'Economic News', icon: Globe, path: '/macro-news', badge: 'NEW' },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
     { id: 'risk-assessment', label: 'Risk Quiz', icon: Brain, path: '/risk-assessment' },
     { id: 'spending-advisor', label: 'AI Advisor', icon: PiggyBank, path: '/spending-advisor' },
@@ -91,6 +95,9 @@ const Header = ({ activePage, setActivePage, currentUser, onShowAuth, onLogout }
             <Badge className="bg-green-600/20 text-green-300 border-green-500 text-xs">
               🇳🇬 Nigerian Demo
             </Badge>
+            <Badge className="bg-purple-600/20 text-purple-300 border-purple-500 text-xs animate-pulse">
+              ENHANCED
+            </Badge>
           </div>
         </div>
 
@@ -113,26 +120,35 @@ const Header = ({ activePage, setActivePage, currentUser, onShowAuth, onLogout }
             </Button>
           ))}
           
-          {/* New Features Dropdown */}
+          {/* Enhanced Features Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-700">
                 <Flame className="w-4 h-4 mr-2" />
-                New Features
-                <Badge className="ml-2 bg-red-600 text-white text-xs">NEW</Badge>
+                Enhanced Features
+                <Badge className="ml-2 bg-purple-600 text-white text-xs animate-pulse">ENHANCED</Badge>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-slate-800 border-slate-700" align="end">
-              <DropdownMenuLabel className="text-slate-300">🚀 Latest Features</DropdownMenuLabel>
+            <DropdownMenuContent className="bg-slate-800 border-slate-700 w-64" align="end">
+              <DropdownMenuLabel className="text-slate-300">🚀 Enhanced Nigerian Features</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-slate-700" />
-              {newFeatures.map((feature) => (
+              {enhancedFeatures.map((feature) => (
                 <DropdownMenuItem
                   key={feature.id}
                   onClick={() => handleNavigation(feature)}
                   className="text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer"
                 >
                   <feature.icon className="w-4 h-4 mr-2" />
-                  {feature.label}
+                  <span className="flex-1">{feature.label}</span>
+                  {feature.badge && (
+                    <Badge className={`ml-2 text-xs ${
+                      feature.badge === 'NEW' ? 'bg-red-600 text-white' : 
+                      feature.badge === 'ENHANCED' ? 'bg-purple-600 text-white' : 
+                      'bg-blue-600 text-white'
+                    }`}>
+                      {feature.badge}
+                    </Badge>
+                  )}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -207,8 +223,8 @@ const Header = ({ activePage, setActivePage, currentUser, onShowAuth, onLogout }
                   ))}
                   
                   <div className="pt-4 border-t border-slate-700">
-                    <h4 className="text-white font-medium mb-2">🚀 New Features</h4>
-                    {newFeatures.map((feature) => (
+                    <h4 className="text-white font-medium mb-2">🚀 Enhanced Features</h4>
+                    {enhancedFeatures.map((feature) => (
                       <Button
                         key={feature.id}
                         variant="ghost"
@@ -216,9 +232,15 @@ const Header = ({ activePage, setActivePage, currentUser, onShowAuth, onLogout }
                         onClick={() => handleNavigation(feature)}
                       >
                         <feature.icon className="mr-2 h-4 w-4" />
-                        {feature.label}
-                        {feature.id === 'leaderboard' && (
-                          <Badge className="ml-auto bg-red-600 text-white text-xs">NEW</Badge>
+                        <span className="flex-1">{feature.label}</span>
+                        {feature.badge && (
+                          <Badge className={`ml-auto text-xs ${
+                            feature.badge === 'NEW' ? 'bg-red-600 text-white' : 
+                            feature.badge === 'ENHANCED' ? 'bg-purple-600 text-white' : 
+                            'bg-blue-600 text-white'
+                          }`}>
+                            {feature.badge}
+                          </Badge>
                         )}
                       </Button>
                     ))}

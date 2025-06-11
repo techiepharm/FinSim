@@ -18,6 +18,8 @@ import RiskAssessmentQuiz from "./components/RiskAssessmentQuiz";
 import AISpendingAdvisor from "./components/AISpendingAdvisor";
 import SavingsStreakRewards from "./components/SavingsStreakRewards";
 import NewsImpactAnalysis from "./components/NewsImpactAnalysis";
+import EnhancedMarketData from "./components/EnhancedMarketData";
+import MacroEconomicNews from "./components/MacroEconomicNews";
 
 // Create the client as a component function
 const App = () => {
@@ -57,6 +59,8 @@ const App = () => {
               <Route path="/spending-advisor" element={<AISpendingAdvisor />} />
               <Route path="/savings-rewards" element={<SavingsStreakRewards />} />
               <Route path="/news-impact" element={<NewsImpactAnalysis />} />
+              <Route path="/market-data" element={<EnhancedMarketData />} />
+              <Route path="/macro-news" element={<MacroEconomicNews />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
