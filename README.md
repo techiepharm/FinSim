@@ -3,8 +3,9 @@
 ## Project info
 
 **URL**: https://lovable.dev/projects/c6beaf08-2970-4838-a6f4-b646f0beb5de
-
-Project Name: Finsavvy 
+## Suggestion: 
+Open on a desktop for a smooth experience.Mobile version coming soon
+## Project Name: Finsavvy 
 Description:The app promotes financial literacy and simulates real time stock trading.
 key features: 
 Financial concept lessons,
