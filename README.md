@@ -4,6 +4,20 @@
 
 **URL**: https://lovable.dev/projects/c6beaf08-2970-4838-a6f4-b646f0beb5de
 
+Project Name: Finsavvy 
+Description:The app promotes financial literacy and simulates real time stock trading.
+key features: 
+Financial concept lessons,
+Smart income split,
+Savings box,
+Savings groups,
+AI chatbox for financial assistance, 
+Smart financial suggestions,
+Detailed financial analytics,
+
+Stock trading:
+Simulator powered by real timemarket data,
+Smart suggestions on informed decisions,
 ## How can I edit this code?
 
 There are several ways of editing your application.
