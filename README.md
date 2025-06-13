@@ -1,8 +1,8 @@
-## FinSavvy 
+## FinSim
 Empowering Financial Literacy. Simulating Real-Time Stock Trading.
 
 ## OverView: 
-Finsavvy is a web application that promptes financial literacy and simulates real time stock trading using live NGX data. It trains individuals on how to utilise their funds and make the most out of their income.
+FinSim is a web application that promptes financial literacy and simulates real time stock trading using live NGX data. It trains individuals on how to utilise their funds and make the most out of their income.
 ## Key Features
 
 Financial Literacy Aspect
