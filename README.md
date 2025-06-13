@@ -1,38 +1,41 @@
-# Welcome to your Lovable project
+## FinSavvy 
+Empowering Financial Literacy. Simulating Real-Time Stock Trading.
 
-## Project info
+## OverView: 
+Finsavvy is a web application that promptes financial literacy and simulates real time stock trading using live NGX data. It is train individuals on how to utilise their funds and make the most out of their income.
+## Key Features
 
-**URL**: https://lovable.dev/projects/c6beaf08-2970-4838-a6f4-b646f0beb5de
-## Suggestion: 
-Open on a desktop for a smooth experience.Mobile version coming soon
-## Project Name: Finsavvy 
-Description:The app promotes financial literacy and simulates real time stock trading.
-key features: 
-Financial concept lessons,
-Smart income split,
-Savings box,
-Savings groups,
-AI chatbox for financial assistance, 
-Smart financial suggestions,
-Detailed financial analytics,
+Financial Literacy Aspect
 
-Stock trading:
-Simulator powered by real timemarket data,
-Smart suggestions on informed decisions,
+Learning center: To teach users the from the basics to advance of finance.
+Smart Income Split: Personalized budgeting plan based on income.
+
+Savings Box & Group Savings: Track goals and save with accountability.
+
+Daily financial quotes & micro-advice for mindset building.
+
+Goals tracker and calendar 
+
+Stock Market Simulation
+
+Live NGX data with historical trend visualizations.
+
+Investment suggestions using market analysis.
+
+Confidence score (Buy / Hold / Sell) for each stock
+
+Engagement & Gamification
+
+Leaderboards for most active learners/investors.
+
+Learning streaks, badges, and XP points to motivate consistent use.
+
+Simulation mode for beginners to practice risk-free investing with a virtual demo capital.
 ## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/c6beaf08-2970-4838-a6f4-b646f0beb5de) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
 
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
+If you want to work locally using your own IDE, you can clone this repo and push changes. 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
 Follow these steps:
@@ -69,20 +72,13 @@ npm run dev
 
 This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Frontend: React + TypeScript
 
-## How can I deploy this project?
+Styling/UI: Tailwind CSS + shaden-ui
 
-Simply open [Lovable](https://lovable.dev/projects/c6beaf08-2970-4838-a6f4-b646f0beb5de) and click on Share -> Publish.
+Build Tool: Vite
 
-## Can I connect a custom domain to my Lovable project?
+Data Handling: Integrated with real-time APIs
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Suggestion: 
+Open on a desktop for a smooth experience.Mobile version coming soon
